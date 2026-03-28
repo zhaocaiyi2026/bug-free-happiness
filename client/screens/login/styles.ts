@@ -159,6 +159,19 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '600',
       color: '#FFFFFF',
     },
+    // 注册链接
+    registerLink: {
+      alignItems: 'center',
+      marginTop: Spacing.md,
+    },
+    registerLinkText: {
+      fontSize: 14,
+      color: '#6B7280',
+    },
+    registerLinkHighlight: {
+      color: '#2563EB',
+      fontWeight: '600',
+    },
     // 分割线
     divider: {
       flexDirection: 'row',

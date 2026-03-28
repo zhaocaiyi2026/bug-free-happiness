@@ -21,7 +21,7 @@ import { Spacing, BorderRadius } from '@/constants/theme';
 import { createStyles } from './styles';
 import { useAuth } from '@/contexts/AuthContext';
 
-type LoginMode = 'sms' | 'password' | 'register';
+type LoginMode = 'sms' | 'password';
 
 export default function LoginScreen() {
   const { theme } = useTheme();
@@ -31,6 +31,7 @@ export default function LoginScreen() {
   const { login } = useAuth();
 
   const [mode, setMode] = useState<LoginMode>('sms');
+  const [isRegister, setIsRegister] = useState(false);
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -66,7 +67,6 @@ export default function LoginScreen() {
     if (countdown > 0) return;
 
     try {
-      // 调用发送验证码API
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/auth/send-sms`,
         {
@@ -78,10 +78,9 @@ export default function LoginScreen() {
       const data = await res.json();
 
       if (data.success) {
-        // 开发环境：后端会返回验证码，方便测试
         if (data.code) {
           Alert.alert('验证码已发送', `【开发模式】验证码: ${data.code}\n\n正式环境验证码将发送到手机`);
-          setSmsCode(data.code); // 自动填充验证码
+          setSmsCode(data.code);
         } else {
           Alert.alert('成功', '验证码已发送到您的手机');
         }
@@ -116,7 +115,7 @@ export default function LoginScreen() {
       return;
     }
 
-    if (mode === 'register') {
+    if (isRegister) {
       if (!password) {
         Alert.alert('提示', '请设置密码');
         return;
@@ -134,7 +133,7 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const endpoint = mode === 'register' ? '/api/v1/auth/register' : '/api/v1/auth/login';
+      const endpoint = isRegister ? '/api/v1/auth/register' : '/api/v1/auth/login';
       const body: any = { phone };
 
       if (mode === 'sms') {
@@ -143,7 +142,7 @@ export default function LoginScreen() {
         body.password = password;
       }
 
-      if (mode === 'register' && nickname) {
+      if (isRegister && nickname) {
         body.nickname = nickname;
       }
 
@@ -158,9 +157,7 @@ export default function LoginScreen() {
       const data = await res.json();
 
       if (data.success) {
-        // 使用 auth context 保存用户信息
         await login(data.data);
-        // 直接跳转到首页，不显示弹窗
         router.replace('/');
       } else {
         Alert.alert('失败', data.message || '操作失败');
@@ -204,7 +201,7 @@ export default function LoginScreen() {
             <View style={styles.modeTabs}>
               <TouchableOpacity
                 style={[styles.modeTab, mode === 'sms' && styles.modeTabActive]}
-                onPress={() => setMode('sms')}
+                onPress={() => { setMode('sms'); setIsRegister(false); }}
               >
                 <Text style={[styles.modeTabText, mode === 'sms' && styles.modeTabTextActive]}>
                   短信登录
@@ -216,14 +213,6 @@ export default function LoginScreen() {
               >
                 <Text style={[styles.modeTabText, mode === 'password' && styles.modeTabTextActive]}>
                   密码登录
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modeTab, mode === 'register' && styles.modeTabActive]}
-                onPress={() => setMode('register')}
-              >
-                <Text style={[styles.modeTabText, mode === 'register' && styles.modeTabTextActive]}>
-                  注册账号
                 </Text>
               </TouchableOpacity>
             </View>
@@ -275,12 +264,12 @@ export default function LoginScreen() {
               )}
 
               {/* 密码 */}
-              {(mode === 'password' || mode === 'register') && (
+              {(mode === 'password' || isRegister) && (
                 <View style={styles.inputGroup}>
                   <FontAwesome6 name="lock" size={18} color="#9CA3AF" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder={mode === 'register' ? '请设置密码（至少6位）' : '请输入密码'}
+                    placeholder={isRegister ? '请设置密码（至少6位）' : '请输入密码'}
                     placeholderTextColor="#9CA3AF"
                     value={password}
                     onChangeText={setPassword}
@@ -291,7 +280,7 @@ export default function LoginScreen() {
               )}
 
               {/* 确认密码 */}
-              {mode === 'register' && (
+              {isRegister && (
                 <>
                   <View style={styles.inputGroup}>
                     <FontAwesome6 name="lock" size={18} color="#9CA3AF" style={styles.inputIcon} />
@@ -342,10 +331,34 @@ export default function LoginScreen() {
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <Text style={styles.submitButtonText}>
-                    {mode === 'register' ? '注册' : '登录'}
+                    {isRegister ? '注册' : '登录'}
                   </Text>
                 )}
               </TouchableOpacity>
+
+              {/* 注册链接 */}
+              {!isRegister && (
+                <TouchableOpacity
+                  style={styles.registerLink}
+                  onPress={() => { setIsRegister(true); setMode('password'); }}
+                >
+                  <Text style={styles.registerLinkText}>
+                    还没有账号？<Text style={styles.registerLinkHighlight}>立即注册</Text>
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {/* 返回登录链接 */}
+              {isRegister && (
+                <TouchableOpacity
+                  style={styles.registerLink}
+                  onPress={() => setIsRegister(false)}
+                >
+                  <Text style={styles.registerLinkText}>
+                    已有账号？<Text style={styles.registerLinkHighlight}>返回登录</Text>
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* 分割线 */}
