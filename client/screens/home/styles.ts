@@ -169,23 +169,23 @@ export const createStyles = (theme: Theme) => {
     filterSection: {
       backgroundColor: '#FFFFFF',
       marginTop: Spacing.xs,
-      paddingVertical: Spacing.xs + 2,
+      paddingVertical: Spacing.xs,
       borderBottomWidth: 1,
       borderBottomColor: '#F0F0F0',
     },
     filterContainer: {
       flexDirection: 'row',
-      gap: Spacing.xs,
-      paddingHorizontal: Spacing.sm,
+      gap: 2,
+      paddingHorizontal: Spacing.xs,
     },
     filterChip: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: Spacing.xs,
+      paddingHorizontal: Spacing.xs + 2,
+      paddingVertical: 2,
       borderRadius: BorderRadius.full,
       backgroundColor: '#F5F5F5',
-      gap: 3,
+      gap: 2,
     },
     filterChipActive: {
       backgroundColor: '#2563EB',
@@ -197,13 +197,13 @@ export const createStyles = (theme: Theme) => {
       marginRight: 0,
     },
     filterChipText: {
-      fontSize: 12,
-      color: '#2563EB',
-      fontWeight: '500',
+      fontSize: 11,
+      color: '#1D4ED8',
+      fontWeight: '600',
     },
     filterChipTextActive: {
       color: '#FFFFFF',
-      fontWeight: '600',
+      fontWeight: '700',
     },
     // 列表
     listContainer: {
