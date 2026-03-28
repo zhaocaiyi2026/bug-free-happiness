@@ -178,11 +178,32 @@ export default function SearchScreen() {
   }, [searchType, router]);
 
   const handleProvinceSelect = (provinceName: string) => {
-    setSelectedProvince(provinceName === '全部' ? '' : provinceName);
+    const newProvince = provinceName === '全部' ? '' : provinceName;
+    setSelectedProvince(newProvince);
+    // 选择省份后自动搜索
+    setTimeout(() => {
+      handleSearchWithParams(keyword, selectedIndustry, newProvince);
+    }, 50);
   };
 
   const handleIndustrySelect = (industryName: string) => {
-    setSelectedIndustry(industryName === '全部' ? '' : industryName);
+    const newIndustry = industryName === '全部' ? '' : industryName;
+    setSelectedIndustry(newIndustry);
+    
+    // 选择行业后，用行业名称替换关键词
+    // 如果选择"全部"，清空关键词
+    setKeyword(newIndustry);
+    
+    // 自动搜索
+    setTimeout(() => {
+      if (newIndustry) {
+        // 选择具体行业时，用行业作为关键词和行业筛选
+        handleSearchWithParams(newIndustry, newIndustry, selectedProvince);
+      } else {
+        // 选择"全部"时，清空关键词和行业筛选
+        handleSearchWithParams('', '', selectedProvince);
+      }
+    }, 50);
   };
 
   // 跳转到省份选择页面
