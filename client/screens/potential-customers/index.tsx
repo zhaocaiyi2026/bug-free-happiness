@@ -175,18 +175,14 @@ export default function PotentialCustomersScreen() {
   const handleIndustrySelect = (industryName: string) => {
     const newIndustry = industryName === '全部' ? '' : industryName;
     setSelectedIndustry(newIndustry);
-    // 选择行业后自动搜索
-    setTimeout(() => {
-      fetchCustomersWithParams(1, true, keyword, newIndustry, customerType);
-    }, 50);
+    // 选择行业后立即搜索（使用新值，不依赖状态更新）
+    fetchCustomersWithParams(1, true, keyword, newIndustry, customerType);
   };
 
   const handleCustomerTypeChange = (newType: 'all' | 'bidder' | 'winner') => {
     setCustomerType(newType);
-    // 切换类型后自动搜索
-    setTimeout(() => {
-      fetchCustomersWithParams(1, true, keyword, selectedIndustry, newType);
-    }, 50);
+    // 切换类型后立即搜索（使用当前状态值）
+    fetchCustomersWithParams(1, true, keyword, selectedIndustry, newType);
   };
 
   // 拨打电话
