@@ -41,20 +41,18 @@ interface Bid {
   is_urgent: boolean;
 }
 
-// 常用省份（只显示4个热门）
+// 常用省份（只显示3个热门）
 const POPULAR_PROVINCES = [
   { id: 0, name: '全部', code: '' },
   { id: 1, name: '上海市', code: '310000' },
   { id: 2, name: '北京市', code: '110000' },
-  { id: 3, name: '广东省', code: '440000' },
 ];
 
-// 常用行业（只显示4个热门）
+// 常用行业（只显示3个热门）
 const POPULAR_INDUSTRIES = [
   { id: 0, name: '全部', code: '' },
   { id: 1, name: '交通运输', code: 'transport' },
   { id: 2, name: '信息技术', code: 'it' },
-  { id: 3, name: '医疗卫生', code: 'medical' },
 ];
 
 export default function SearchScreen() {
@@ -391,28 +389,39 @@ export default function SearchScreen() {
             <Text style={styles.filterLabel}>省份</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-                {/* 如果选中的省份不在热门列表中，额外显示一个已选中的标签 */}
-                {selectedProvince && !POPULAR_PROVINCES.find(p => p.name === selectedProvince) && (
-                  renderFilterChip(
-                    { id: -2, name: selectedProvince },
-                    true,
-                    () => handleProvinceSelect(''),
-                    false,
-                    true
-                  )
-                )}
-                {POPULAR_PROVINCES.map((item) =>
-                  renderFilterChip(
-                    item,
-                    selectedProvince === item.name || (item.name === '全部' && !selectedProvince),
-                    () => handleProvinceSelect(item.name)
-                  )
-                )}
-                {renderFilterChip(
-                  { id: -1, name: '' },
-                  false,
-                  handleProvinceMore,
-                  true
+                {/* 如果选中的省份不在热门列表中，只显示选中的标签和更多按钮 */}
+                {selectedProvince && !POPULAR_PROVINCES.find(p => p.name === selectedProvince) ? (
+                  <>
+                    {renderFilterChip(
+                      { id: -2, name: selectedProvince },
+                      true,
+                      () => handleProvinceSelect(''),
+                      false,
+                      true
+                    )}
+                    {renderFilterChip(
+                      { id: -1, name: '' },
+                      false,
+                      handleProvinceMore,
+                      true
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {POPULAR_PROVINCES.map((item) =>
+                      renderFilterChip(
+                        item,
+                        selectedProvince === item.name || (item.name === '全部' && !selectedProvince),
+                        () => handleProvinceSelect(item.name)
+                      )
+                    )}
+                    {renderFilterChip(
+                      { id: -1, name: '' },
+                      false,
+                      handleProvinceMore,
+                      true
+                    )}
+                  </>
                 )}
               </ScrollView>
             </View>
@@ -423,28 +432,39 @@ export default function SearchScreen() {
             <Text style={styles.filterLabel}>行业</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-                {/* 如果选中的行业不在热门列表中，额外显示一个已选中的标签 */}
-                {selectedIndustry && !POPULAR_INDUSTRIES.find(p => p.name === selectedIndustry) && (
-                  renderFilterChip(
-                    { id: -2, name: selectedIndustry },
-                    true,
-                    () => handleIndustrySelect(''),
-                    false,
-                    true
-                  )
-                )}
-                {POPULAR_INDUSTRIES.map((item) =>
-                  renderFilterChip(
-                    item,
-                    selectedIndustry === item.name || (item.name === '全部' && !selectedIndustry),
-                    () => handleIndustrySelect(item.name)
-                  )
-                )}
-                {renderFilterChip(
-                  { id: -1, name: '' },
-                  false,
-                  handleIndustryMore,
-                  true
+                {/* 如果选中的行业不在热门列表中，只显示选中的标签和更多按钮 */}
+                {selectedIndustry && !POPULAR_INDUSTRIES.find(p => p.name === selectedIndustry) ? (
+                  <>
+                    {renderFilterChip(
+                      { id: -2, name: selectedIndustry },
+                      true,
+                      () => handleIndustrySelect(''),
+                      false,
+                      true
+                    )}
+                    {renderFilterChip(
+                      { id: -1, name: '' },
+                      false,
+                      handleIndustryMore,
+                      true
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {POPULAR_INDUSTRIES.map((item) =>
+                      renderFilterChip(
+                        item,
+                        selectedIndustry === item.name || (item.name === '全部' && !selectedIndustry),
+                        () => handleIndustrySelect(item.name)
+                      )
+                    )}
+                    {renderFilterChip(
+                      { id: -1, name: '' },
+                      false,
+                      handleIndustryMore,
+                      true
+                    )}
+                  </>
                 )}
               </ScrollView>
             </View>
