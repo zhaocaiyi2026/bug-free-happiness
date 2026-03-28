@@ -71,11 +71,11 @@ export default function FavoritesScreen() {
     fetchFavorites();
   };
 
-  const handleBidPress = (bidId: number) => {
+  const handleBidPress = useCallback((bidId: number) => {
     router.push('/detail', { id: bidId });
-  };
+  }, [router]);
 
-  const handleRemoveFavorite = async (bidId: number, title: string) => {
+  const handleRemoveFavorite = useCallback((bidId: number, title: string) => {
     Alert.alert('取消收藏', `确定要取消收藏「${title.slice(0, 20)}...」吗？`, [
       { text: '取消', style: 'cancel' },
       {
@@ -90,7 +90,11 @@ export default function FavoritesScreen() {
             const data = await res.json();
 
             if (data.success) {
-              setFavorites(favorites.filter((f) => f.bids.id !== bidId));
+              // 使用函数式更新确保状态正确
+              setFavorites(prev => prev.filter((f) => f.bids.id !== bidId));
+              Alert.alert('成功', '已取消收藏');
+            } else {
+              Alert.alert('错误', data.message || '取消收藏失败');
             }
           } catch (error) {
             console.error('取消收藏失败:', error);
@@ -99,7 +103,7 @@ export default function FavoritesScreen() {
         },
       },
     ]);
-  };
+  }, [userId]);
 
   const formatBudget = (budget: number | null) => {
     if (!budget) return '面议';
@@ -139,8 +143,9 @@ export default function FavoritesScreen() {
         <TouchableOpacity
           style={styles.removeButton}
           onPress={() => handleRemoveFavorite(item.bids.id, item.bids.title)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <FontAwesome6 name="heart-crack" size={14} color="#C8102E" />
+          <FontAwesome6 name="heart" size={16} color="#C8102E" solid />
         </TouchableOpacity>
       </View>
       <Text style={styles.bidTitle} numberOfLines={2}>
@@ -152,7 +157,7 @@ export default function FavoritesScreen() {
         <Text style={styles.bidDeadline}>截止 {formatDeadline(item.bids.deadline)}</Text>
       </View>
     </TouchableOpacity>
-  ), [styles]);
+  ), [styles, handleRemoveFavorite]);
 
   if (loading) {
     return (

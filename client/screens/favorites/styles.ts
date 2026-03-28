@@ -103,12 +103,14 @@ export const createStyles = (theme: Theme) => {
     },
     removeButton: {
       marginLeft: 'auto',
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       backgroundColor: 'rgba(200, 16, 46, 0.1)',
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(200, 16, 46, 0.3)',
     },
     bidTitle: {
       fontSize: 14,
