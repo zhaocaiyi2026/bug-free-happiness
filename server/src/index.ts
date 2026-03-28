@@ -8,7 +8,9 @@ import favoritesRouter from './routes/favorites';
 import crawlerRouter from './routes/crawler';
 import messagesRouter from './routes/messages';
 import subscriptionsRouter from './routes/subscriptions';
+import dataSourcesRouter from './routes/data-sources';
 import { startCrawler } from './crawler';
+import { startDataSyncScheduler } from './services/data-sources';
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -33,6 +35,7 @@ app.use('/api/v1/favorites', favoritesRouter);
 app.use('/api/v1/crawler', crawlerRouter);
 app.use('/api/v1/messages', messagesRouter);
 app.use('/api/v1/subscriptions', subscriptionsRouter);
+app.use('/api/v1/data-sources', dataSourcesRouter);
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}/`);
@@ -41,5 +44,11 @@ app.listen(port, () => {
   if (process.env.NODE_ENV === 'production' || process.env.ENABLE_CRAWLER === 'true') {
     console.log('Auto-starting crawler service...');
     startCrawler();
+  }
+  
+  // 启动数据同步调度器（官方数据源）
+  if (process.env.NODE_ENV === 'production' || process.env.ENABLE_DATA_SYNC === 'true') {
+    console.log('Auto-starting data sync scheduler...');
+    startDataSyncScheduler();
   }
 });

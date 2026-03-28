@@ -68,6 +68,10 @@ export const bids = pgTable("bids", {
 	requirements: text(),
 	openBidTime: timestamp("open_bid_time", { mode: 'string' }),
 	openBidLocation: varchar("open_bid_location", { length: 500 }),
+	// 数据源标识字段
+	sourcePlatform: varchar("source_platform", { length: 50 }),
+	sourceId: varchar("source_id", { length: 100 }),
+	dataType: varchar("data_type", { length: 20 }).default('crawl'),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 });
@@ -98,6 +102,10 @@ export const winBids = pgTable("win_bids", {
 	source: varchar({ length: 200 }),
 	sourceUrl: text("source_url"),
 	viewCount: integer("view_count").default(0),
+	// 数据源标识字段
+	sourcePlatform: varchar("source_platform", { length: 50 }),
+	sourceId: varchar("source_id", { length: 100 }),
+	dataType: varchar("data_type", { length: 20 }).default('crawl'),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 });
@@ -167,3 +175,18 @@ export const searchHistory = pgTable("search_history", {
 			name: "search_history_user_id_fkey"
 		}).onDelete("cascade"),
 ]);
+
+// 同步日志表 - 用于追踪官方数据源同步状态
+export const syncLogs = pgTable("sync_logs", {
+	id: serial().primaryKey().notNull(),
+	sourcePlatform: varchar("source_platform", { length: 50 }).notNull(),
+	syncType: varchar("sync_type", { length: 50 }).notNull(), // 'full' | 'incremental' | 'realtime'
+	startTime: timestamp("start_time", { mode: 'string' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+	endTime: timestamp("end_time", { mode: 'string' }),
+	totalCount: integer("total_count").default(0),
+	successCount: integer("success_count").default(0),
+	errorCount: integer("error_count").default(0),
+	errorMessage: text("error_message"),
+	status: varchar({ length: 20 }).default('running'), // 'running' | 'completed' | 'failed'
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+});

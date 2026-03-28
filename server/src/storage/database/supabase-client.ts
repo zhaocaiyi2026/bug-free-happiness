@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { execSync } from 'child_process';
+import * as schema from './shared/schema';
 
 let envLoaded = false;
 
@@ -113,3 +114,7 @@ function getSupabaseClient(token?: string): SupabaseClient {
 }
 
 export { loadEnv, getSupabaseCredentials, getSupabaseClient };
+
+// 数据库操作代理（使用Supabase客户端）
+// 注意：直接使用getSupabaseClient()进行数据库操作
+// sync-scheduler.ts已经使用Supabase客户端
