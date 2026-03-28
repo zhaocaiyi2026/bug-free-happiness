@@ -223,11 +223,19 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       paddingVertical: Spacing['3xl'],
     },
+    loadingText: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      marginTop: Spacing.md,
+    },
     emptyContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
       paddingVertical: Spacing['5xl'],
+    },
+    emptyIcon: {
+      marginBottom: Spacing.md,
     },
     emptyText: {
       fontSize: 14,

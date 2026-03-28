@@ -143,5 +143,16 @@ export const createStyles = (theme: Theme) => {
       fontSize: 14,
       color: '#9CA3AF',
     },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: Spacing['3xl'],
+    },
+    loadingText: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      marginTop: Spacing.md,
+    },
   });
 };

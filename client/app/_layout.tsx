@@ -32,6 +32,10 @@ export default function RootLayout() {
             <Stack.Screen name="bidList" options={{ title: "招标列表" }} />
             <Stack.Screen name="search" options={{ title: "搜索" }} />
             <Stack.Screen name="favorites" options={{ title: "我的收藏" }} />
+            <Stack.Screen name="history" options={{ title: "浏览历史" }} />
+            <Stack.Screen name="subscribe" options={{ title: "订阅管理" }} />
+            <Stack.Screen name="settings" options={{ title: "设置" }} />
+            <Stack.Screen name="feedback" options={{ title: "意见反馈" }} />
           </Stack>
           <Toast />
         </GestureHandlerRootView>

@@ -6,6 +6,7 @@ import commonRouter from './routes/common';
 import authRouter from './routes/auth';
 import favoritesRouter from './routes/favorites';
 import crawlerRouter from './routes/crawler';
+import messagesRouter from './routes/messages';
 import { startCrawler } from './crawler';
 
 const app = express();
@@ -29,6 +30,7 @@ app.use('/api/v1/common', commonRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/favorites', favoritesRouter);
 app.use('/api/v1/crawler', crawlerRouter);
+app.use('/api/v1/messages', messagesRouter);
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}/`);

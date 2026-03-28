@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
@@ -14,25 +15,19 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
 import { createStyles } from './styles';
 
-const categories = [
-  { id: 1, name: '建筑工程', icon: 'building', count: 1280, color: '#2563EB' },
-  { id: 2, name: 'IT服务', icon: 'laptop-code', count: 856, color: '#059669' },
-  { id: 3, name: '医疗设备', icon: 'hospital', count: 432, color: '#DC2626' },
-  { id: 4, name: '教育培训', icon: 'graduation-cap', count: 367, color: '#7C3AED' },
-  { id: 5, name: '交通运输', icon: 'truck', count: 298, color: '#EA580C' },
-  { id: 6, name: '环保能源', icon: 'leaf', count: 245, color: '#16A34A' },
-  { id: 7, name: '政府采购', icon: 'landmark', count: 189, color: '#0891B2' },
-  { id: 8, name: '更多', icon: 'ellipsis', count: 0, color: '#6B7280' },
-];
+interface Industry {
+  id: number;
+  name: string;
+  code: string;
+}
 
-const hotTags = [
-  { name: '市政工程', isHot: true },
-  { name: '信息化建设', isHot: false },
-  { name: '医疗器械', isHot: true },
-  { name: '智慧城市', isHot: false },
-  { name: '新能源', isHot: false },
-  { name: '园林绿化', isHot: true },
-];
+interface Category {
+  id: number | string;
+  name: string;
+  icon: string;
+  count: number;
+  color: string;
+}
 
 interface Bid {
   id: number;
@@ -45,6 +40,44 @@ interface Bid {
   is_urgent: boolean;
 }
 
+const DEFAULT_CATEGORIES: Category[] = [
+  { id: 1, name: '建筑工程', icon: 'building', count: 0, color: '#2563EB' },
+  { id: 2, name: 'IT服务', icon: 'laptop-code', count: 0, color: '#059669' },
+  { id: 3, name: '医疗设备', icon: 'hospital', count: 0, color: '#DC2626' },
+  { id: 4, name: '教育培训', icon: 'graduation-cap', count: 0, color: '#7C3AED' },
+  { id: 5, name: '交通运输', icon: 'truck', count: 0, color: '#EA580C' },
+  { id: 6, name: '环保能源', icon: 'leaf', count: 0, color: '#16A34A' },
+  { id: 7, name: '政府采购', icon: 'landmark', count: 0, color: '#0891B2' },
+  { id: 'more', name: '更多', icon: 'ellipsis', count: 0, color: '#6B7280' },
+];
+
+const hotTags = [
+  { name: '市政工程', isHot: true },
+  { name: '信息化建设', isHot: false },
+  { name: '医疗器械', isHot: true },
+  { name: '智慧城市', isHot: false },
+  { name: '新能源', isHot: false },
+  { name: '园林绿化', isHot: true },
+];
+
+const CATEGORY_ICONS: Record<string, string> = {
+  '建筑工程': 'building',
+  'IT服务': 'laptop-code',
+  '医疗设备': 'hospital',
+  '教育培训': 'graduation-cap',
+  '交通运输': 'truck',
+  '环保能源': 'leaf',
+  '政府采购': 'landmark',
+  '市政设施': 'road',
+  '水利水电': 'water',
+  '农林牧渔': 'seedling',
+};
+
+const CATEGORY_COLORS: string[] = [
+  '#2563EB', '#059669', '#DC2626', '#7C3AED', 
+  '#EA580C', '#16A34A', '#0891B2', '#6366F1'
+];
+
 export default function DiscoverScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -52,6 +85,10 @@ export default function DiscoverScreen() {
   const router = useSafeRouter();
 
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [recommendBids, setRecommendBids] = useState<Bid[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const filters = [
     { key: 'all', label: '全部' },
@@ -60,18 +97,86 @@ export default function DiscoverScreen() {
     { key: 'high_budget', label: '大额项目' },
   ];
 
-  // 模拟推荐数据
-  const recommendBids: Bid[] = [
-    { id: 1, title: '某市智慧城市建设项目招标公告', budget: 58000000, province: '广东', city: '深圳', industry: 'IT服务', deadline: '2026-04-15', is_urgent: true },
-    { id: 2, title: '2026年度医疗设备集中采购项目', budget: 32000000, province: '北京', city: '北京', industry: '医疗设备', deadline: '2026-04-20', is_urgent: false },
-    { id: 3, title: '城区道路改造提升工程施工招标', budget: 85000000, province: '浙江', city: '杭州', industry: '建筑工程', deadline: '2026-04-18', is_urgent: true },
-    { id: 4, title: '新能源充电桩建设运营项目', budget: 12000000, province: '江苏', city: '南京', industry: '环保能源', deadline: '2026-04-22', is_urgent: false },
-    { id: 5, title: '政务服务系统升级改造项目', budget: 8500000, province: '上海', city: '上海', industry: 'IT服务', deadline: '2026-04-25', is_urgent: false },
-    { id: 6, title: '城市园林绿化养护工程招标', budget: 15000000, province: '四川', city: '成都', industry: '建筑工程', deadline: '2026-04-28', is_urgent: true },
-  ];
+  useEffect(() => {
+    fetchData();
+  }, [activeFilter]);
 
-  const handleCategoryPress = (category: typeof categories[0]) => {
-    if (category.name === '更多') {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([fetchIndustries(), fetchRecommendBids()]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const fetchIndustries = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/common/industries`
+      );
+      const data = await res.json();
+
+      if (data.success && data.data) {
+        const mappedCategories: Category[] = data.data.slice(0, 7).map((industry: Industry, index: number) => ({
+          id: industry.id,
+          name: industry.name,
+          icon: CATEGORY_ICONS[industry.name] || 'folder',
+          count: 0,
+          color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+        }));
+        mappedCategories.push({ id: 'more', name: '更多', icon: 'ellipsis', count: 0, color: '#6B7280' });
+        setCategories(mappedCategories);
+      }
+    } catch (error) {
+      console.error('获取行业列表失败:', error);
+    }
+  };
+
+  const fetchRecommendBids = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append('page', '1');
+      params.append('pageSize', '6');
+
+      // 根据筛选条件添加参数
+      switch (activeFilter) {
+        case 'today': {
+          const today = new Date().toISOString().split('T')[0];
+          params.append('publishDateFrom', today);
+          break;
+        }
+        case 'urgent':
+          params.append('isUrgent', 'true');
+          break;
+        case 'high_budget':
+          params.append('minBudget', '10000000');
+          break;
+      }
+
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        setRecommendBids(data.data.list);
+      }
+    } catch (error) {
+      console.error('获取推荐招标失败:', error);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
+
+  const handleCategoryPress = (category: Category) => {
+    if (category.id === 'more') {
+      // 更多行业 - 跳转到搜索页
+      router.push('/search');
       return;
     }
     router.push('/search', { industry: category.name });
@@ -83,6 +188,20 @@ export default function DiscoverScreen() {
 
   const handleBidPress = (bidId: number) => {
     router.push('/detail', { id: bidId });
+  };
+
+  const handleViewAllCategories = () => {
+    router.push('/search');
+  };
+
+  const handleViewAllBids = () => {
+    if (activeFilter === 'urgent') {
+      router.push('/bidList', { type: 'urgent' });
+    } else if (activeFilter === 'today') {
+      router.push('/bidList', { type: 'today' });
+    } else {
+      router.push('/bidList', { type: 'today' });
+    }
   };
 
   const formatBudget = (budget: number | null) => {
@@ -103,6 +222,59 @@ export default function DiscoverScreen() {
     return `${month}/${day}`;
   };
 
+  const renderBidCard = useCallback((bid: Bid) => (
+    <TouchableOpacity
+      key={bid.id}
+      style={styles.bidCard}
+      onPress={() => handleBidPress(bid.id)}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.bidCardContent, bid.is_urgent && styles.bidCardUrgent]}>
+        <View style={styles.cardHeader}>
+          <View style={styles.categoryTag}>
+            <Text style={styles.categoryTagText} numberOfLines={1}>
+              {bid.industry?.slice(0, 4) || '项目'}
+            </Text>
+          </View>
+          {bid.is_urgent && (
+            <View style={styles.urgentTag}>
+              <Text style={styles.urgentTagText}>紧急</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.bidTitle} numberOfLines={2}>
+          {bid.title}
+        </Text>
+        <Text style={styles.bidBudget}>{formatBudget(bid.budget)}元</Text>
+        <Text style={styles.bidMeta} numberOfLines={1}>{bid.province} · {bid.city}</Text>
+        <Text style={styles.bidDeadline}>截止 {formatDeadline(bid.deadline)}</Text>
+      </View>
+    </TouchableOpacity>
+  ), [styles]);
+
+  if (loading && !refreshing) {
+    return (
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+          <View style={styles.headerTop}>
+            <Text style={styles.headerTitle}>发现</Text>
+            <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>
+              <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.searchContainer} onPress={() => router.navigate('/search')}>
+            <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
+            <Text style={styles.searchPlaceholder}>搜索招标信息、行业...</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2563EB" />
+          <Text style={styles.loadingText}>加载中...</Text>
+        </View>
+      </Screen>
+    );
+  }
+
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
       <View style={{ flex: 1 }}>
@@ -120,12 +292,23 @@ export default function DiscoverScreen() {
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.container} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#2563EB']}
+              tintColor="#2563EB"
+            />
+          }
+        >
           {/* 热门行业 - 宫格 */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>热门行业</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={handleViewAllCategories}>
                 <Text style={styles.sectionMore}>查看全部</Text>
               </TouchableOpacity>
             </View>
@@ -189,41 +372,19 @@ export default function DiscoverScreen() {
           <View style={[styles.sectionContainer, { marginBottom: Spacing.lg }]}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>热门推荐</Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={handleViewAllBids}>
                 <Text style={styles.sectionMore}>更多</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.bidGrid}>
-              {recommendBids.map((bid) => (
-                <TouchableOpacity
-                  key={bid.id}
-                  style={styles.bidCard}
-                  onPress={() => handleBidPress(bid.id)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.bidCardContent, bid.is_urgent && styles.bidCardUrgent]}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.categoryTag}>
-                        <Text style={styles.categoryTagText} numberOfLines={1}>
-                          {bid.industry?.slice(0, 4) || '项目'}
-                        </Text>
-                      </View>
-                      {bid.is_urgent && (
-                        <View style={styles.urgentTag}>
-                          <Text style={styles.urgentTagText}>紧急</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.bidTitle} numberOfLines={2}>
-                      {bid.title}
-                    </Text>
-                    <Text style={styles.bidBudget}>{formatBudget(bid.budget)}元</Text>
-                    <Text style={styles.bidMeta} numberOfLines={1}>{bid.province} · {bid.city}</Text>
-                    <Text style={styles.bidDeadline}>截止 {formatDeadline(bid.deadline)}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {recommendBids.map((bid) => renderBidCard(bid))}
             </View>
+            {recommendBids.length === 0 && (
+              <View style={styles.emptyContainer}>
+                <FontAwesome6 name="folder-open" size={40} color="#D1D5DB" style={styles.emptyIcon} />
+                <Text style={styles.emptyText}>暂无推荐招标</Text>
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>

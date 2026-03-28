@@ -34,7 +34,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
 
   const [user, setUser] = useState<User | null>(null);
-  const [favoriteCount, setFavoriteCount] = useState(12);
+  const [favoriteCount, setFavoriteCount] = useState(0);
   const [historyCount, setHistoryCount] = useState(56);
   const [subscribeCount, setSubscribeCount] = useState(8);
   const [loading, setLoading] = useState(true);
@@ -85,26 +85,26 @@ export default function ProfileScreen() {
         router.navigate('/favorites');
         break;
       case 'history':
-        Alert.alert('提示', '浏览历史功能开发中');
+        router.push('/history');
         break;
       case 'subscribe':
-        Alert.alert('提示', '订阅管理功能开发中');
+        router.push('/subscribe');
         break;
       case 'settings':
-        Alert.alert('提示', '设置功能开发中');
+        router.push('/settings');
         break;
       case 'feedback':
-        Alert.alert('提示', '意见反馈功能开发中');
+        router.push('/feedback');
         break;
       case 'about':
-        Alert.alert('关于', '招标通 v1.0.0\n专业的招标信息聚合平台');
+        Alert.alert('关于招标通', '招标通 v1.0.0\n\n专业的招标信息聚合平台\n\n整合20,000+数据源\n提供实时招标、中标信息\n助力企业把握商机');
         break;
     }
   };
 
   const handleUpgradeVIP = () => {
-    Alert.alert('VIP服务', '开通VIP会员，享受更多专属权益！', [
-      { text: '取消', style: 'cancel' },
+    Alert.alert('VIP会员服务', '开通VIP会员，解锁全部高级功能\n\n• 实时推送招标信息\n• 智能数据分析报告\n• 专属客服优先响应\n• 历史数据无限制查看', [
+      { text: '暂不需要', style: 'cancel' },
       { text: '立即开通', onPress: () => console.log('开通VIP') },
     ]);
   };
