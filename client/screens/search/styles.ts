@@ -52,6 +52,43 @@ export const createStyles = (theme: Theme) => {
       color: '#1C1917',
       marginLeft: Spacing.sm,
     },
+    // 搜索类型切换
+    typeSection: {
+      flexDirection: 'row',
+      backgroundColor: '#FFFFFF',
+      marginHorizontal: Spacing.sm,
+      marginTop: Spacing.sm,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.xs,
+    },
+    typeTab: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.sm + 2,
+      borderRadius: BorderRadius.md,
+      backgroundColor: '#F5F5F5',
+      marginHorizontal: 2,
+    },
+    typeTabActive: {
+      backgroundColor: '#FFFFFF',
+      shadowColor: '#2563EB',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    typeTabText: {
+      fontSize: 13,
+      color: '#6B7280',
+      fontWeight: '500',
+      marginLeft: Spacing.xs,
+    },
+    typeTabTextActive: {
+      color: '#2563EB',
+      fontWeight: '600',
+    },
     // 筛选区域
     filterSection: {
       backgroundColor: '#FFFFFF',
@@ -70,10 +107,15 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '600',
       marginBottom: Spacing.sm,
     },
-    filterScroll: {
+    filterScrollWrapper: {
       marginHorizontal: -Spacing.xs,
     },
+    filterScroll: {
+      paddingHorizontal: Spacing.xs,
+    },
     filterChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.xs + 2,
       borderRadius: BorderRadius.full,
@@ -82,6 +124,12 @@ export const createStyles = (theme: Theme) => {
     },
     filterChipActive: {
       backgroundColor: '#2563EB',
+    },
+    filterChipMore: {
+      borderStyle: 'dashed',
+      borderWidth: 1,
+      borderColor: '#D1D5DB',
+      backgroundColor: 'transparent',
     },
     filterChipText: {
       fontSize: 12,
@@ -231,6 +279,59 @@ export const createStyles = (theme: Theme) => {
       fontSize: 12,
       color: '#9CA3AF',
       marginTop: Spacing.xs,
+    },
+    // 弹窗样式
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: '#FFFFFF',
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      maxHeight: '60%',
+      paddingBottom: Spacing['2xl'],
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
+    },
+    modalTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#1C1917',
+    },
+    modalList: {
+      paddingHorizontal: Spacing.md,
+    },
+    modalItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F5F5F5',
+    },
+    modalItemActive: {
+      backgroundColor: '#F0F7FF',
+      marginHorizontal: -Spacing.sm,
+      paddingHorizontal: Spacing.md,
+      borderRadius: BorderRadius.md,
+    },
+    modalItemText: {
+      fontSize: 14,
+      color: '#1C1917',
+    },
+    modalItemTextActive: {
+      color: '#2563EB',
+      fontWeight: '600',
     },
   });
 };

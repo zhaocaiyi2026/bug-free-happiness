@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -7,6 +7,7 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
@@ -48,18 +49,38 @@ interface Bid {
   is_urgent: boolean;
 }
 
+// 常用省份（前6个）
+const POPULAR_PROVINCES = [
+  { id: 0, name: '全部', code: '' },
+  { id: 1, name: '上海市', code: '310000' },
+  { id: 2, name: '北京市', code: '110000' },
+  { id: 3, name: '四川省', code: '510000' },
+  { id: 4, name: '山东省', code: '370000' },
+  { id: 5, name: '广东省', code: '440000' },
+];
+
+// 常用行业（前5个）
+const POPULAR_INDUSTRIES = [
+  { id: 0, name: '全部', code: '' },
+  { id: 1, name: '交通运输', code: 'transport' },
+  { id: 2, name: '信息技术', code: 'it' },
+  { id: 3, name: '农林牧渔', code: 'agriculture' },
+  { id: 4, name: '医疗卫生', code: 'medical' },
+];
+
 export default function SearchScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
 
+  // 搜索类型：bid-招标，winBid-中标
+  const [searchType, setSearchType] = useState<'bid' | 'winBid'>('bid');
+  
   const [keyword, setKeyword] = useState('');
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [industries, setIndustries] = useState<Industry[]>([]);
+  const [allProvinces, setAllProvinces] = useState<Province[]>([]);
+  const [allIndustries, setAllIndustries] = useState<Industry[]>([]);
   const [selectedProvince, setSelectedProvince] = useState<string>('');
-  const [selectedCity, setSelectedCity] = useState<string>('');
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [minBudget, setMinBudget] = useState('');
   const [maxBudget, setMaxBudget] = useState('');
@@ -67,19 +88,13 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  // 弹窗状态
+  const [provinceModalVisible, setProvinceModalVisible] = useState(false);
+  const [industryModalVisible, setIndustryModalVisible] = useState(false);
+
   useEffect(() => {
     fetchFilters();
   }, []);
-
-  useEffect(() => {
-    if (selectedProvince) {
-      fetchCities(selectedProvince);
-    } else {
-      setCities([]);
-      setSelectedCity('');
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProvince]);
 
   const fetchFilters = async () => {
     try {
@@ -92,31 +107,13 @@ export default function SearchScreen() {
       const industriesData = await industriesRes.json();
 
       if (provincesData.success) {
-        setProvinces(provincesData.data);
+        setAllProvinces(provincesData.data);
       }
       if (industriesData.success) {
-        setIndustries(industriesData.data);
+        setAllIndustries(industriesData.data);
       }
     } catch (error) {
       console.error('获取筛选数据失败:', error);
-    }
-  };
-
-  const fetchCities = async (provinceName: string) => {
-    try {
-      const province = provinces.find((p) => p.name === provinceName);
-      if (!province) return;
-
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/common/cities?provinceId=${province.id}`
-      );
-      const data = await res.json();
-
-      if (data.success) {
-        setCities(data.data);
-      }
-    } catch (error) {
-      console.error('获取城市数据失败:', error);
     }
   };
 
@@ -128,13 +125,13 @@ export default function SearchScreen() {
       const params = new URLSearchParams();
       if (keyword) params.append('keyword', keyword);
       if (selectedProvince) params.append('province', selectedProvince);
-      if (selectedCity) params.append('city', selectedCity);
       if (selectedIndustry) params.append('industry', selectedIndustry);
       if (minBudget) params.append('minBudget', minBudget);
       if (maxBudget) params.append('maxBudget', maxBudget);
 
+      const endpoint = searchType === 'bid' ? '/api/v1/bids' : '/api/v1/win-bids';
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}${endpoint}?${params.toString()}`
       );
       const data = await res.json();
 
@@ -164,37 +161,54 @@ export default function SearchScreen() {
     return `${date.getMonth() + 1}.${date.getDate()}`;
   };
 
-  const handleBidPress = (bidId: number) => {
-    router.push('/detail', { id: bidId });
+  const handleBidPress = useCallback((bidId: number) => {
+    if (searchType === 'bid') {
+      router.push('/detail', { id: bidId });
+    } else {
+      router.push('/win-bid-detail', { id: bidId });
+    }
+  }, [searchType, router]);
+
+  const handleProvinceSelect = (provinceName: string) => {
+    setSelectedProvince(provinceName === '全部' ? '' : provinceName);
+    setProvinceModalVisible(false);
   };
 
-  const renderFilterChips = (
-    items: { id: number; name: string }[],
-    selected: string,
-    onSelect: (value: string) => void
-  ) => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-      <TouchableOpacity
-        style={[styles.filterChip, !selected && styles.filterChipActive]}
-        onPress={() => onSelect('')}
-      >
-        <Text style={[styles.filterChipText, !selected && styles.filterChipTextActive]}>全部</Text>
-      </TouchableOpacity>
-      {items.map((item) => (
-        <TouchableOpacity
-          key={item.id}
-          style={[styles.filterChip, selected === item.name && styles.filterChipActive]}
-          onPress={() => onSelect(item.name)}
-        >
-          <Text style={[styles.filterChipText, selected === item.name && styles.filterChipTextActive]}>
-            {item.name}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+  const handleIndustrySelect = (industryName: string) => {
+    setSelectedIndustry(industryName === '全部' ? '' : industryName);
+    setIndustryModalVisible(false);
+  };
 
-  const renderResultItem = ({ item }: { item: Bid }) => (
+  const renderFilterChip = useCallback((
+    item: { id: number; name: string },
+    isSelected: boolean,
+    onPress: () => void,
+    isMore: boolean = false
+  ) => (
+    <TouchableOpacity
+      key={item.id}
+      style={[
+        styles.filterChip,
+        isSelected && styles.filterChipActive,
+        isMore && styles.filterChipMore,
+      ]}
+      onPress={onPress}
+    >
+      <Text style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}>
+        {isMore ? '更多' : item.name}
+      </Text>
+      {isMore && (
+        <FontAwesome6
+          name="chevron-down"
+          size={8}
+          color={isSelected ? '#FFFFFF' : '#6B7280'}
+          style={{ marginLeft: 4 }}
+        />
+      )}
+    </TouchableOpacity>
+  ), [styles]);
+
+  const renderResultItem = useCallback(({ item }: { item: Bid }) => (
     <TouchableOpacity style={styles.bidCard} onPress={() => handleBidPress(item.id)} activeOpacity={0.7}>
       <View style={styles.cardHeader}>
         <View style={styles.categoryTag}>
@@ -214,7 +228,26 @@ export default function SearchScreen() {
         <Text style={styles.bidMeta}>{formatDate(item.publish_date)}</Text>
       </View>
     </TouchableOpacity>
-  );
+  ), [styles, searchType, handleBidPress]);
+
+  const renderModalItem = useCallback((
+    item: { id: number; name: string },
+    isSelected: boolean,
+    onPress: () => void
+  ) => (
+    <TouchableOpacity
+      key={item.id}
+      style={[styles.modalItem, isSelected && styles.modalItemActive]}
+      onPress={onPress}
+    >
+      <Text style={[styles.modalItemText, isSelected && styles.modalItemTextActive]}>
+        {item.name}
+      </Text>
+      {isSelected && (
+        <FontAwesome6 name="check" size={14} color="#2563EB" />
+      )}
+    </TouchableOpacity>
+  ), [styles]);
 
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
@@ -224,7 +257,7 @@ export default function SearchScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <FontAwesome6 name="arrow-left" size={18} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>搜索招标</Text>
+          <Text style={styles.headerTitle}>搜索{searchType === 'bid' ? '招标' : '中标'}</Text>
           <View style={styles.headerRight} />
         </View>
         
@@ -251,26 +284,80 @@ export default function SearchScreen() {
       </View>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* 搜索类型切换 */}
+        <View style={styles.typeSection}>
+          <TouchableOpacity
+            style={[styles.typeTab, searchType === 'bid' && styles.typeTabActive]}
+            onPress={() => setSearchType('bid')}
+          >
+            <FontAwesome6
+              name="file-contract"
+              size={14}
+              color={searchType === 'bid' ? '#2563EB' : '#6B7280'}
+            />
+            <Text style={[styles.typeTabText, searchType === 'bid' && styles.typeTabTextActive]}>
+              招标信息
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.typeTab, searchType === 'winBid' && styles.typeTabActive]}
+            onPress={() => setSearchType('winBid')}
+          >
+            <FontAwesome6
+              name="trophy"
+              size={14}
+              color={searchType === 'winBid' ? '#2563EB' : '#6B7280'}
+            />
+            <Text style={[styles.typeTabText, searchType === 'winBid' && styles.typeTabTextActive]}>
+              中标信息
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* 筛选区域 */}
         <View style={styles.filterSection}>
           {/* 省份 */}
           <View style={styles.filterGroup}>
             <Text style={styles.filterLabel}>省份</Text>
-            {renderFilterChips(provinces, selectedProvince, setSelectedProvince)}
-          </View>
-
-          {/* 城市 */}
-          {selectedProvince && cities.length > 0 && (
-            <View style={styles.filterGroup}>
-              <Text style={styles.filterLabel}>城市</Text>
-              {renderFilterChips(cities, selectedCity, setSelectedCity)}
+            <View style={styles.filterScrollWrapper}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+                {POPULAR_PROVINCES.map((item) =>
+                  renderFilterChip(
+                    item,
+                    selectedProvince === item.name || (item.name === '全部' && !selectedProvince),
+                    () => handleProvinceSelect(item.name)
+                  )
+                )}
+                {renderFilterChip(
+                  { id: -1, name: '' },
+                  false,
+                  () => setProvinceModalVisible(true),
+                  true
+                )}
+              </ScrollView>
             </View>
-          )}
+          </View>
 
           {/* 行业 */}
           <View style={styles.filterGroup}>
             <Text style={styles.filterLabel}>行业</Text>
-            {renderFilterChips(industries, selectedIndustry, setSelectedIndustry)}
+            <View style={styles.filterScrollWrapper}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+                {POPULAR_INDUSTRIES.map((item) =>
+                  renderFilterChip(
+                    item,
+                    selectedIndustry === item.name || (item.name === '全部' && !selectedIndustry),
+                    () => handleIndustrySelect(item.name)
+                  )
+                )}
+                {renderFilterChip(
+                  { id: -1, name: '' },
+                  false,
+                  () => setIndustryModalVisible(true),
+                  true
+                )}
+              </ScrollView>
+            </View>
           </View>
 
           {/* 预算范围 */}
@@ -320,7 +407,7 @@ export default function SearchScreen() {
             ) : results.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <FontAwesome6 name="folder-open" size={48} color="#D1D5DB" />
-                <Text style={styles.emptyText}>未找到符合条件的招标信息</Text>
+                <Text style={styles.emptyText}>未找到符合条件的{searchType === 'bid' ? '招标' : '中标'}信息</Text>
                 <Text style={styles.emptyHint}>请尝试调整筛选条件</Text>
               </View>
             ) : (
@@ -336,6 +423,78 @@ export default function SearchScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* 省份选择弹窗 */}
+      <Modal
+        visible={provinceModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setProvinceModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setProvinceModalVisible(false)}
+        >
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>选择省份</Text>
+              <TouchableOpacity onPress={() => setProvinceModalVisible(false)}>
+                <FontAwesome6 name="xmark" size={18} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={[{ id: 0, name: '全部' }, ...allProvinces]}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) =>
+                renderModalItem(
+                  item,
+                  selectedProvince === item.name || (item.name === '全部' && !selectedProvince),
+                  () => handleProvinceSelect(item.name)
+                )
+              }
+              showsVerticalScrollIndicator={false}
+              style={styles.modalList}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* 行业选择弹窗 */}
+      <Modal
+        visible={industryModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIndustryModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setIndustryModalVisible(false)}
+        >
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>选择行业</Text>
+              <TouchableOpacity onPress={() => setIndustryModalVisible(false)}>
+                <FontAwesome6 name="xmark" size={18} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={[{ id: 0, name: '全部' }, ...allIndustries]}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) =>
+                renderModalItem(
+                  item,
+                  selectedIndustry === item.name || (item.name === '全部' && !selectedIndustry),
+                  () => handleIndustrySelect(item.name)
+                )
+              }
+              showsVerticalScrollIndicator={false}
+              style={styles.modalList}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </Screen>
   );
 }
