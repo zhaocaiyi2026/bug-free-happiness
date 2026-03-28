@@ -16,14 +16,14 @@ import { Spacing, BorderRadius } from '@/constants/theme';
 import { createStyles } from './styles';
 
 const categories = [
-  { id: 1, name: '建筑工程', icon: '🏗️', count: 1280, color: '#2563EB' },
-  { id: 2, name: 'IT服务', icon: '💻', count: 856, color: '#059669' },
-  { id: 3, name: '医疗设备', icon: '🏥', count: 432, color: '#DC2626' },
-  { id: 4, name: '教育培训', icon: '📚', count: 367, color: '#7C3AED' },
-  { id: 5, name: '交通运输', icon: '🚛', count: 298, color: '#EA580C' },
-  { id: 6, name: '环保能源', icon: '🌱', count: 245, color: '#16A34A' },
-  { id: 7, name: '政府采购', icon: '🏛️', count: 189, color: '#0891B2' },
-  { id: 8, name: '更多', icon: '📋', count: 0, color: '#6B7280' },
+  { id: 1, name: '建筑工程', icon: 'building', count: 1280, color: '#2563EB' },
+  { id: 2, name: 'IT服务', icon: 'laptop-code', count: 856, color: '#059669' },
+  { id: 3, name: '医疗设备', icon: 'hospital', count: 432, color: '#DC2626' },
+  { id: 4, name: '教育培训', icon: 'graduation-cap', count: 367, color: '#7C3AED' },
+  { id: 5, name: '交通运输', icon: 'truck', count: 298, color: '#EA580C' },
+  { id: 6, name: '环保能源', icon: 'leaf', count: 245, color: '#16A34A' },
+  { id: 7, name: '政府采购', icon: 'landmark', count: 189, color: '#0891B2' },
+  { id: 8, name: '更多', icon: 'ellipsis', count: 0, color: '#6B7280' },
 ];
 
 const hotTags = [
@@ -127,7 +127,7 @@ export default function DiscoverScreen() {
                   onPress={() => handleCategoryPress(category)}
                 >
                   <View style={[styles.categoryIcon, { backgroundColor: `${category.color}15` }]}>
-                    <Text style={styles.categoryIconText}>{category.icon}</Text>
+                    <FontAwesome6 name={category.icon} size={22} color={category.color} />
                   </View>
                   <Text style={styles.categoryName}>{category.name}</Text>
                   {category.count > 0 && (
@@ -151,7 +151,7 @@ export default function DiscoverScreen() {
                   onPress={() => handleTagPress(tag.name)}
                 >
                   <Text style={[styles.tagText, tag.isHot && styles.tagTextHot]}>
-                    {tag.isHot && '🔥 '}{tag.name}
+                    {tag.name}
                   </Text>
                 </TouchableOpacity>
               ))}
