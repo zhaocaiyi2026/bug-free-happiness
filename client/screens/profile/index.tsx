@@ -15,6 +15,9 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing, BorderRadius } from '@/constants/theme';
 import { createStyles } from './styles';
 import { useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const FAVORITE_VIEWED_KEY = 'favorite_last_viewed_count';
 
 interface User {
   id: number;
@@ -36,16 +39,33 @@ export default function ProfileScreen() {
 
   const [user, setUser] = useState<User | null>(null);
   const [favoriteCount, setFavoriteCount] = useState(0);
+  const [lastViewedFavoriteCount, setLastViewedFavoriteCount] = useState(0);
   const [historyCount, setHistoryCount] = useState(56);
   const [subscribeCount, setSubscribeCount] = useState(8);
   const [loading, setLoading] = useState(true);
+
+  // 计算是否有新的收藏需要提醒
+  const hasNewFavorite = favoriteCount > lastViewedFavoriteCount;
+  const newFavoriteCount = Math.max(0, favoriteCount - lastViewedFavoriteCount);
 
   // 使用 useFocusEffect 确保每次页面获得焦点时刷新数据
   useFocusEffect(
     useCallback(() => {
       fetchUserData();
+      fetchLastViewedCount();
     }, [])
   );
+
+  const fetchLastViewedCount = async () => {
+    try {
+      const lastCount = await AsyncStorage.getItem(FAVORITE_VIEWED_KEY);
+      if (lastCount) {
+        setLastViewedFavoriteCount(parseInt(lastCount, 10));
+      }
+    } catch (error) {
+      console.error('获取上次查看数量失败:', error);
+    }
+  };
 
   const fetchUserData = async () => {
     try {
@@ -83,9 +103,12 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleMenuPress = (menu: string) => {
+  const handleMenuPress = async (menu: string) => {
     switch (menu) {
       case 'favorites':
+        // 标记收藏为已查看
+        await AsyncStorage.setItem(FAVORITE_VIEWED_KEY, String(favoriteCount));
+        setLastViewedFavoriteCount(favoriteCount);
         router.navigate('/favorites');
         break;
       case 'history':
@@ -247,9 +270,9 @@ export default function ProfileScreen() {
                   <FontAwesome6 name="heart" size={18} color="#C8102E" />
                 </View>
                 <Text style={styles.menuText}>我的收藏</Text>
-                {favoriteCount > 0 && (
+                {newFavoriteCount > 0 && (
                   <View style={styles.menuBadge}>
-                    <Text style={styles.menuBadgeText}>{favoriteCount}</Text>
+                    <Text style={styles.menuBadgeText}>{newFavoriteCount > 99 ? '99+' : newFavoriteCount}</Text>
                   </View>
                 )}
                 <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
