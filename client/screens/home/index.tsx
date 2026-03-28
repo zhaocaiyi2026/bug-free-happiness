@@ -50,12 +50,13 @@ export default function HomeScreen() {
       tabStyle={{ width: 'auto', paddingHorizontal: Spacing.lg }}
       labelStyle={{
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: '600',
         textTransform: 'none',
       }}
       activeColor="#2563EB"
       inactiveColor="#9CA3AF"
       scrollEnabled={false}
+      pressColor="rgba(37, 99, 235, 0.1)"
     />
   );
 
@@ -74,7 +75,9 @@ export default function HomeScreen() {
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             {/* 应用名称 */}
-            <Text style={styles.appTitle}>招标通</Text>
+            <Text style={styles.appTitle}>
+              招标<Text style={styles.appTitleAccent}>通</Text>
+            </Text>
             {/* 右侧操作区 */}
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>

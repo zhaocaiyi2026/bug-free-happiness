@@ -12,6 +12,11 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.lg,
       paddingTop: Spacing.lg,
       paddingBottom: Spacing.md,
+      shadowColor: '#2563EB',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
     },
     headerTop: {
       flexDirection: 'row',
@@ -19,9 +24,13 @@ export const createStyles = (theme: Theme) => {
       justifyContent: 'space-between',
     },
     appTitle: {
-      fontSize: 24,
-      fontWeight: '700',
+      fontSize: 26,
+      fontWeight: '800',
       color: '#1C1917',
+      letterSpacing: -0.5,
+    },
+    appTitleAccent: {
+      color: '#2563EB',
     },
     headerActions: {
       flexDirection: 'row',
@@ -29,12 +38,24 @@ export const createStyles = (theme: Theme) => {
       gap: Spacing.sm,
     },
     iconButton: {
-      width: 40,
-      height: 40,
+      width: 42,
+      height: 42,
       borderRadius: BorderRadius.lg,
       backgroundColor: '#F5F5F5',
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    tabBar: {
+      backgroundColor: '#FFFFFF',
+      elevation: 0,
+      shadowOpacity: 0,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
+    },
+    tabIndicator: {
+      backgroundColor: '#2563EB',
+      height: 3,
+      borderRadius: 1.5,
     },
     filterBar: {
       flexDirection: 'row',
@@ -69,22 +90,33 @@ export const createStyles = (theme: Theme) => {
       padding: Spacing.md,
       paddingBottom: Spacing['5xl'],
     },
+    columnWrapper: {
+      justifyContent: 'space-between',
+      marginBottom: Spacing.md,
+    },
     gridContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: Spacing.md,
     },
     bidCard: {
-      width: '48%',
+      flex: 1,
       backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.md,
+      borderRadius: BorderRadius.lg,
       borderWidth: 1,
       borderColor: '#E5E7EB',
       padding: Spacing.md,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.04,
+      shadowRadius: 4,
+      elevation: 2,
     },
     bidCardUrgent: {
       borderColor: '#C8102E',
       borderWidth: 2,
+      shadowColor: '#C8102E',
+      shadowOpacity: 0.1,
     },
     cardHeader: {
       flexDirection: 'row',
@@ -95,7 +127,7 @@ export const createStyles = (theme: Theme) => {
     categoryTag: {
       backgroundColor: '#2563EB',
       paddingHorizontal: Spacing.sm,
-      paddingVertical: 2,
+      paddingVertical: 3,
       borderRadius: BorderRadius.xs,
     },
     categoryTagText: {
@@ -106,8 +138,11 @@ export const createStyles = (theme: Theme) => {
     urgentTag: {
       backgroundColor: '#C8102E',
       paddingHorizontal: Spacing.sm,
-      paddingVertical: 2,
+      paddingVertical: 3,
       borderRadius: BorderRadius.xs,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
     },
     urgentTagText: {
       fontSize: 10,
@@ -123,19 +158,20 @@ export const createStyles = (theme: Theme) => {
     },
     bidBudget: {
       fontSize: 18,
-      fontWeight: '700',
-      color: '#1C1917',
+      fontWeight: '800',
+      color: '#2563EB',
       marginBottom: Spacing.xs,
     },
     bidMeta: {
-      fontSize: 11,
-      color: '#9CA3AF',
+      fontSize: 12,
+      color: '#6B7280',
       lineHeight: 16,
     },
     bidDeadline: {
       fontSize: 11,
       color: '#C8102E',
       marginTop: Spacing.xs,
+      fontWeight: '500',
     },
     loadingContainer: {
       flex: 1,
@@ -154,20 +190,34 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       paddingVertical: Spacing['5xl'],
     },
+    emptyIcon: {
+      marginBottom: Spacing.md,
+    },
     emptyText: {
       fontSize: 14,
       color: '#9CA3AF',
     },
-    tabBar: {
+    statsBar: {
+      flexDirection: 'row',
       backgroundColor: '#FFFFFF',
-      elevation: 0,
-      shadowOpacity: 0,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      justifyContent: 'space-around',
       borderBottomWidth: 1,
       borderBottomColor: '#E5E7EB',
     },
-    tabIndicator: {
-      backgroundColor: '#2563EB',
-      height: 2,
+    statItem: {
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#2563EB',
+    },
+    statLabel: {
+      fontSize: 11,
+      color: '#9CA3AF',
+      marginTop: 2,
     },
   });
 };

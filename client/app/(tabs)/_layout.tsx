@@ -16,22 +16,24 @@ export default function TabLayout() {
           backgroundColor: '#FFFFFF',
           borderTopColor: '#E5E7EB',
           borderTopWidth: 1,
-          height: Platform.OS === 'web' ? 60 : 50 + insets.bottom,
+          height: Platform.OS === 'web' ? 64 : 54 + insets.bottom,
           paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom,
+          paddingTop: Platform.OS === 'web' ? 8 : 6,
           elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
+          shadowColor: '#2563EB',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 12,
         },
         tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#9CA3AF',
         tabBarItemStyle: {
-          height: Platform.OS === 'web' ? 60 : undefined,
+          height: Platform.OS === 'web' ? 64 : undefined,
+          gap: 2,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '500',
+          fontSize: 11,
+          fontWeight: '600',
           marginTop: 2,
         },
       }}
@@ -40,26 +42,26 @@ export default function TabLayout() {
         name="index"
         options={{
           title: '首页',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="house" size={20} color={color} solid />
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome6 name="house" size={20} color={color} solid={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="discover"
         options={{
-          title: '搜索',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="magnifying-glass" size={20} color={color} />
+          title: '发现',
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome6 name="compass" size={20} color={color} solid={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="favorites"
+        name="messages"
         options={{
-          title: '收藏',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="heart" size={20} color={color} />
+          title: '消息',
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome6 name="bell" size={20} color={color} solid={focused} />
           ),
         }}
       />
@@ -67,8 +69,8 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: '我的',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="user" size={20} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome6 name="user" size={20} color={color} solid={focused} />
           ),
         }}
       />
