@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
@@ -14,6 +15,11 @@ import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_GAP = Spacing.sm;
+const CARD_MARGIN = Spacing.sm;
+const CARD_WIDTH = (SCREEN_WIDTH - CARD_MARGIN * 2 - CARD_GAP) / 2;
 
 interface Bid {
   id: number;
@@ -29,12 +35,6 @@ interface Bid {
   view_count: number;
 }
 
-interface Stats {
-  todayCount: number;
-  urgentCount: number;
-  nearbyCount: number;
-}
-
 export default function HomeScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -42,7 +42,6 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
 
   const [bids, setBids] = useState<Bid[]>([]);
-  const [stats, setStats] = useState<Stats>({ todayCount: 0, urgentCount: 0, nearbyCount: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
@@ -81,12 +80,6 @@ export default function HomeScreen() {
       if (data.success) {
         if (pageNum === 1) {
           setBids(data.data.list);
-          // 模拟统计数据
-          setStats({
-            todayCount: data.data.total || 156,
-            urgentCount: data.data.list.filter((b: Bid) => b.is_urgent).length || 12,
-            nearbyCount: Math.floor((data.data.total || 156) * 0.3),
-          });
         } else {
           setBids((prev) => [...prev, ...data.data.list]);
         }
@@ -135,7 +128,7 @@ export default function HomeScreen() {
   const formatBudget = (budget: number | null) => {
     if (!budget) return '面议';
     if (budget >= 100000000) {
-      return `${(budget / 100000000).toFixed(2)}亿`;
+      return `${(budget / 100000000).toFixed(1)}亿`;
     } else if (budget >= 10000) {
       return `${(budget / 10000).toFixed(0)}万`;
     }
@@ -150,19 +143,24 @@ export default function HomeScreen() {
     return `${month}/${day}`;
   };
 
-  const renderBidItem = useCallback(({ item }: { item: Bid }) => (
+  const renderBidItem = useCallback(({ item, index }: { item: Bid; index: number }) => (
     <TouchableOpacity
-      style={[styles.bidCard, item.is_urgent && styles.bidCardUrgent]}
+      style={[
+        styles.bidCard,
+        item.is_urgent && styles.bidCardUrgent,
+        { width: CARD_WIDTH - 4 }
+      ]}
       onPress={() => handleBidPress(item.id)}
       activeOpacity={0.7}
     >
-      <View style={styles.bidCardHeader}>
+      <View style={styles.cardHeader}>
         <View style={styles.categoryTag}>
-          <Text style={styles.categoryTagText}>{item.industry?.slice(0, 6) || '项目招标'}</Text>
+          <Text style={styles.categoryTagText} numberOfLines={1}>
+            {item.industry?.slice(0, 4) || '项目'}
+          </Text>
         </View>
         {item.is_urgent && (
           <View style={styles.urgentTag}>
-            <FontAwesome6 name="bolt" size={9} color="#FFFFFF" />
             <Text style={styles.urgentTagText}>紧急</Text>
           </View>
         )}
@@ -171,57 +169,10 @@ export default function HomeScreen() {
         {item.title}
       </Text>
       <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
-      <View style={styles.bidFooter}>
-        <Text style={styles.bidMeta}>{item.province} · {item.city}</Text>
-        <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>
-      </View>
+      <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
+      <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>
     </TouchableOpacity>
-  ), [styles]);
-
-  const ListHeaderComponent = useMemo(() => (
-    <>
-      {/* 今日数据概览 */}
-      <View style={styles.statsCard}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{stats.todayCount}</Text>
-          <Text style={styles.statLabel}>今日新增</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, styles.statValueRed]}>{stats.urgentCount}</Text>
-          <Text style={styles.statLabel}>紧急招标</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{stats.nearbyCount}</Text>
-          <Text style={styles.statLabel}>本省项目</Text>
-        </View>
-      </View>
-
-      {/* 快捷筛选 */}
-      <View style={styles.filterSection}>
-        <View style={styles.filterContainer}>
-          {filters.map((filter) => (
-            <TouchableOpacity
-              key={filter.key}
-              style={[styles.filterChip, activeFilter === filter.key && styles.filterChipActive]}
-              onPress={() => handleFilterPress(filter.key)}
-            >
-              <Text style={[styles.filterChipText, activeFilter === filter.key && styles.filterChipTextActive]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* 列表标题 */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>最新招标</Text>
-        <TouchableOpacity>
-          <Text style={styles.sectionMore}>更多</Text>
-        </TouchableOpacity>
-      </View>
-    </>
-  ), [stats, activeFilter, styles]);
+  ), [styles, CARD_WIDTH]);
 
   if (loading && page === 1) {
     return (
@@ -233,17 +184,13 @@ export default function HomeScreen() {
             </Text>
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
-                <FontAwesome6 name="magnifying-glass" size={18} color="#1C1917" />
+                <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton} onPress={handleFavoritePress}>
-                <FontAwesome6 name="heart" size={18} color="#C8102E" />
+                <FontAwesome6 name="heart" size={16} color="#C8102E" />
               </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
-            <FontAwesome6 name="magnifying-glass" size={16} color="#9CA3AF" />
-            <Text style={styles.searchPlaceholder}>搜索招标信息、行业...</Text>
-          </TouchableOpacity>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
@@ -256,7 +203,7 @@ export default function HomeScreen() {
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
       <View style={{ flex: 1 }}>
-        {/* Header */}
+        {/* Header - 紧凑型 */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <Text style={styles.appTitle}>
@@ -264,28 +211,46 @@ export default function HomeScreen() {
             </Text>
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
-                <FontAwesome6 name="magnifying-glass" size={18} color="#1C1917" />
+                <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton} onPress={handleFavoritePress}>
-                <FontAwesome6 name="heart" size={18} color="#C8102E" />
+                <FontAwesome6 name="heart" size={16} color="#C8102E" />
               </TouchableOpacity>
             </View>
           </View>
           <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
-            <FontAwesome6 name="magnifying-glass" size={16} color="#9CA3AF" />
+            <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
             <Text style={styles.searchPlaceholder}>搜索招标信息、行业...</Text>
           </TouchableOpacity>
         </View>
 
-        {/* 招标列表 */}
+        {/* 筛选条 */}
+        <View style={styles.filterSection}>
+          <View style={styles.filterContainer}>
+            {filters.map((filter) => (
+              <TouchableOpacity
+                key={filter.key}
+                style={[styles.filterChip, activeFilter === filter.key && styles.filterChipActive]}
+                onPress={() => handleFilterPress(filter.key)}
+              >
+                <Text style={[styles.filterChipText, activeFilter === filter.key && styles.filterChipTextActive]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* 双列网格招标列表 */}
         <FlatList
-          key="home-bids-list"
+          key="home-bids-grid"
           data={bids}
           renderItem={renderBidItem}
           keyExtractor={(item) => String(item.id)}
+          numColumns={2}
+          columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={ListHeaderComponent}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -298,13 +263,13 @@ export default function HomeScreen() {
           onEndReachedThreshold={0.5}
           ListFooterComponent={
             loading && page > 1 ? (
-              <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: Spacing.lg }} />
+              <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: Spacing.md }} />
             ) : null
           }
           ListEmptyComponent={
             !loading ? (
               <View style={styles.emptyContainer}>
-                <FontAwesome6 name="folder-open" size={48} color="#D1D5DB" style={styles.emptyIcon} />
+                <FontAwesome6 name="folder-open" size={40} color="#D1D5DB" style={styles.emptyIcon} />
                 <Text style={styles.emptyText}>暂无招标信息</Text>
               </View>
             ) : null
