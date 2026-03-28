@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
-  ScrollView,
   Text,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
@@ -36,9 +37,11 @@ export default function FavoritesScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
+  const insets = useSafeAreaInsets();
 
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [userId] = useState(1);
 
   useEffect(() => {
@@ -59,68 +62,158 @@ export default function FavoritesScreen() {
       console.error('获取收藏列表失败:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchFavorites();
   };
 
   const handleBidPress = (bidId: number) => {
     router.push('/detail', { id: bidId });
   };
 
-  const handleRemoveFavorite = async (bidId: number) => {
-    try {
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites/${bidId}?userId=${userId}`,
-        { method: 'DELETE' }
-      );
-      const data = await res.json();
+  const handleRemoveFavorite = async (bidId: number, title: string) => {
+    Alert.alert('取消收藏', `确定要取消收藏「${title.slice(0, 20)}...」吗？`, [
+      { text: '取消', style: 'cancel' },
+      {
+        text: '确定',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const res = await fetch(
+              `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites/${bidId}?userId=${userId}`,
+              { method: 'DELETE' }
+            );
+            const data = await res.json();
 
-      if (data.success) {
-        setFavorites(favorites.filter((f) => f.bids.id !== bidId));
-        Alert.alert('成功', '已取消收藏');
-      }
-    } catch (error) {
-      console.error('取消收藏失败:', error);
-    }
+            if (data.success) {
+              setFavorites(favorites.filter((f) => f.bids.id !== bidId));
+            }
+          } catch (error) {
+            console.error('取消收藏失败:', error);
+            Alert.alert('错误', '取消收藏失败，请重试');
+          }
+        },
+      },
+    ]);
   };
 
   const formatBudget = (budget: number | null) => {
-    if (!budget) return '预算面议';
+    if (!budget) return '面议';
     if (budget >= 100000000) {
-      return `${(budget / 100000000).toFixed(2)}亿元`;
+      return `${(budget / 100000000).toFixed(1)}亿`;
     } else if (budget >= 10000) {
-      return `${(budget / 10000).toFixed(0)}万元`;
+      return `${(budget / 10000).toFixed(0)}万`;
     }
-    return `${budget}元`;
+    return `${budget}`;
   };
 
-  const formatDate = (dateStr: string | null) => {
+  const formatDeadline = (dateStr: string | null) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}/${day}`;
   };
+
+  const renderFavoriteItem = useCallback(({ item }: { item: Favorite }) => (
+    <TouchableOpacity
+      style={[styles.bidCard, item.bids.is_urgent && styles.bidCardUrgent]}
+      onPress={() => handleBidPress(item.bids.id)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.categoryTag}>
+          <Text style={styles.categoryTagText} numberOfLines={1}>
+            {item.bids.industry?.slice(0, 4) || '项目'}
+          </Text>
+        </View>
+        {item.bids.is_urgent && (
+          <View style={styles.urgentTag}>
+            <Text style={styles.urgentTagText}>紧急</Text>
+          </View>
+        )}
+        <TouchableOpacity
+          style={styles.removeButton}
+          onPress={() => handleRemoveFavorite(item.bids.id, item.bids.title)}
+        >
+          <FontAwesome6 name="heart-crack" size={14} color="#C8102E" />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.bidTitle} numberOfLines={2}>
+        {item.bids.title}
+      </Text>
+      <Text style={styles.bidBudget}>{formatBudget(item.bids.budget)}元</Text>
+      <View style={styles.bidFooter}>
+        <Text style={styles.bidMeta} numberOfLines={1}>{item.bids.province} · {item.bids.city}</Text>
+        <Text style={styles.bidDeadline}>截止 {formatDeadline(item.bids.deadline)}</Text>
+      </View>
+    </TouchableOpacity>
+  ), [styles]);
 
   if (loading) {
     return (
-      <Screen backgroundColor="#FAF9F6" statusBarStyle="dark">
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>我的收藏</Text>
+            <View style={{ width: 36 }} />
+          </View>
+        </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#000000" />
+          <ActivityIndicator size="large" color="#2563EB" />
         </View>
       </Screen>
     );
   }
 
   return (
-    <Screen backgroundColor="#FAF9F6" statusBarStyle="dark">
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>我的收藏</Text>
-          <Text style={styles.headerSubtitle}>共 {favorites.length} 条收藏</Text>
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+      <View style={{ flex: 1 }}>
+        {/* Header */}
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>我的收藏</Text>
+            <Text style={styles.headerCount}>{favorites.length}条</Text>
+          </View>
         </View>
 
-        <View style={styles.content}>
-          {favorites.length === 0 ? (
+        {/* 统计条 */}
+        <View style={styles.statsBar}>
+          <View style={styles.statsItem}>
+            <FontAwesome6 name="heart" size={14} color="#C8102E" />
+            <Text style={styles.statsText}>共 {favorites.length} 条收藏</Text>
+          </View>
+        </View>
+
+        {/* 收藏列表 */}
+        <FlatList
+          key="favorites-list"
+          data={favorites}
+          renderItem={renderFavoriteItem}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#2563EB']}
+              tintColor="#2563EB"
+            />
+          }
+          ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <FontAwesome6 name="heart" size={48} color="#E5E5E5" />
+              <FontAwesome6 name="heart" size={48} color="#D1D5DB" style={styles.emptyIcon} />
               <Text style={styles.emptyText}>暂无收藏</Text>
               <TouchableOpacity
                 style={styles.emptyButton}
@@ -129,34 +222,9 @@ export default function FavoritesScreen() {
                 <Text style={styles.emptyButtonText}>去浏览招标信息</Text>
               </TouchableOpacity>
             </View>
-          ) : (
-            favorites.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.bidCard}
-                onPress={() => handleBidPress(item.bids.id)}
-              >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={styles.bidCategory}>{item.bids.industry || '综合'}</Text>
-                  <TouchableOpacity onPress={() => handleRemoveFavorite(item.bids.id)}>
-                    <FontAwesome6 name="heart-crack" size={16} color="#C8102E" />
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.bidTitle} numberOfLines={2}>
-                  {item.bids.title}
-                </Text>
-                <View style={styles.bidMetaRow}>
-                  <Text style={styles.bidMetaItem}>
-                    {item.bids.province} {item.bids.city}
-                  </Text>
-                  <Text style={styles.bidMetaItem}>截止 {formatDate(item.bids.deadline)}</Text>
-                </View>
-                <Text style={styles.bidBudget}>{formatBudget(item.bids.budget)}</Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-      </ScrollView>
+          }
+        />
+      </View>
     </Screen>
   );
 }
