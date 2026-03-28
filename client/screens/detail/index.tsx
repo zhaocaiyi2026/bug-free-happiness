@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
@@ -159,6 +160,41 @@ export default function DetailScreen() {
     return diff > 0 ? diff : 0;
   };
 
+  // 拨打电话
+  const handleCall = (phone: string) => {
+    if (!phone || phone === '暂无') {
+      Alert.alert('提示', '暂无联系电话');
+      return;
+    }
+    
+    Alert.alert(
+      '拨打电话',
+      `确定拨打 ${phone}？`,
+      [
+        { text: '取消', style: 'cancel' },
+        { 
+          text: '拨打', 
+          style: 'default',
+          onPress: () => {
+            const phoneUrl = `tel:${phone}`;
+            Linking.canOpenURL(phoneUrl)
+              .then((supported) => {
+                if (supported) {
+                  Linking.openURL(phoneUrl);
+                } else {
+                  Alert.alert('错误', '无法拨打电话');
+                }
+              })
+              .catch((err) => {
+                console.error('拨打电话失败:', err);
+                Alert.alert('错误', '拨打电话失败');
+              });
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
@@ -288,8 +324,12 @@ export default function DetailScreen() {
               <Text style={styles.contactValue}>{bid.contact_person || '暂无'}</Text>
             </View>
 
-            {/* 联系电话 */}
-            <View style={styles.contactRow}>
+            {/* 联系电话 - 可点击拨打 */}
+            <TouchableOpacity 
+              style={styles.contactRow}
+              onPress={() => handleCall(bid.contact_phone || '')}
+              activeOpacity={0.7}
+            >
               <View style={styles.contactIconWrap}>
                 <FontAwesome6 name="phone" size={12} color="#059669" />
               </View>
@@ -297,7 +337,12 @@ export default function DetailScreen() {
               <Text style={[styles.contactValue, styles.contactPhone]}>
                 {bid.contact_phone || '暂无'}
               </Text>
-            </View>
+              {bid.contact_phone && (
+                <View style={styles.callButton}>
+                  <FontAwesome6 name="phone-volume" size={12} color="#FFFFFF" />
+                </View>
+              )}
+            </TouchableOpacity>
 
             {/* 电子邮箱 */}
             <View style={styles.contactRow}>

@@ -28,6 +28,7 @@ export default function RootLayout() {
           }}>
             <Stack.Screen name="(tabs)" options={{ title: "" }} />
             <Stack.Screen name="detail" options={{ title: "招标详情" }} />
+            <Stack.Screen name="win-bid-detail" options={{ title: "中标详情" }} />
             <Stack.Screen name="bidList" options={{ title: "招标列表" }} />
             <Stack.Screen name="search" options={{ title: "搜索" }} />
             <Stack.Screen name="favorites" options={{ title: "我的收藏" }} />

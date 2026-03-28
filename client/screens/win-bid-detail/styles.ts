@@ -8,11 +8,11 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#F5F5F5',
     },
     scrollContent: {
-      paddingBottom: 80,
+      paddingBottom: 100,
     },
-    // 紧凑型 Header
+    // Header
     header: {
-      backgroundColor: '#2563EB',
+      backgroundColor: '#059669',
       paddingHorizontal: Spacing.lg,
       paddingTop: Spacing.md,
       paddingBottom: Spacing.lg,
@@ -70,17 +70,17 @@ export const createStyles = (theme: Theme) => {
       color: '#FFFFFF',
       fontWeight: '600',
     },
-    urgentTag: {
-      backgroundColor: '#C8102E',
+    winTag: {
+      backgroundColor: '#FFFFFF',
       paddingHorizontal: Spacing.sm,
       paddingVertical: 2,
       borderRadius: 4,
       flexDirection: 'row',
       alignItems: 'center',
     },
-    urgentTagText: {
+    winTagText: {
       fontSize: 10,
-      color: '#FFFFFF',
+      color: '#059669',
       fontWeight: '700',
       marginLeft: 2,
     },
@@ -90,7 +90,7 @@ export const createStyles = (theme: Theme) => {
       color: '#FFFFFF',
       lineHeight: 26,
     },
-    // 核心信息卡片 - 紧凑型
+    // 核心信息卡片
     coreInfoCard: {
       backgroundColor: '#FFFFFF',
       marginHorizontal: Spacing.md,
@@ -103,7 +103,7 @@ export const createStyles = (theme: Theme) => {
       shadowRadius: 6,
       elevation: 2,
     },
-    budgetRow: {
+    amountRow: {
       flexDirection: 'row',
       alignItems: 'baseline',
       justifyContent: 'center',
@@ -111,22 +111,22 @@ export const createStyles = (theme: Theme) => {
       borderBottomWidth: 1,
       borderBottomColor: '#F3F4F6',
     },
-    budgetLabel: {
+    amountLabel: {
       fontSize: 12,
       color: '#6B7280',
       marginRight: Spacing.sm,
     },
-    budgetValue: {
+    amountValue: {
       fontSize: 26,
       fontWeight: '800',
-      color: '#2563EB',
+      color: '#059669',
     },
-    budgetUnit: {
+    amountUnit: {
       fontSize: 14,
-      color: '#2563EB',
+      color: '#059669',
       fontWeight: '600',
     },
-    // 信息网格 - 紧凑型
+    // 信息网格
     infoGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -134,11 +134,6 @@ export const createStyles = (theme: Theme) => {
     },
     infoItem: {
       width: '50%',
-      paddingVertical: Spacing.sm,
-      paddingHorizontal: Spacing.xs,
-    },
-    infoItemFull: {
-      width: '100%',
       paddingVertical: Spacing.sm,
       paddingHorizontal: Spacing.xs,
     },
@@ -160,10 +155,7 @@ export const createStyles = (theme: Theme) => {
       color: '#1C1917',
       fontWeight: '500',
     },
-    infoValueRed: {
-      color: '#C8102E',
-    },
-    // 项目详情
+    // 区块卡片
     sectionCard: {
       backgroundColor: '#FFFFFF',
       marginHorizontal: Spacing.md,
@@ -180,7 +172,7 @@ export const createStyles = (theme: Theme) => {
       width: 24,
       height: 24,
       borderRadius: 6,
-      backgroundColor: 'rgba(37,99,235,0.1)',
+      backgroundColor: 'rgba(5,150,105,0.1)',
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: Spacing.sm,
@@ -227,7 +219,7 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '500',
     },
     contactPhone: {
-      color: '#2563EB',
+      color: '#059669',
     },
     callButton: {
       backgroundColor: '#059669',
@@ -256,7 +248,7 @@ export const createStyles = (theme: Theme) => {
       fontSize: 12,
       color: '#6B7280',
     },
-    // 底部操作栏 - 紧凑型
+    // 底部操作栏
     bottomBar: {
       position: 'absolute',
       bottom: 0,
@@ -280,7 +272,7 @@ export const createStyles = (theme: Theme) => {
       marginHorizontal: Spacing.xs,
     },
     primaryButton: {
-      backgroundColor: '#2563EB',
+      backgroundColor: '#059669',
     },
     secondaryButton: {
       backgroundColor: '#F5F5F5',
