@@ -473,14 +473,6 @@ export default function HomeScreen() {
                 <Text style={[styles.appTitle, styles.appTitleAccent]}>通</Text>
               </View>
             </View>
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
-                <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={handleFavoritePress}>
-                <FontAwesome6 name="heart" size={16} color="#C8102E" />
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
         <View style={styles.loadingContainer}>
@@ -505,14 +497,6 @@ export default function HomeScreen() {
                 <Text style={styles.appTitle}>招标</Text>
                 <Text style={[styles.appTitle, styles.appTitleAccent]}>通</Text>
               </View>
-            </View>
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
-                <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={handleFavoritePress}>
-                <FontAwesome6 name="heart" size={16} color="#C8102E" />
-              </TouchableOpacity>
             </View>
           </View>
           <View style={styles.searchRow}>
