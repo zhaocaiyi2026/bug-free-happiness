@@ -129,7 +129,26 @@ export default function MessagesScreen() {
   };
 
   const handleCategoryPress = (category: MessageCategory) => {
-    router.push('/message-list', { category: category.key });
+    switch (category.key) {
+      case 'deadline':
+        // 招标截止提醒 → 跳转到紧急招标列表
+        router.push('/bidList', { type: 'urgent' });
+        break;
+      case 'winbid':
+        // 中标公告提醒 → 跳转到中标列表
+        router.push('/bidList', { type: 'win' });
+        break;
+      case 'match':
+        // 新招标匹配 → 跳转到今日新增列表
+        router.push('/bidList', { type: 'today' });
+        break;
+      case 'system':
+        // 系统通知 → 跳转到消息列表
+        router.push('/message-list', { category: category.key });
+        break;
+      default:
+        router.push('/message-list', { category: category.key });
+    }
   };
 
   const formatTime = (dateStr: string) => {
@@ -238,7 +257,7 @@ export default function MessagesScreen() {
         <View style={styles.tipsCard}>
           <FontAwesome6 name="lightbulb" size={16} color="#F59E0B" />
           <Text style={styles.tipsText}>
-            点击分类查看详情，长按消息可删除
+            点击分类查看相关项目列表
           </Text>
         </View>
       </ScrollView>
