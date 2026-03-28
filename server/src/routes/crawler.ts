@@ -15,7 +15,8 @@ import {
   getAvailableParsers,
 } from '@/crawler';
 import { generateBids } from '@/crawler/mock-generator';
-import { saveBids } from '@/crawler/storage';
+import { generateWinBids } from '@/crawler/win-bid-generator';
+import { saveBids, saveWinBids } from '@/crawler/storage';
 
 const router = Router();
 
@@ -200,6 +201,42 @@ router.post('/generate', async (req, res) => {
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : '生成数据失败',
+    });
+  }
+});
+
+/**
+ * 生成中标信息数据（开发测试用）
+ * POST /api/v1/crawler/generate-win-bids
+ * Body参数：count (生成数量，默认30)
+ */
+router.post('/generate-win-bids', async (req, res) => {
+  try {
+    const { count = 30 } = req.body;
+    
+    console.log(`[Crawler] Generating ${count} mock win bids...`);
+    
+    // 生成模拟数据
+    const winBids = generateWinBids(count);
+    
+    // 保存到数据库
+    const result = await saveWinBids(winBids);
+    
+    res.json({
+      success: true,
+      data: {
+        generated: count,
+        saved: result.saved,
+        duplicates: result.duplicates,
+        errors: result.errors,
+      },
+      message: `成功生成 ${result.saved} 条中标信息`,
+    });
+  } catch (error) {
+    console.error('[Crawler] Generate win bids error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : '生成中标数据失败',
     });
   }
 });

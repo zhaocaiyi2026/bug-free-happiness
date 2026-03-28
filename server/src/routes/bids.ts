@@ -49,6 +49,8 @@ router.get('/', async (req, res) => {
       .not('contact_person', 'is', null)
       .not('contact_phone', 'is', null)
       .not('project_location', 'is', null)
+      // 过滤已截止的招标（截止时间大于当前时间）
+      .gt('deadline', new Date().toISOString())
       .order('is_urgent', { ascending: false })
       .order('publish_date', { ascending: false });
 

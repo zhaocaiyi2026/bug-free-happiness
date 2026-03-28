@@ -8,11 +8,12 @@
  */
 
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import type { BidInfo } from './types';
+import type { BidInfo, WinBidInfo } from './types';
 import { CRAWLER_CONFIG, INDUSTRY_MAPPING, PROVINCE_MAPPING } from './config';
 
 // 去重缓存（运行时内存缓存）
 const dedupCache = new Set<string>();
+const winBidDedupCache = new Set<string>();
 
 /**
  * 生成去重键
@@ -258,5 +259,181 @@ export async function getCrawlerStats(): Promise<{
  */
 export function clearDedupCache(): void {
   dedupCache.clear();
+  winBidDedupCache.clear();
   console.log('[Storage] Dedup cache cleared');
+}
+
+// ============== 中标信息存储 ==============
+
+/**
+ * 生成中标信息去重键
+ */
+function generateWinBidDedupKey(winBid: WinBidInfo): string {
+  const normalizedTitle = winBid.title
+    .toLowerCase()
+    .replace(/[\s\-_]/g, '')
+    .slice(0, 100);
+  
+  return `${winBid.source}:${normalizedTitle}:${winBid.winCompany || ''}`;
+}
+
+/**
+ * 检查中标信息是否已存在
+ */
+async function winBidExistsInDatabase(winBid: WinBidInfo): Promise<boolean> {
+  const client = getSupabaseClient();
+  
+  const { data, error } = await client
+    .from('win_bids')
+    .select('id')
+    .eq('title', winBid.title)
+    .eq('win_company', winBid.winCompany || '')
+    .maybeSingle();
+  
+  if (error) {
+    console.error('[Storage] Error checking win_bid existence:', error);
+    return false;
+  }
+  
+  return !!data;
+}
+
+/**
+ * 批量保存中标信息
+ */
+export async function saveWinBids(winBids: WinBidInfo[]): Promise<{
+  total: number;
+  saved: number;
+  duplicates: number;
+  errors: number;
+}> {
+  const client = getSupabaseClient();
+  const result = {
+    total: winBids.length,
+    saved: 0,
+    duplicates: 0,
+    errors: 0,
+  };
+
+  if (winBids.length === 0) {
+    return result;
+  }
+
+  // 去重过滤
+  const uniqueWinBids: WinBidInfo[] = [];
+  
+  for (const winBid of winBids) {
+    const key = generateWinBidDedupKey(winBid);
+    
+    // 内存缓存去重
+    if (winBidDedupCache.has(key)) {
+      result.duplicates++;
+      continue;
+    }
+    
+    // 数据库去重
+    const exists = await winBidExistsInDatabase(winBid);
+    if (exists) {
+      winBidDedupCache.add(key);
+      result.duplicates++;
+      continue;
+    }
+    
+    uniqueWinBids.push(winBid);
+    winBidDedupCache.add(key);
+  }
+
+  console.log(`[Storage] Unique win_bids: ${uniqueWinBids.length}, Duplicates: ${result.duplicates}`);
+
+  // 批量插入
+  const batchSize = CRAWLER_CONFIG.data.batchSize;
+  
+  for (let i = 0; i < uniqueWinBids.length; i += batchSize) {
+    const batch = uniqueWinBids.slice(i, i + batchSize);
+    
+    const records = batch.map(winBid => ({
+      title: winBid.title,
+      content: winBid.content || null,
+      win_amount: winBid.winAmount || null,
+      province: winBid.province || null,
+      city: winBid.city || null,
+      industry: normalizeIndustry(winBid.industry) || null,
+      bid_type: winBid.bidType || null,
+      // 中标单位信息
+      win_company: winBid.winCompany || null,
+      win_company_address: winBid.winCompanyAddress || null,
+      win_company_phone: winBid.winCompanyPhone || null,
+      // 项目信息
+      project_location: winBid.projectLocation || null,
+      // 日期
+      win_date: winBid.winDate || null,
+      publish_date: winBid.publishDate || null,
+      // 来源
+      source: winBid.source,
+      source_url: winBid.sourceUrl,
+      view_count: 0,
+    }));
+
+    const { error } = await client
+      .from('win_bids')
+      .insert(records);
+
+    if (error) {
+      console.error('[Storage] Win bid batch insert error:', error);
+      result.errors += batch.length;
+    } else {
+      result.saved += batch.length;
+    }
+  }
+
+  console.log(`[Storage] Win bids saved: ${result.saved}, Errors: ${result.errors}`);
+
+  return result;
+}
+
+/**
+ * 获取中标信息统计
+ */
+export async function getWinBidStats(): Promise<{
+  total: number;
+  todayCount: number;
+  topCompanies: Array<{ company: string; count: number }>;
+}> {
+  const client = getSupabaseClient();
+  const today = new Date().toISOString().split('T')[0];
+  
+  // 总数
+  const { count: total } = await client
+    .from('win_bids')
+    .select('*', { count: 'exact', head: true });
+  
+  // 今日新增
+  const { count: todayCount } = await client
+    .from('win_bids')
+    .select('*', { count: 'exact', head: true })
+    .gte('created_at', today);
+  
+  // 按中标单位统计
+  const { data: companyData } = await client
+    .from('win_bids')
+    .select('win_company');
+  
+  const companyStats = new Map<string, number>();
+  companyData?.forEach(item => {
+    if (item.win_company) {
+      const count = companyStats.get(item.win_company) || 0;
+      companyStats.set(item.win_company, count + 1);
+    }
+  });
+  
+  const topCompanies = Array.from(companyStats.entries())
+    .map(([company, count]) => ({ company, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+  
+  return {
+    total: total || 0,
+    todayCount: todayCount || 0,
+    topCompanies,
+  };
 }

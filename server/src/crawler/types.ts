@@ -34,6 +34,29 @@ export interface BidInfo {
   openBidLocation?: string;   // 开标地点
 }
 
+// 中标信息结构
+export interface WinBidInfo {
+  title: string;              // 中标标题
+  content?: string;           // 中标内容
+  winAmount?: number;         // 中标金额
+  province?: string;          // 省份
+  city?: string;              // 城市
+  industry?: string;          // 行业分类
+  bidType?: string;           // 招标方式
+  // 中标单位信息
+  winCompany?: string;        // 中标单位名称
+  winCompanyAddress?: string; // 中标单位地址
+  winCompanyPhone?: string;   // 中标单位电话
+  // 项目信息
+  projectLocation?: string;   // 项目地点
+  // 日期
+  winDate?: string;           // 中标日期
+  publishDate?: string;       // 公告日期
+  // 来源
+  source: string;             // 来源网站名称
+  sourceUrl: string;          // 来源URL
+}
+
 // 解析器配置
 export interface ParserConfig {
   name: string;               // 解析器名称
@@ -54,6 +77,16 @@ export interface CrawlResult {
   data: BidInfo[];
   error?: string;
   duration: number;           // 爬取耗时（毫秒）
+}
+
+// 中标爬取结果
+export interface WinBidCrawlResult {
+  success: boolean;
+  source: string;
+  count: number;
+  data: WinBidInfo[];
+  error?: string;
+  duration: number;
 }
 
 // 爬虫状态

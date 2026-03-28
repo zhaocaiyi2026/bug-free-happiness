@@ -35,10 +35,21 @@ interface Bid {
   view_count: number;
 }
 
+interface WinBid {
+  id: number;
+  title: string;
+  win_amount: number | null;
+  province: string | null;
+  city: string | null;
+  industry: string | null;
+  win_company: string | null;
+  publish_date: string | null;
+}
+
 interface Stats {
   todayCount: number;
   urgentCount: number;
-  nearbyCount: number;
+  winBidCount: number;
 }
 
 export default function HomeScreen() {
@@ -48,7 +59,8 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
 
   const [bids, setBids] = useState<Bid[]>([]);
-  const [stats, setStats] = useState<Stats>({ todayCount: 156, urgentCount: 8, nearbyCount: 47 });
+  const [winBids, setWinBids] = useState<WinBid[]>([]);
+  const [stats, setStats] = useState<Stats>({ todayCount: 156, urgentCount: 8, winBidCount: 32 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
@@ -58,13 +70,14 @@ export default function HomeScreen() {
 
   const filters = [
     { key: 'all', label: '全部' },
-    { key: 'province', label: '本省' },
-    { key: 'city', label: '本市' },
+    { key: 'win', label: '中标' },
+    { key: 'urgent', label: '紧急' },
     { key: 'follow', label: '关注' },
   ];
 
   useEffect(() => {
     fetchData(1);
+    fetchWinBids();
   }, [activeFilter]);
 
   const fetchData = async (pageNum: number) => {
@@ -72,12 +85,6 @@ export default function HomeScreen() {
       const params = new URLSearchParams();
       params.append('page', String(pageNum));
       params.append('pageSize', '20');
-      
-      if (activeFilter === 'province') {
-        params.append('province', '广东省');
-      } else if (activeFilter === 'city') {
-        params.append('city', '深圳市');
-      }
 
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
@@ -88,11 +95,11 @@ export default function HomeScreen() {
         if (pageNum === 1) {
           setBids(data.data.list);
           // 更新统计数据
-          setStats({
+          setStats(prev => ({
+            ...prev,
             todayCount: data.data.total || 156,
             urgentCount: data.data.list.filter((b: Bid) => b.is_urgent).length || 8,
-            nearbyCount: Math.floor((data.data.total || 156) * 0.3),
-          });
+          }));
         } else {
           setBids((prev) => [...prev, ...data.data.list]);
         }
@@ -103,6 +110,25 @@ export default function HomeScreen() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const fetchWinBids = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?page=1&pageSize=5`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        setWinBids(data.data.list);
+        setStats(prev => ({
+          ...prev,
+          winBidCount: data.data.total || 32,
+        }));
+      }
+    } catch (error) {
+      console.error('获取中标列表失败:', error);
     }
   };
 
@@ -249,7 +275,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* 统计卡片 - 今日新增、紧急招标、本省项目 */}
+        {/* 统计卡片 - 今日新增、紧急招标、中标信息 */}
         <View style={styles.statsCard}>
           <TouchableOpacity 
             style={styles.statItem}
@@ -271,11 +297,11 @@ export default function HomeScreen() {
           <View style={styles.statDivider} />
           <TouchableOpacity 
             style={styles.statItem}
-            onPress={() => router.push('/bidList', { type: 'nearby' })}
+            onPress={() => router.push('/bidList', { type: 'win' })}
             activeOpacity={0.7}
           >
-            <Text style={styles.statValue}>{stats.nearbyCount}</Text>
-            <Text style={styles.statLabel}>本省项目</Text>
+            <Text style={[styles.statValue, styles.statValueGreen]}>{stats.winBidCount}</Text>
+            <Text style={styles.statLabel}>中标信息</Text>
           </TouchableOpacity>
         </View>
 

@@ -106,6 +106,9 @@ export const createStyles = (theme: Theme) => {
     statValueRed: {
       color: '#C8102E',
     },
+    statValueGreen: {
+      color: '#059669',
+    },
     statLabel: {
       fontSize: 11,
       color: '#6B7280',

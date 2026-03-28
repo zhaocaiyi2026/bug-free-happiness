@@ -72,6 +72,36 @@ export const bids = pgTable("bids", {
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 });
 
+// 中标信息表
+export const winBids = pgTable("win_bids", {
+	id: serial().primaryKey().notNull(),
+	title: varchar({ length: 500 }).notNull(),
+	content: text(),
+	// 中标金额
+	winAmount: numeric("win_amount", { precision: 15, scale: 2 }),
+	province: varchar({ length: 50 }),
+	city: varchar({ length: 50 }),
+	industry: varchar({ length: 100 }),
+	// 招标方式
+	bidType: varchar("bid_type", { length: 50 }),
+	// 中标单位信息
+	winCompany: varchar("win_company", { length: 200 }),
+	winCompanyAddress: varchar("win_company_address", { length: 500 }),
+	winCompanyPhone: varchar("win_company_phone", { length: 50 }),
+	// 项目信息
+	projectLocation: varchar("project_location", { length: 500 }),
+	// 中标日期
+	winDate: timestamp("win_date", { mode: 'string' }),
+	// 公告日期
+	publishDate: timestamp("publish_date", { mode: 'string' }),
+	// 数据来源
+	source: varchar({ length: 200 }),
+	sourceUrl: text("source_url"),
+	viewCount: integer("view_count").default(0),
+	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
+});
+
 export const reminders = pgTable("reminders", {
 	id: serial().primaryKey().notNull(),
 	userId: integer("user_id"),
