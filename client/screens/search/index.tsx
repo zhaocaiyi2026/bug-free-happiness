@@ -10,7 +10,7 @@ import {
   Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
@@ -73,6 +73,12 @@ export default function SearchScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
+  const searchParams = useSafeSearchParams<{
+    keyword?: string;
+    industry?: string;
+    province?: string;
+    autoSearch?: string;
+  }>();
 
   // 搜索类型：bid-招标，winBid-中标
   const [searchType, setSearchType] = useState<'bid' | 'winBid'>('bid');
@@ -92,9 +98,39 @@ export default function SearchScreen() {
   const [provinceModalVisible, setProvinceModalVisible] = useState(false);
   const [industryModalVisible, setIndustryModalVisible] = useState(false);
 
+  // 初始化：获取筛选数据
   useEffect(() => {
     fetchFilters();
   }, []);
+
+  // 处理从发现页面传来的参数
+  useEffect(() => {
+    if (searchParams) {
+      // 设置关键词
+      if (searchParams.keyword) {
+        setKeyword(searchParams.keyword);
+      }
+      // 设置行业
+      if (searchParams.industry) {
+        setSelectedIndustry(searchParams.industry);
+      }
+      // 设置省份
+      if (searchParams.province) {
+        setSelectedProvince(searchParams.province);
+      }
+      // 自动搜索
+      if (searchParams.autoSearch === 'true') {
+        // 延迟执行，等待筛选数据加载完成
+        setTimeout(() => {
+          handleSearchWithParams(
+            searchParams.keyword || '',
+            searchParams.industry || '',
+            searchParams.province || ''
+          );
+        }, 500);
+      }
+    }
+  }, [searchParams]);
 
   const fetchFilters = async () => {
     try {
@@ -118,14 +154,22 @@ export default function SearchScreen() {
   };
 
   const handleSearch = async () => {
+    await handleSearchWithParams(keyword, selectedIndustry, selectedProvince);
+  };
+
+  const handleSearchWithParams = async (
+    searchKeyword: string,
+    searchIndustry: string,
+    searchProvince: string
+  ) => {
     setLoading(true);
     setHasSearched(true);
 
     try {
       const params = new URLSearchParams();
-      if (keyword) params.append('keyword', keyword);
-      if (selectedProvince) params.append('province', selectedProvince);
-      if (selectedIndustry) params.append('industry', selectedIndustry);
+      if (searchKeyword) params.append('keyword', searchKeyword);
+      if (searchProvince) params.append('province', searchProvince);
+      if (searchIndustry) params.append('industry', searchIndustry);
       if (minBudget) params.append('minBudget', minBudget);
       if (maxBudget) params.append('maxBudget', maxBudget);
 
@@ -228,7 +272,7 @@ export default function SearchScreen() {
         <Text style={styles.bidMeta}>{formatDate(item.publish_date)}</Text>
       </View>
     </TouchableOpacity>
-  ), [styles, searchType, handleBidPress]);
+  ), [styles, handleBidPress]);
 
   const renderModalItem = useCallback((
     item: { id: number; name: string },

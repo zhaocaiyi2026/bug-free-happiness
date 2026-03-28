@@ -67,6 +67,31 @@ export const createStyles = (theme: Theme) => {
       color: '#9CA3AF',
       marginLeft: Spacing.sm,
     },
+    // 地址选择
+    locationSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: '#FFFFFF',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm + 2,
+    },
+    locationSelector: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    locationText: {
+      fontSize: 14,
+      color: '#1C1917',
+      fontWeight: '500',
+      marginLeft: Spacing.xs,
+      marginRight: Spacing.xs,
+    },
+    viewAllText: {
+      fontSize: 12,
+      color: '#2563EB',
+      fontWeight: '500',
+    },
     // Section
     sectionContainer: {
       backgroundColor: '#FFFFFF',
@@ -261,6 +286,59 @@ export const createStyles = (theme: Theme) => {
     emptyText: {
       fontSize: 14,
       color: '#9CA3AF',
+    },
+    // 弹窗样式
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: '#FFFFFF',
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      maxHeight: '60%',
+      paddingBottom: Spacing['2xl'],
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
+    },
+    modalTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: '#1C1917',
+    },
+    modalList: {
+      paddingHorizontal: Spacing.md,
+    },
+    modalItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F5F5F5',
+    },
+    modalItemActive: {
+      backgroundColor: '#F0F7FF',
+      marginHorizontal: -Spacing.sm,
+      paddingHorizontal: Spacing.md,
+      borderRadius: BorderRadius.md,
+    },
+    modalItemText: {
+      fontSize: 14,
+      color: '#1C1917',
+    },
+    modalItemTextActive: {
+      color: '#2563EB',
+      fontWeight: '600',
     },
   });
 };
