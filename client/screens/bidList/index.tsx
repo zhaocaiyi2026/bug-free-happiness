@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
@@ -35,64 +35,78 @@ interface Bid {
   view_count: number;
 }
 
-interface Stats {
-  todayCount: number;
-  urgentCount: number;
-  nearbyCount: number;
-}
+type ListType = 'today' | 'urgent' | 'nearby' | 'search';
 
-export default function HomeScreen() {
+const LIST_CONFIG: Record<ListType, { title: string; icon: string }> = {
+  today: { title: '今日新增', icon: 'calendar-day' },
+  urgent: { title: '紧急招标', icon: 'bolt' },
+  nearby: { title: '本省项目', icon: 'location-dot' },
+  search: { title: '搜索结果', icon: 'magnifying-glass' },
+};
+
+export default function BidListScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
+  const params = useSafeSearchParams<{ type: ListType; keyword?: string; industry?: string }>();
   const insets = useSafeAreaInsets();
 
+  const listType = params.type || 'today';
+  const config = LIST_CONFIG[listType] || LIST_CONFIG.today;
+
   const [bids, setBids] = useState<Bid[]>([]);
-  const [stats, setStats] = useState<Stats>({ todayCount: 156, urgentCount: 8, nearbyCount: 47 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-
-  const [activeFilter, setActiveFilter] = useState('all');
-
-  const filters = [
-    { key: 'all', label: '全部' },
-    { key: 'province', label: '本省' },
-    { key: 'city', label: '本市' },
-    { key: 'follow', label: '关注' },
-  ];
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     fetchData(1);
-  }, [activeFilter]);
+  }, [listType, params.keyword, params.industry]);
 
   const fetchData = async (pageNum: number) => {
     try {
-      const params = new URLSearchParams();
-      params.append('page', String(pageNum));
-      params.append('pageSize', '20');
-      
-      if (activeFilter === 'province') {
-        params.append('province', '广东省');
-      } else if (activeFilter === 'city') {
-        params.append('city', '深圳市');
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', String(pageNum));
+      queryParams.append('pageSize', '20');
+
+      // 根据类型设置筛选条件
+      switch (listType) {
+        case 'today': {
+          // 今日新增：发布日期为今天
+          const today = new Date().toISOString().split('T')[0];
+          queryParams.append('publishDateFrom', today);
+          break;
+        }
+        case 'urgent':
+          // 紧急招标
+          queryParams.append('isUrgent', 'true');
+          break;
+        case 'nearby':
+          // 本省项目（默认广东省）
+          queryParams.append('province', '广东省');
+          break;
+        case 'search':
+          // 搜索结果
+          if (params.keyword) {
+            queryParams.append('keyword', params.keyword);
+          }
+          if (params.industry) {
+            queryParams.append('industry', params.industry);
+          }
+          break;
       }
 
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${queryParams.toString()}`
       );
       const data = await res.json();
 
       if (data.success) {
         if (pageNum === 1) {
           setBids(data.data.list);
-          // 更新统计数据
-          setStats({
-            todayCount: data.data.total || 156,
-            urgentCount: data.data.list.filter((b: Bid) => b.is_urgent).length || 8,
-            nearbyCount: Math.floor((data.data.total || 156) * 0.3),
-          });
+          setTotal(data.data.total);
         } else {
           setBids((prev) => [...prev, ...data.data.list]);
         }
@@ -120,22 +134,8 @@ export default function HomeScreen() {
     }
   };
 
-  const handleFilterPress = (filterKey: string) => {
-    setActiveFilter(filterKey);
-    setPage(1);
-    setLoading(true);
-  };
-
   const handleBidPress = (bidId: number) => {
     router.push('/detail', { id: bidId });
-  };
-
-  const handleSearchPress = () => {
-    router.navigate('/search');
-  };
-
-  const handleFavoritePress = () => {
-    router.navigate('/favorites');
   };
 
   const formatBudget = (budget: number | null) => {
@@ -187,22 +187,16 @@ export default function HomeScreen() {
     </TouchableOpacity>
   ), [styles, CARD_WIDTH]);
 
-  if (loading && page === 1) {
+  if (loading) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
-            <Text style={styles.appTitle}>
-              招标<Text style={styles.appTitleAccent}>通</Text>
-            </Text>
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
-                <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={handleFavoritePress}>
-                <FontAwesome6 name="heart" size={16} color="#C8102E" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{config.title}</Text>
+            <View style={styles.headerRight} />
           </View>
         </View>
         <View style={styles.loadingContainer}>
@@ -214,79 +208,41 @@ export default function HomeScreen() {
   }
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
       <View style={{ flex: 1 }}>
-        {/* Header - 紧凑型 */}
+        {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
-            <Text style={styles.appTitle}>
-              招标<Text style={styles.appTitleAccent}>通</Text>
-            </Text>
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
-                <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={handleFavoritePress}>
-                <FontAwesome6 name="heart" size={16} color="#C8102E" />
-              </TouchableOpacity>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
+            <View style={styles.headerCenter}>
+              <FontAwesome6 name={config.icon as any} size={16} color="#FFFFFF" style={styles.headerIcon} />
+              <Text style={styles.headerTitle}>{config.title}</Text>
+            </View>
+            <View style={styles.headerRight}>
+              <Text style={styles.headerCount}>{total}条</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
-            <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
-            <Text style={styles.searchPlaceholder}>搜索招标信息、行业...</Text>
-          </TouchableOpacity>
         </View>
 
-        {/* 统计卡片 - 今日新增、紧急招标、本省项目 */}
-        <View style={styles.statsCard}>
-          <TouchableOpacity 
-            style={styles.statItem}
-            onPress={() => router.push('/bidList', { type: 'today' })}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.statValue}>{stats.todayCount}</Text>
-            <Text style={styles.statLabel}>今日新增</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <TouchableOpacity 
-            style={styles.statItem}
-            onPress={() => router.push('/bidList', { type: 'urgent' })}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.statValue, styles.statValueRed]}>{stats.urgentCount}</Text>
-            <Text style={styles.statLabel}>紧急招标</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <TouchableOpacity 
-            style={styles.statItem}
-            onPress={() => router.push('/bidList', { type: 'nearby' })}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.statValue}>{stats.nearbyCount}</Text>
-            <Text style={styles.statLabel}>本省项目</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 筛选条 */}
-        <View style={styles.filterSection}>
-          <View style={styles.filterContainer}>
-            {filters.map((filter) => (
-              <TouchableOpacity
-                key={filter.key}
-                style={[styles.filterChip, activeFilter === filter.key && styles.filterChipActive]}
-                onPress={() => handleFilterPress(filter.key)}
-              >
-                <Text style={[styles.filterChipText, activeFilter === filter.key && styles.filterChipTextActive]}>
-                  {filter.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+        {/* 统计条 */}
+        <View style={styles.statsBar}>
+          <View style={styles.statsItem}>
+            <FontAwesome6 name="file-lines" size={14} color="#2563EB" />
+            <Text style={styles.statsText}>共 {total} 条招标信息</Text>
+          </View>
+          <View style={styles.statsItem}>
+            <FontAwesome6 name="clock" size={14} color="#6B7280" />
+            <Text style={styles.statsTextMuted}>
+              {listType === 'today' ? '今日发布' : listType === 'urgent' ? '紧急处理' : '本省项目'}
+            </Text>
           </View>
         </View>
 
         {/* 双列网格招标列表 */}
         <FlatList
-          key="home-bids-grid"
+          key={`bids-list-${listType}`}
           data={bids}
           renderItem={renderBidItem}
           keyExtractor={(item) => String(item.id)}

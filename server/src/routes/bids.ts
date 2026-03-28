@@ -16,6 +16,8 @@ const router = Router();
  * - keyword: string (关键词搜索)
  * - isUrgent: boolean (是否紧急)
  * - bidType: string (招标类型)
+ * - publishDateFrom: string (发布日期起始，格式：YYYY-MM-DD)
+ * - publishDateTo: string (发布日期结束)
  */
 router.get('/', async (req, res) => {
   try {
@@ -30,7 +32,9 @@ router.get('/', async (req, res) => {
       maxBudget,
       keyword,
       isUrgent,
-      bidType
+      bidType,
+      publishDateFrom,
+      publishDateTo
     } = req.query;
 
     const pageNum = Number(page);
@@ -68,6 +72,12 @@ router.get('/', async (req, res) => {
     }
     if (keyword) {
       query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
+    }
+    if (publishDateFrom) {
+      query = query.gte('publish_date', publishDateFrom as string);
+    }
+    if (publishDateTo) {
+      query = query.lte('publish_date', publishDateTo as string);
     }
 
     // 分页
