@@ -53,6 +53,47 @@ export const createStyles = (theme: Theme) => {
       color: '#9CA3AF',
       marginLeft: Spacing.sm,
     },
+    // 统计卡片 - 紧凑型
+    statsCard: {
+      flexDirection: 'row',
+      backgroundColor: '#FFFFFF',
+      marginHorizontal: Spacing.md,
+      marginTop: Spacing.sm,
+      marginBottom: Spacing.xs,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.sm,
+      justifyContent: 'space-around',
+      alignItems: 'center',
+      shadowColor: '#2563EB',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    statItem: {
+      alignItems: 'center',
+      flex: 1,
+    },
+    statDivider: {
+      width: 1,
+      height: 32,
+      backgroundColor: '#E5E7EB',
+    },
+    statValue: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: '#2563EB',
+    },
+    statValueRed: {
+      color: '#C8102E',
+    },
+    statLabel: {
+      fontSize: 11,
+      color: '#6B7280',
+      marginTop: 2,
+    },
+    // 筛选条
     filterSection: {
       backgroundColor: '#FFFFFF',
       marginTop: Spacing.xs,
@@ -83,6 +124,7 @@ export const createStyles = (theme: Theme) => {
       color: '#FFFFFF',
       fontWeight: '600',
     },
+    // 列表
     listContainer: {
       padding: Spacing.sm,
       paddingBottom: Spacing['5xl'],
