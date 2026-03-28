@@ -166,6 +166,52 @@ export const createStyles = (theme: Theme) => {
     tagTextHot: {
       color: '#C8102E',
     },
+    // 特色功能区
+    featureGrid: {
+      gap: Spacing.sm,
+    },
+    featureCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+    },
+    featureIcon: {
+      width: 52,
+      height: 52,
+      borderRadius: BorderRadius.lg,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    featureContent: {
+      flex: 1,
+      marginLeft: Spacing.md,
+    },
+    featureTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#1C1917',
+    },
+    featureDesc: {
+      fontSize: 12,
+      color: '#6B7280',
+      marginTop: 2,
+    },
+    comingSoonTag: {
+      backgroundColor: '#FEF3C7',
+      paddingHorizontal: Spacing.xs,
+      paddingVertical: 1,
+      borderRadius: BorderRadius.sm,
+      marginLeft: Spacing.xs,
+    },
+    comingSoonText: {
+      fontSize: 10,
+      color: '#D97706',
+      fontWeight: '500',
+    },
     // 筛选
     filterContainer: {
       flexDirection: 'row',

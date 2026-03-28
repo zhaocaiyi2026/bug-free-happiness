@@ -441,6 +441,51 @@ export default function DiscoverScreen() {
             </View>
           </View>
 
+          {/* 特色功能区 */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>特色功能</Text>
+            </View>
+            <View style={styles.featureGrid}>
+              {/* 潜在客户 */}
+              <TouchableOpacity
+                style={styles.featureCard}
+                onPress={() => router.push('/potential-customers')}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.featureIcon, { backgroundColor: '#EFF6FF' }]}>
+                  <FontAwesome6 name="address-book" size={24} color="#2563EB" />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>潜在客户</Text>
+                  <Text style={styles.featureDesc}>查找招标方/中标方联系方式</Text>
+                </View>
+                <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+              </TouchableOpacity>
+              
+              {/* 前期项目 */}
+              <TouchableOpacity
+                style={[styles.featureCard, { opacity: 0.6 }]}
+                onPress={() => {}}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.featureIcon, { backgroundColor: '#FEF3C7' }]}>
+                  <FontAwesome6 name="clipboard-list" size={24} color="#D97706" />
+                </View>
+                <View style={styles.featureContent}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={styles.featureTitle}>前期项目</Text>
+                    <View style={styles.comingSoonTag}>
+                      <Text style={styles.comingSoonText}>即将上线</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.featureDesc}>筹建/备案项目信息查询</Text>
+                </View>
+                <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* 筛选条件 */}
           <View style={[styles.sectionContainer, { paddingBottom: Spacing.sm }]}>
             <View style={styles.filterContainer}>
