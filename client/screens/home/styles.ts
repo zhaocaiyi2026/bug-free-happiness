@@ -169,7 +169,6 @@ export const createStyles = (theme: Theme) => {
     filterSection: {
       backgroundColor: '#FFFFFF',
       marginTop: Spacing.xs,
-      paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.sm,
       borderBottomWidth: 1,
       borderBottomColor: '#F0F0F0',
@@ -177,19 +176,29 @@ export const createStyles = (theme: Theme) => {
     filterContainer: {
       flexDirection: 'row',
       gap: Spacing.sm,
+      paddingHorizontal: Spacing.lg,
     },
     filterChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.xs + 2,
       borderRadius: BorderRadius.full,
       backgroundColor: '#F5F5F5',
+      gap: Spacing.xs,
     },
     filterChipActive: {
       backgroundColor: '#2563EB',
     },
+    filterChipDisabled: {
+      opacity: 0.5,
+    },
+    filterIcon: {
+      marginRight: 2,
+    },
     filterChipText: {
       fontSize: 13,
-      color: '#6B7280',
+      color: '#2563EB',
       fontWeight: '500',
     },
     filterChipTextActive: {
@@ -217,6 +226,10 @@ export const createStyles = (theme: Theme) => {
     bidCardUrgent: {
       borderColor: '#FCA5A5',
       backgroundColor: '#FFFBFC',
+    },
+    bidCardWin: {
+      borderColor: '#86EFAC',
+      backgroundColor: '#F0FDF4',
     },
     cardHeader: {
       flexDirection: 'row',
@@ -246,6 +259,17 @@ export const createStyles = (theme: Theme) => {
       color: '#FFFFFF',
       fontWeight: '700',
     },
+    winTag: {
+      backgroundColor: '#059669',
+      paddingHorizontal: Spacing.xs + 2,
+      paddingVertical: 1,
+      borderRadius: 3,
+    },
+    winTagText: {
+      fontSize: 9,
+      color: '#FFFFFF',
+      fontWeight: '700',
+    },
     bidTitle: {
       fontSize: 13,
       fontWeight: '600',
@@ -258,6 +282,12 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '800',
       color: '#2563EB',
       marginBottom: 2,
+    },
+    bidWinCompany: {
+      fontSize: 10,
+      color: '#059669',
+      fontWeight: '500',
+      marginBottom: 1,
     },
     bidMeta: {
       fontSize: 10,

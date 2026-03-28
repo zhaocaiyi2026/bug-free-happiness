@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Dimensions,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
@@ -84,19 +85,20 @@ export default function HomeScreen() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locating, setLocating] = useState(false);
-  const [locationFilter, setLocationFilter] = useState<'all' | 'province' | 'city'>('all');
 
+  // 快捷筛选入口：全部、本省、本市、本省中标、本市中标
   const filters = [
-    { key: 'all', label: '全部' },
-    { key: 'win', label: '中标' },
-    { key: 'urgent', label: '紧急' },
-    { key: 'follow', label: '关注' },
+    { key: 'all', label: '全部', icon: 'layer-group' },
+    { key: 'province', label: '本省', icon: 'map' },
+    { key: 'city', label: '本市', icon: 'city' },
+    { key: 'provinceWin', label: '本省中标', icon: 'trophy' },
+    { key: 'cityWin', label: '本市中标', icon: 'award' },
   ];
 
   useEffect(() => {
     fetchData(1);
     fetchWinBids();
-  }, [activeFilter, locationFilter]);
+  }, [activeFilter]);
 
   // 请求定位权限并获取位置
   const requestLocation = async () => {
@@ -129,9 +131,6 @@ export default function HomeScreen() {
         
         setUserLocation({ province, city });
         
-        // 自动切换到本省筛选
-        setLocationFilter('province');
-        
         Alert.alert('定位成功', `已定位到：${province} ${city}`, [
           { text: '好的', style: 'default' }
         ]);
@@ -146,38 +145,85 @@ export default function HomeScreen() {
 
   const fetchData = async (pageNum: number) => {
     try {
-      const params = new URLSearchParams();
-      params.append('page', String(pageNum));
-      params.append('pageSize', '20');
+      // 判断是否为中标筛选
+      const isWinBidFilter = activeFilter === 'provinceWin' || activeFilter === 'cityWin';
+      
+      if (isWinBidFilter) {
+        // 获取中标数据
+        const params = new URLSearchParams();
+        params.append('page', String(pageNum));
+        params.append('pageSize', '20');
 
-      // 根据位置筛选
-      if (locationFilter === 'province' && userLocation?.province) {
-        params.append('province', userLocation.province);
-      } else if (locationFilter === 'city' && userLocation?.city) {
-        params.append('city', userLocation.city);
-      }
-
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
-      );
-      const data = await res.json();
-
-      if (data.success) {
-        if (pageNum === 1) {
-          setBids(data.data.list);
-          // 更新统计数据
-          setStats(prev => ({
-            ...prev,
-            todayCount: data.data.total || 156,
-            urgentCount: data.data.list.filter((b: Bid) => b.is_urgent).length || 8,
-          }));
-        } else {
-          setBids((prev) => [...prev, ...data.data.list]);
+        if (activeFilter === 'provinceWin' && userLocation?.province) {
+          params.append('province', userLocation.province);
+        } else if (activeFilter === 'cityWin' && userLocation?.city) {
+          params.append('city', userLocation.city);
         }
-        setHasMore(data.data.page < data.data.totalPages);
+
+        const res = await fetch(
+          `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?${params.toString()}`
+        );
+        const data = await res.json();
+
+        if (data.success) {
+          // 将中标数据转换为统一格式显示
+          const winBidItems = data.data.list.map((item: WinBid) => ({
+            id: item.id,
+            title: item.title,
+            budget: item.win_amount,
+            province: item.province,
+            city: item.city,
+            industry: item.industry,
+            bid_type: '中标',
+            publish_date: item.publish_date,
+            deadline: null,
+            is_urgent: false,
+            view_count: 0,
+            isWinBid: true,
+            winCompany: item.win_company,
+          }));
+          
+          if (pageNum === 1) {
+            setBids(winBidItems);
+          } else {
+            setBids((prev) => [...prev, ...winBidItems]);
+          }
+          setHasMore(data.data.page < data.data.totalPages);
+        }
+      } else {
+        // 获取招标数据
+        const params = new URLSearchParams();
+        params.append('page', String(pageNum));
+        params.append('pageSize', '20');
+
+        if (activeFilter === 'province' && userLocation?.province) {
+          params.append('province', userLocation.province);
+        } else if (activeFilter === 'city' && userLocation?.city) {
+          params.append('city', userLocation.city);
+        }
+
+        const res = await fetch(
+          `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
+        );
+        const data = await res.json();
+
+        if (data.success) {
+          if (pageNum === 1) {
+            setBids(data.data.list);
+            // 更新统计数据
+            setStats(prev => ({
+              ...prev,
+              todayCount: data.data.total || 156,
+              urgentCount: data.data.list.filter((b: Bid) => b.is_urgent).length || 8,
+            }));
+          } else {
+            setBids((prev) => [...prev, ...data.data.list]);
+          }
+          setHasMore(data.data.page < data.data.totalPages);
+        }
       }
     } catch (error) {
-      console.error('获取招标列表失败:', error);
+      console.error('获取数据失败:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -219,6 +265,19 @@ export default function HomeScreen() {
   };
 
   const handleFilterPress = (filterKey: string) => {
+    // 如果是位置相关筛选，检查是否已定位
+    if (filterKey !== 'all' && !userLocation) {
+      Alert.alert(
+        '提示', 
+        '使用此功能需要先定位，是否现在定位？',
+        [
+          { text: '取消', style: 'cancel' },
+          { text: '定位', onPress: requestLocation }
+        ]
+      );
+      return;
+    }
+    
     setActiveFilter(filterKey);
     setPage(1);
     setLoading(true);
@@ -254,36 +313,51 @@ export default function HomeScreen() {
     return `${month}/${day}`;
   };
 
-  const renderBidItem = useCallback(({ item, index }: { item: Bid; index: number }) => (
-    <TouchableOpacity
-      style={[
-        styles.bidCard,
-        item.is_urgent && styles.bidCardUrgent,
-        { width: CARD_WIDTH - 4 }
-      ]}
-      onPress={() => handleBidPress(item.id)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.categoryTag}>
-          <Text style={styles.categoryTagText} numberOfLines={1}>
-            {item.industry?.slice(0, 4) || '项目'}
-          </Text>
-        </View>
-        {item.is_urgent && (
-          <View style={styles.urgentTag}>
-            <Text style={styles.urgentTagText}>紧急</Text>
+  const renderBidItem = useCallback(({ item, index }: { item: any; index: number }) => {
+    const isWinBid = item.isWinBid;
+    
+    return (
+      <TouchableOpacity
+        style={[
+          styles.bidCard,
+          item.is_urgent && styles.bidCardUrgent,
+          isWinBid && styles.bidCardWin,
+          { width: CARD_WIDTH - 4 }
+        ]}
+        onPress={() => handleBidPress(item.id)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.categoryTag}>
+            <Text style={styles.categoryTagText} numberOfLines={1}>
+              {item.industry?.slice(0, 4) || '项目'}
+            </Text>
           </View>
+          {item.is_urgent && (
+            <View style={styles.urgentTag}>
+              <Text style={styles.urgentTagText}>紧急</Text>
+            </View>
+          )}
+          {isWinBid && (
+            <View style={styles.winTag}>
+              <Text style={styles.winTagText}>中标</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.bidTitle} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
+        {isWinBid && item.winCompany && (
+          <Text style={styles.bidWinCompany} numberOfLines={1}>
+            {item.winCompany}
+          </Text>
         )}
-      </View>
-      <Text style={styles.bidTitle} numberOfLines={2}>
-        {item.title}
-      </Text>
-      <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
-      <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
-      <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>
-    </TouchableOpacity>
-  ), [styles, CARD_WIDTH]);
+        <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
+        {!isWinBid && <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>}
+      </TouchableOpacity>
+    );
+  }, [styles, CARD_WIDTH]);
 
   if (loading && page === 1) {
     return (
@@ -364,36 +438,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 位置筛选条 */}
-        {userLocation && (
-          <View style={styles.locationFilterSection}>
-            <TouchableOpacity 
-              style={[styles.locationChip, locationFilter === 'all' && styles.locationChipActive]}
-              onPress={() => { setLocationFilter('all'); setPage(1); setLoading(true); }}
-            >
-              <Text style={[styles.locationChipText, locationFilter === 'all' && styles.locationChipTextActive]}>全部</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.locationChip, locationFilter === 'province' && styles.locationChipActive]}
-              onPress={() => { setLocationFilter('province'); setPage(1); setLoading(true); }}
-            >
-              <FontAwesome6 name="map" size={11} color={locationFilter === 'province' ? '#FFFFFF' : '#2563EB'} />
-              <Text style={[styles.locationChipText, locationFilter === 'province' && styles.locationChipTextActive]}>
-                {userLocation.province}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.locationChip, locationFilter === 'city' && styles.locationChipActive]}
-              onPress={() => { setLocationFilter('city'); setPage(1); setLoading(true); }}
-            >
-              <FontAwesome6 name="city" size={11} color={locationFilter === 'city' ? '#FFFFFF' : '#2563EB'} />
-              <Text style={[styles.locationChipText, locationFilter === 'city' && styles.locationChipTextActive]}>
-                {userLocation.city}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* 统计卡片 - 今日新增、紧急招标、中标信息 */}
         <View style={styles.statsCard}>
           <TouchableOpacity 
@@ -424,21 +468,43 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* 筛选条 */}
+        {/* 快捷筛选入口 */}
         <View style={styles.filterSection}>
-          <View style={styles.filterContainer}>
-            {filters.map((filter) => (
-              <TouchableOpacity
-                key={filter.key}
-                style={[styles.filterChip, activeFilter === filter.key && styles.filterChipActive]}
-                onPress={() => handleFilterPress(filter.key)}
-              >
-                <Text style={[styles.filterChipText, activeFilter === filter.key && styles.filterChipTextActive]}>
-                  {filter.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterContainer}
+          >
+            {filters.map((filter) => {
+              const isActive = activeFilter === filter.key;
+              const isLocationFilter = filter.key !== 'all';
+              
+              return (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterChip, 
+                    isActive && styles.filterChipActive,
+                    isLocationFilter && !userLocation && styles.filterChipDisabled
+                  ]}
+                  onPress={() => handleFilterPress(filter.key)}
+                >
+                  <FontAwesome6 
+                    name={filter.icon as any} 
+                    size={12} 
+                    color={isActive ? '#FFFFFF' : '#2563EB'} 
+                    style={styles.filterIcon}
+                  />
+                  <Text style={[
+                    styles.filterChipText, 
+                    isActive && styles.filterChipTextActive
+                  ]}>
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* 双列网格招标列表 */}
