@@ -7,44 +7,51 @@ export const createStyles = (theme: Theme) => {
       flex: 1,
       backgroundColor: '#F5F5F5',
     },
+    // Header - 紧凑型
     header: {
       backgroundColor: '#FFFFFF',
       paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.lg,
-      paddingBottom: Spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
+      paddingTop: Spacing.md,
+      paddingBottom: Spacing.sm,
+    },
+    headerTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
     },
     headerTitle: {
-      fontSize: 24,
-      fontWeight: '700',
+      fontSize: 22,
+      fontWeight: '800',
       color: '#1C1917',
+    },
+    iconButton: {
+      width: 38,
+      height: 38,
+      borderRadius: BorderRadius.md,
+      backgroundColor: '#F5F5F5',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: '#F5F5F5',
-      borderRadius: BorderRadius.lg,
+      borderRadius: BorderRadius.md,
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm + 4,
-      marginTop: Spacing.md,
-    },
-    searchInput: {
-      flex: 1,
-      fontSize: 15,
-      color: '#1C1917',
-      marginLeft: Spacing.sm,
+      paddingVertical: Spacing.sm,
+      marginTop: Spacing.sm,
     },
     searchPlaceholder: {
-      fontSize: 15,
+      fontSize: 13,
       color: '#9CA3AF',
       marginLeft: Spacing.sm,
     },
+    // Section
     sectionContainer: {
       backgroundColor: '#FFFFFF',
-      marginTop: Spacing.md,
+      marginTop: Spacing.sm,
       paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.lg,
+      paddingVertical: Spacing.md,
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -53,35 +60,32 @@ export const createStyles = (theme: Theme) => {
       marginBottom: Spacing.md,
     },
     sectionTitle: {
-      fontSize: 17,
+      fontSize: 15,
       fontWeight: '700',
       color: '#1C1917',
     },
     sectionMore: {
-      fontSize: 13,
+      fontSize: 12,
       color: '#2563EB',
       fontWeight: '500',
     },
+    // 分类宫格
     categoryGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      marginHorizontal: -Spacing.sm / 2,
     },
     categoryItem: {
       width: '25%',
       alignItems: 'center',
-      paddingVertical: Spacing.md,
+      paddingVertical: Spacing.sm,
     },
     categoryIcon: {
-      width: 52,
-      height: 52,
+      width: 48,
+      height: 48,
       borderRadius: BorderRadius.lg,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: Spacing.sm,
-    },
-    categoryIconText: {
-      fontSize: 22,
+      marginBottom: Spacing.xs,
     },
     categoryName: {
       fontSize: 12,
@@ -89,34 +93,11 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '500',
     },
     categoryCount: {
-      fontSize: 11,
+      fontSize: 10,
       color: '#9CA3AF',
-      marginTop: 2,
+      marginTop: 1,
     },
-    filterContainer: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
-    },
-    filterChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#F5F5F5',
-      borderRadius: BorderRadius.full,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      gap: Spacing.xs,
-    },
-    filterChipActive: {
-      backgroundColor: '#2563EB',
-    },
-    filterChipText: {
-      fontSize: 13,
-      color: '#374151',
-      fontWeight: '500',
-    },
-    filterChipTextActive: {
-      color: '#FFFFFF',
-    },
+    // 标签
     tagsContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -126,7 +107,7 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: 'rgba(37, 99, 235, 0.08)',
       borderRadius: BorderRadius.full,
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm - 2,
+      paddingVertical: Spacing.xs + 2,
     },
     tagHot: {
       backgroundColor: 'rgba(200, 16, 46, 0.08)',
@@ -139,74 +120,102 @@ export const createStyles = (theme: Theme) => {
     tagTextHot: {
       color: '#C8102E',
     },
-    listContainer: {
-      padding: Spacing.md,
-      paddingBottom: Spacing['5xl'],
+    // 筛选
+    filterContainer: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
     },
+    filterChip: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs + 2,
+      borderRadius: BorderRadius.full,
+      backgroundColor: '#F5F5F5',
+    },
+    filterChipActive: {
+      backgroundColor: '#2563EB',
+    },
+    filterChipText: {
+      fontSize: 13,
+      color: '#6B7280',
+      fontWeight: '500',
+    },
+    filterChipTextActive: {
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
+    // 双列网格
+    bidGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginHorizontal: -2,
+    },
+    // 紧凑型卡片样式
     bidCard: {
+      width: '50%',
+      padding: 2,
+    },
+    bidCardContent: {
+      flex: 1,
       backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.lg,
-      padding: Spacing.md,
-      marginBottom: Spacing.md,
-      borderLeftWidth: 3,
-      borderLeftColor: '#2563EB',
+      borderRadius: BorderRadius.md,
+      padding: Spacing.sm + 2,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
     },
     bidCardUrgent: {
-      borderLeftColor: '#C8102E',
+      borderColor: '#FCA5A5',
+      backgroundColor: '#FFFBFC',
     },
-    bidCardHeader: {
+    cardHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: Spacing.sm,
+      alignItems: 'center',
+      marginBottom: Spacing.xs,
     },
-    bidCategory: {
+    categoryTag: {
       backgroundColor: 'rgba(37, 99, 235, 0.1)',
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: 2,
-      borderRadius: BorderRadius.xs,
+      paddingHorizontal: Spacing.xs + 2,
+      paddingVertical: 1,
+      borderRadius: 3,
     },
-    bidCategoryText: {
-      fontSize: 11,
+    categoryTagText: {
+      fontSize: 10,
       color: '#2563EB',
       fontWeight: '600',
     },
-    bidUrgentBadge: {
+    urgentTag: {
       backgroundColor: '#C8102E',
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: 2,
-      borderRadius: BorderRadius.xs,
+      paddingHorizontal: Spacing.xs + 2,
+      paddingVertical: 1,
+      borderRadius: 3,
     },
-    bidUrgentText: {
-      fontSize: 10,
+    urgentTagText: {
+      fontSize: 9,
       color: '#FFFFFF',
       fontWeight: '700',
     },
     bidTitle: {
-      fontSize: 15,
+      fontSize: 13,
       fontWeight: '600',
       color: '#1C1917',
-      lineHeight: 22,
-      marginBottom: Spacing.sm,
-    },
-    bidInfoRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      lineHeight: 18,
+      marginBottom: Spacing.xs,
     },
     bidBudget: {
-      fontSize: 18,
-      fontWeight: '700',
+      fontSize: 16,
+      fontWeight: '800',
       color: '#2563EB',
+      marginBottom: 2,
     },
     bidMeta: {
-      fontSize: 12,
+      fontSize: 10,
       color: '#9CA3AF',
+      marginBottom: 1,
     },
     bidDeadline: {
-      fontSize: 12,
+      fontSize: 10,
       color: '#C8102E',
-      marginTop: Spacing.xs,
+      fontWeight: '500',
     },
     loadingContainer: {
       flex: 1,
