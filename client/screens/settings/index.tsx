@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
@@ -14,6 +15,15 @@ import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing, BorderRadius } from '@/constants/theme';
 import { createStyles } from './styles';
+
+interface DataSourceStatus {
+  platform: string;
+  name: string;
+  priority: number;
+  isAvailable: boolean;
+  isEnabled: boolean;
+  apiType: string;
+}
 
 export default function SettingsScreen() {
   const { theme } = useTheme();
@@ -28,6 +38,29 @@ export default function SettingsScreen() {
     autoRefresh: true,
     cacheClear: false,
   });
+  const [dataSources, setDataSources] = useState<DataSourceStatus[]>([]);
+  const [loadingDataSources, setLoadingDataSources] = useState(false);
+
+  useEffect(() => {
+    fetchDataSources();
+  }, []);
+
+  const fetchDataSources = async () => {
+    try {
+      setLoadingDataSources(true);
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/data-sources/status`
+      );
+      const data = await res.json();
+      if (data.success) {
+        setDataSources(data.data.sources);
+      }
+    } catch (error) {
+      console.error('获取数据源状态失败:', error);
+    } finally {
+      setLoadingDataSources(false);
+    }
+  };
 
   const handleToggle = (key: keyof typeof settings) => {
     setSettings({ ...settings, [key]: !settings[key] });
@@ -116,6 +149,55 @@ export default function SettingsScreen() {
               <View style={styles.settingContent}>
                 <Text style={styles.settingTitle}>清除缓存</Text>
                 <Text style={styles.settingDesc}>清除本地临时数据，释放存储空间</Text>
+              </View>
+              <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+            </TouchableOpacity>
+          </View>
+
+          {/* 数据源状态 */}
+          <View style={styles.section}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm }}>
+              <Text style={styles.sectionTitle}>数据源状态</Text>
+              {loadingDataSources && <ActivityIndicator size="small" color="#2563EB" />}
+            </View>
+            {dataSources.filter(s => s.priority >= 100).map((source) => (
+              <View key={source.platform} style={styles.settingItem}>
+                <View style={[styles.settingIcon, { backgroundColor: source.isAvailable ? 'rgba(5, 150, 105, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
+                  <FontAwesome6 
+                    name={source.isAvailable ? 'check-circle' : 'times-circle'} 
+                    size={18} 
+                    color={source.isAvailable ? '#059669' : '#EF4444'} 
+                  />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={styles.settingTitle}>{source.name}</Text>
+                  <Text style={styles.settingDesc}>
+                    {source.isAvailable ? '已连接' : '未配置'}
+                  </Text>
+                </View>
+                <View style={[styles.statusBadge, { backgroundColor: source.isAvailable ? '#ECFDF5' : '#FEF2F2' }]}>
+                  <Text style={[styles.statusText, { color: source.isAvailable ? '#059669' : '#EF4444' }]}>
+                    {source.isAvailable ? '可用' : '不可用'}
+                  </Text>
+                </View>
+              </View>
+            ))}
+            <TouchableOpacity 
+              style={[styles.settingItem, { marginTop: Spacing.xs }]} 
+              onPress={() => {
+                Alert.alert(
+                  '配置数据源',
+                  '请关注微信公众号"思通数据"获取免费API密钥，然后在服务器环境变量中配置 STONEDT_APP_ID 和 STONEDT_APP_SECRET',
+                  [{ text: '知道了' }]
+                );
+              }}
+            >
+              <View style={[styles.settingIcon, { backgroundColor: 'rgba(37, 99, 235, 0.1)' }]}>
+                <FontAwesome6 name="circle-question" size={18} color="#2563EB" />
+              </View>
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>如何配置数据源？</Text>
+                <Text style={styles.settingDesc}>获取免费API密钥的方法</Text>
               </View>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
             </TouchableOpacity>
