@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   Dimensions,
-  StyleSheet,
 } from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -74,15 +73,17 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
-            {/* 搜索框 */}
-            <TouchableOpacity style={styles.searchBox} onPress={handleSearchPress}>
-              <FontAwesome6 name="magnifying-glass" size={16} color="#9CA3AF" />
-              <Text style={styles.searchPlaceholder}>搜索招标信息</Text>
-            </TouchableOpacity>
-            {/* 收藏按钮 */}
-            <TouchableOpacity style={styles.favoriteButton} onPress={handleFavoritePress}>
-              <FontAwesome6 name="heart" size={18} color="#C8102E" />
-            </TouchableOpacity>
+            {/* 应用名称 */}
+            <Text style={styles.appTitle}>招标通</Text>
+            {/* 右侧操作区 */}
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.iconButton} onPress={handleSearchPress}>
+                <FontAwesome6 name="magnifying-glass" size={18} color="#1C1917" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton} onPress={handleFavoritePress}>
+                <FontAwesome6 name="heart" size={18} color="#C8102E" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 

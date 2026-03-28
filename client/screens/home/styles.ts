@@ -16,29 +16,19 @@ export const createStyles = (theme: Theme) => {
     headerTop: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: Spacing.md,
+      justifyContent: 'space-between',
     },
-    searchBox: {
-      flex: 1,
+    appTitle: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: '#1C1917',
+    },
+    headerActions: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F5F5F5',
-      borderRadius: BorderRadius.lg,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm + 2,
+      gap: Spacing.sm,
     },
-    searchInput: {
-      flex: 1,
-      fontSize: 14,
-      color: '#1C1917',
-      marginLeft: Spacing.sm,
-    },
-    searchPlaceholder: {
-      fontSize: 14,
-      color: '#9CA3AF',
-      marginLeft: Spacing.sm,
-    },
-    favoriteButton: {
+    iconButton: {
       width: 40,
       height: 40,
       borderRadius: BorderRadius.lg,
