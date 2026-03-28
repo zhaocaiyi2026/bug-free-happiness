@@ -111,6 +111,22 @@ export const createStyles = (theme: Theme) => {
     smsButtonTextDisabled: {
       color: '#9CA3AF',
     },
+    // 错误提示
+    errorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(200, 16, 46, 0.1)',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.md,
+      marginBottom: Spacing.md,
+      gap: Spacing.xs,
+    },
+    errorText: {
+      fontSize: 13,
+      color: '#C8102E',
+      flex: 1,
+    },
     // 协议
     agreement: {
       flexDirection: 'row',

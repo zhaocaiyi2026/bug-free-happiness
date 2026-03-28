@@ -149,24 +149,25 @@ router.post('/register', async (req, res) => {
 /**
  * 用户登录
  * Body参数：
- * - phone: string (手机号)
+ * - phone?: string (手机号)
+ * - nickname?: string (昵称)
  * - password?: string (密码)
  * - smsCode?: string (验证码)
  */
 router.post('/login', async (req, res) => {
   try {
     const client = getSupabaseClient();
-    const { phone, password, smsCode } = req.body;
+    const { phone, nickname, password, smsCode } = req.body;
 
-    if (!phone) {
+    if (!phone && !nickname) {
       return res.status(400).json({
         success: false,
-        message: '手机号不能为空'
+        message: '请输入手机号或昵称'
       });
     }
 
-    // 短信验证码登录
-    if (smsCode && !password) {
+    // 短信验证码登录（仅支持手机号）
+    if (smsCode && !password && phone) {
       const stored = smsCodeStore[phone];
       if (!stored || stored.code !== smsCode || stored.expireAt < Date.now()) {
         return res.status(400).json({
@@ -178,19 +179,30 @@ router.post('/login', async (req, res) => {
       delete smsCodeStore[phone];
     }
 
-    // 查询用户
-    const { data: user, error } = await client
-      .from('users')
-      .select('*')
-      .eq('phone', phone)
-      .maybeSingle();
+    // 查询用户（支持手机号或昵称登录）
+    let query = client.from('users').select('*');
+    
+    if (phone) {
+      query = query.eq('phone', phone);
+    } else if (nickname) {
+      query = query.eq('nickname', nickname);
+    }
+
+    const { data: user, error } = await query.maybeSingle();
 
     if (error) {
       throw new Error(`查询用户失败: ${error.message}`);
     }
 
-    // 如果用户不存在，创建新用户（短信登录时自动注册）
+    // 如果用户不存在
     if (!user) {
+      if (nickname) {
+        return res.status(401).json({
+          success: false,
+          message: '昵称不存在，请检查输入或使用手机号登录'
+        });
+      }
+      
       if (password) {
         return res.status(401).json({
           success: false,
@@ -198,7 +210,7 @@ router.post('/login', async (req, res) => {
         });
       }
 
-      // 短信登录自动注册
+      // 短信登录自动注册（仅手机号）
       const { data: newUser, error: createError } = await client
         .from('users')
         .insert({
@@ -221,12 +233,20 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 验证密码（如果设置了密码且通过密码登录）
-    if (password && user.password && user.password !== password) {
-      return res.status(401).json({
-        success: false,
-        message: '密码错误'
-      });
+    // 验证密码（密码登录）
+    if (password) {
+      if (!user.password) {
+        return res.status(400).json({
+          success: false,
+          message: '该账号未设置密码，请使用短信验证码登录'
+        });
+      }
+      if (user.password !== password) {
+        return res.status(401).json({
+          success: false,
+          message: '密码错误'
+        });
+      }
     }
 
     // 如果用户设置了密码但未提供密码（短信登录时）

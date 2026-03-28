@@ -32,7 +32,7 @@ export default function LoginScreen() {
 
   const [mode, setMode] = useState<LoginMode>('sms');
   const [isRegister, setIsRegister] = useState(false);
-  const [phone, setPhone] = useState('');
+  const [account, setAccount] = useState(''); // 手机号或昵称
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [smsCode, setSmsCode] = useState('');
@@ -40,6 +40,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [agreeTerms, setAgreeTerms] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(''); // 错误提示
 
   const passwordRef = useRef<TextInput>(null);
   const smsCodeRef = useRef<TextInput>(null);
@@ -54,25 +55,45 @@ export default function LoginScreen() {
 
   // 验证手机号格式
   const isPhoneValid = useMemo(() => {
-    return /^1[3-9]\d{9}$/.test(phone);
-  }, [phone]);
+    return /^1[3-9]\d{9}$/.test(account);
+  }, [account]);
+
+  // 验证昵称格式（密码登录时可以用昵称）
+  const isNicknameValid = useMemo(() => {
+    return account.length >= 2 && account.length <= 20;
+  }, [account]);
+
+  // 密码登录时，账号可以是手机号或昵称
+  const isAccountValid = useMemo(() => {
+    if (mode === 'sms') {
+      return isPhoneValid;
+    }
+    return isPhoneValid || isNicknameValid;
+  }, [mode, isPhoneValid, isNicknameValid]);
+
+  // 判断账号类型
+  const getAccountType = () => {
+    if (isPhoneValid) return 'phone';
+    return 'nickname';
+  };
 
   // 发送验证码
   const handleSendSms = async () => {
     if (!isPhoneValid) {
-      Alert.alert('提示', '请输入正确的手机号');
+      setErrorMessage('请输入正确的手机号');
       return;
     }
 
     if (countdown > 0) return;
 
+    setErrorMessage('');
     try {
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/auth/send-sms`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone }),
+          body: JSON.stringify({ phone: account }),
         }
       );
       const data = await res.json();
@@ -86,59 +107,72 @@ export default function LoginScreen() {
         }
         setCountdown(60);
       } else {
-        Alert.alert('发送失败', data.message || '请稍后重试');
+        setErrorMessage(data.message || '发送失败，请稍后重试');
       }
     } catch (error) {
-      Alert.alert('网络错误', '请检查网络连接后重试');
+      setErrorMessage('网络错误，请检查网络连接');
     }
   };
 
   // 登录/注册
   const handleSubmit = async () => {
-    if (!isPhoneValid) {
-      Alert.alert('提示', '请输入正确的手机号');
+    if (!isAccountValid) {
+      setErrorMessage(mode === 'sms' ? '请输入正确的手机号' : '请输入手机号或昵称');
       return;
     }
 
     if (!agreeTerms) {
-      Alert.alert('提示', '请先同意用户协议和隐私政策');
+      setErrorMessage('请先同意用户协议和隐私政策');
       return;
     }
 
     if (mode === 'sms' && !smsCode) {
-      Alert.alert('提示', '请输入验证码');
+      setErrorMessage('请输入验证码');
       return;
     }
 
     if (mode === 'password' && !password) {
-      Alert.alert('提示', '请输入密码');
+      setErrorMessage('请输入密码');
       return;
     }
 
     if (isRegister) {
       if (!password) {
-        Alert.alert('提示', '请设置密码');
+        setErrorMessage('请设置密码');
         return;
       }
       if (password !== confirmPassword) {
-        Alert.alert('提示', '两次输入的密码不一致');
+        setErrorMessage('两次输入的密码不一致');
         return;
       }
       if (password.length < 6) {
-        Alert.alert('提示', '密码至少6位');
+        setErrorMessage('密码至少6位');
+        return;
+      }
+      // 注册必须是手机号
+      if (!isPhoneValid) {
+        setErrorMessage('注册需要使用手机号');
         return;
       }
     }
 
     setLoading(true);
+    setErrorMessage('');
 
     try {
       const endpoint = isRegister ? '/api/v1/auth/register' : '/api/v1/auth/login';
-      const body: any = { phone };
+      const body: any = {};
 
-      if (mode === 'sms') {
+      if (mode === 'sms' || isRegister) {
+        body.phone = account;
         body.smsCode = smsCode;
       } else {
+        // 密码登录支持手机号或昵称
+        if (isPhoneValid) {
+          body.phone = account;
+        } else {
+          body.nickname = account;
+        }
         body.password = password;
       }
 
@@ -160,11 +194,21 @@ export default function LoginScreen() {
         await login(data.data);
         router.replace('/');
       } else {
-        Alert.alert('失败', data.message || '操作失败');
+        // 根据错误类型显示不同提示
+        const errorMsg = data.message || '操作失败';
+        if (errorMsg.includes('验证码')) {
+          setErrorMessage('验证码错误或已过期，请重新获取');
+        } else if (errorMsg.includes('密码')) {
+          setErrorMessage('密码错误，请重试');
+        } else if (errorMsg.includes('用户不存在') || errorMsg.includes('未注册')) {
+          setErrorMessage('账号不存在，请先注册');
+        } else {
+          setErrorMessage(errorMsg);
+        }
       }
     } catch (error) {
       console.error('登录失败:', error);
-      Alert.alert('失败', '网络错误，请重试');
+      setErrorMessage('网络错误，请重试');
     } finally {
       setLoading(false);
     }
@@ -173,6 +217,16 @@ export default function LoginScreen() {
   // 微信登录
   const handleWechatLogin = () => {
     Alert.alert('微信登录', '微信登录功能开发中，敬请期待');
+  };
+
+  // 打开用户协议
+  const openAgreement = () => {
+    router.push('/agreement');
+  };
+
+  // 打开隐私政策
+  const openPrivacy = () => {
+    router.push('/privacy');
   };
 
   return (
@@ -201,7 +255,7 @@ export default function LoginScreen() {
             <View style={styles.modeTabs}>
               <TouchableOpacity
                 style={[styles.modeTab, mode === 'sms' && styles.modeTabActive]}
-                onPress={() => { setMode('sms'); setIsRegister(false); }}
+                onPress={() => { setMode('sms'); setIsRegister(false); setErrorMessage(''); }}
               >
                 <Text style={[styles.modeTabText, mode === 'sms' && styles.modeTabTextActive]}>
                   短信登录
@@ -209,7 +263,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modeTab, mode === 'password' && styles.modeTabActive]}
-                onPress={() => setMode('password')}
+                onPress={() => { setMode('password'); setErrorMessage(''); }}
               >
                 <Text style={[styles.modeTabText, mode === 'password' && styles.modeTabTextActive]}>
                   密码登录
@@ -219,20 +273,25 @@ export default function LoginScreen() {
 
             {/* 表单 */}
             <View style={styles.form}>
-              {/* 手机号 */}
+              {/* 手机号/账号 */}
               <View style={styles.inputGroup}>
-                <FontAwesome6 name="phone" size={18} color="#9CA3AF" style={styles.inputIcon} />
+                <FontAwesome6 
+                  name={mode === 'sms' ? 'phone' : 'user'} 
+                  size={18} 
+                  color="#9CA3AF" 
+                  style={styles.inputIcon} 
+                />
                 <TextInput
                   style={styles.input}
-                  placeholder="请输入手机号"
+                  placeholder={mode === 'sms' ? '请输入手机号' : '请输入手机号或昵称'}
                   placeholderTextColor="#9CA3AF"
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
-                  maxLength={11}
+                  value={account}
+                  onChangeText={setAccount}
+                  keyboardType={mode === 'sms' ? 'phone-pad' : 'default'}
+                  maxLength={mode === 'sms' ? 11 : 20}
                 />
-                {phone.length > 0 && (
-                  <TouchableOpacity onPress={() => setPhone('')}>
+                {account.length > 0 && (
+                  <TouchableOpacity onPress={() => setAccount('')}>
                     <FontAwesome6 name="circle-xmark" size={18} color="#D1D5DB" />
                   </TouchableOpacity>
                 )}
@@ -279,7 +338,7 @@ export default function LoginScreen() {
                 </View>
               )}
 
-              {/* 确认密码 */}
+              {/* 确认密码（仅注册） */}
               {isRegister && (
                 <>
                   <View style={styles.inputGroup}>
@@ -308,6 +367,14 @@ export default function LoginScreen() {
                 </>
               )}
 
+              {/* 错误提示 */}
+              {errorMessage ? (
+                <View style={styles.errorContainer}>
+                  <FontAwesome6 name="circle-exclamation" size={14} color="#C8102E" />
+                  <Text style={styles.errorText}>{errorMessage}</Text>
+                </View>
+              ) : null}
+
               {/* 协议 */}
               <TouchableOpacity style={styles.agreement} onPress={() => setAgreeTerms(!agreeTerms)}>
                 <View style={[styles.checkbox, agreeTerms && styles.checkboxChecked]}>
@@ -315,9 +382,9 @@ export default function LoginScreen() {
                 </View>
                 <Text style={styles.agreementText}>
                   我已阅读并同意
-                  <Text style={styles.agreementLink}>《用户协议》</Text>
+                  <Text style={styles.agreementLink} onPress={openAgreement}>《用户协议》</Text>
                   和
-                  <Text style={styles.agreementLink}>《隐私政策》</Text>
+                  <Text style={styles.agreementLink} onPress={openPrivacy}>《隐私政策》</Text>
                 </Text>
               </TouchableOpacity>
 
@@ -340,7 +407,7 @@ export default function LoginScreen() {
               {!isRegister && (
                 <TouchableOpacity
                   style={styles.registerLink}
-                  onPress={() => { setIsRegister(true); setMode('password'); }}
+                  onPress={() => { setIsRegister(true); setMode('password'); setErrorMessage(''); }}
                 >
                   <Text style={styles.registerLinkText}>
                     还没有账号？<Text style={styles.registerLinkHighlight}>立即注册</Text>
@@ -352,7 +419,7 @@ export default function LoginScreen() {
               {isRegister && (
                 <TouchableOpacity
                   style={styles.registerLink}
-                  onPress={() => setIsRegister(false)}
+                  onPress={() => { setIsRegister(false); setErrorMessage(''); }}
                 >
                   <Text style={styles.registerLinkText}>
                     已有账号？<Text style={styles.registerLinkHighlight}>返回登录</Text>
