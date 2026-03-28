@@ -38,6 +38,7 @@ interface Customer {
 const POPULAR_INDUSTRIES = [
   { id: 1, name: '医疗设备', code: 'medical' },
   { id: 2, name: '建筑工程', code: 'construction' },
+  { id: 3, name: '信息技术', code: 'it' },
 ];
 
 export default function PotentialCustomersScreen() {
