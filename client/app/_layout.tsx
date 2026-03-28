@@ -26,7 +26,8 @@ export default function RootLayout() {
             // 隐藏自带的头部
             headerShown: false
           }}>
-            <Stack.Screen name="index" options={{ title: "" }} />
+            <Stack.Screen name="(tabs)" options={{ title: "" }} />
+            <Stack.Screen name="detail" options={{ title: "招标详情" }} />
           </Stack>
           <Toast />
         </GestureHandlerRootView>
