@@ -169,23 +169,23 @@ export const createStyles = (theme: Theme) => {
     filterSection: {
       backgroundColor: '#FFFFFF',
       marginTop: Spacing.xs,
-      paddingVertical: Spacing.sm,
+      paddingVertical: Spacing.xs + 2,
       borderBottomWidth: 1,
       borderBottomColor: '#F0F0F0',
     },
     filterContainer: {
       flexDirection: 'row',
-      gap: Spacing.sm,
-      paddingHorizontal: Spacing.lg,
+      gap: Spacing.xs,
+      paddingHorizontal: Spacing.sm,
     },
     filterChip: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xs + 2,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
       borderRadius: BorderRadius.full,
       backgroundColor: '#F5F5F5',
-      gap: Spacing.xs,
+      gap: 3,
     },
     filterChipActive: {
       backgroundColor: '#2563EB',
@@ -194,10 +194,10 @@ export const createStyles = (theme: Theme) => {
       opacity: 0.5,
     },
     filterIcon: {
-      marginRight: 2,
+      marginRight: 0,
     },
     filterChipText: {
-      fontSize: 13,
+      fontSize: 12,
       color: '#2563EB',
       fontWeight: '500',
     },

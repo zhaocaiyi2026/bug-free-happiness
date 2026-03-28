@@ -491,9 +491,8 @@ export default function HomeScreen() {
                 >
                   <FontAwesome6 
                     name={filter.icon as any} 
-                    size={12} 
+                    size={10} 
                     color={isActive ? '#FFFFFF' : '#2563EB'} 
-                    style={styles.filterIcon}
                   />
                   <Text style={[
                     styles.filterChipText, 
