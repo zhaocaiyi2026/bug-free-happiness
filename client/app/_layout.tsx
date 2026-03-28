@@ -82,6 +82,7 @@ export default function RootLayout() {
               <Stack.Screen name="agreement" options={{ title: "用户协议" }} />
               <Stack.Screen name="privacy" options={{ title: "隐私政策" }} />
               <Stack.Screen name="register" options={{ title: "注册" }} />
+              <Stack.Screen name="filter-select" options={{ title: "选择筛选" }} />
             </Stack>
           </AuthGuard>
           <Toast />

@@ -7,7 +7,6 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
-  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
@@ -19,13 +18,6 @@ import { Spacing } from '@/constants/theme';
 
 interface Province {
   id: number;
-  name: string;
-  code: string;
-}
-
-interface City {
-  id: number;
-  province_id: number;
   name: string;
   code: string;
 }
@@ -49,23 +41,20 @@ interface Bid {
   is_urgent: boolean;
 }
 
-// 常用省份（前6个）
+// 常用省份（只显示4个热门）
 const POPULAR_PROVINCES = [
   { id: 0, name: '全部', code: '' },
   { id: 1, name: '上海市', code: '310000' },
   { id: 2, name: '北京市', code: '110000' },
-  { id: 3, name: '四川省', code: '510000' },
-  { id: 4, name: '山东省', code: '370000' },
-  { id: 5, name: '广东省', code: '440000' },
+  { id: 3, name: '广东省', code: '440000' },
 ];
 
-// 常用行业（前5个）
+// 常用行业（只显示4个热门）
 const POPULAR_INDUSTRIES = [
   { id: 0, name: '全部', code: '' },
   { id: 1, name: '交通运输', code: 'transport' },
   { id: 2, name: '信息技术', code: 'it' },
-  { id: 3, name: '农林牧渔', code: 'agriculture' },
-  { id: 4, name: '医疗卫生', code: 'medical' },
+  { id: 3, name: '医疗卫生', code: 'medical' },
 ];
 
 export default function SearchScreen() {
@@ -87,8 +76,6 @@ export default function SearchScreen() {
   const [searchType, setSearchType] = useState<'bid' | 'winBid'>('bid');
   
   const [keyword, setKeyword] = useState('');
-  const [allProvinces, setAllProvinces] = useState<Province[]>([]);
-  const [allIndustries, setAllIndustries] = useState<Industry[]>([]);
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [minBudget, setMinBudget] = useState('');
@@ -97,13 +84,9 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // 弹窗状态
-  const [provinceModalVisible, setProvinceModalVisible] = useState(false);
-  const [industryModalVisible, setIndustryModalVisible] = useState(false);
-
   // 初始化：获取筛选数据
   useEffect(() => {
-    fetchFilters();
+    // 可以在这里获取数据用于其他用途
   }, []);
 
   // 处理从发现页面传来的参数 - 只执行一次
@@ -138,27 +121,6 @@ export default function SearchScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.autoSearch]);
-
-  const fetchFilters = async () => {
-    try {
-      const [provincesRes, industriesRes] = await Promise.all([
-        fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/common/provinces`),
-        fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/common/industries`),
-      ]);
-
-      const provincesData = await provincesRes.json();
-      const industriesData = await industriesRes.json();
-
-      if (provincesData.success) {
-        setAllProvinces(provincesData.data);
-      }
-      if (industriesData.success) {
-        setAllIndustries(industriesData.data);
-      }
-    } catch (error) {
-      console.error('获取筛选数据失败:', error);
-    }
-  };
 
   const handleSearch = async () => {
     await handleSearchWithParams(keyword, selectedIndustry, selectedProvince);
@@ -222,12 +184,26 @@ export default function SearchScreen() {
 
   const handleProvinceSelect = (provinceName: string) => {
     setSelectedProvince(provinceName === '全部' ? '' : provinceName);
-    setProvinceModalVisible(false);
   };
 
   const handleIndustrySelect = (industryName: string) => {
     setSelectedIndustry(industryName === '全部' ? '' : industryName);
-    setIndustryModalVisible(false);
+  };
+
+  // 跳转到省份选择页面
+  const handleProvinceMore = () => {
+    router.push('/filter-select', { 
+      type: 'province',
+      selected: selectedProvince 
+    });
+  };
+
+  // 跳转到行业选择页面
+  const handleIndustryMore = () => {
+    router.push('/filter-select', { 
+      type: 'industry',
+      selected: selectedIndustry 
+    });
   };
 
   const renderFilterChip = useCallback((
@@ -251,7 +227,7 @@ export default function SearchScreen() {
       </Text>
       {isMore && (
         <FontAwesome6
-          name="chevron-down"
+          name="chevron-right"
           size={8}
           color={isSelected ? '#FFFFFF' : '#6B7280'}
           style={{ marginLeft: 4 }}
@@ -289,25 +265,6 @@ export default function SearchScreen() {
       </View>
     </TouchableOpacity>
   ), [styles, handleBidPress]);
-
-  const renderModalItem = useCallback((
-    item: { id: number; name: string },
-    isSelected: boolean,
-    onPress: () => void
-  ) => (
-    <TouchableOpacity
-      key={item.id}
-      style={[styles.modalItem, isSelected && styles.modalItemActive]}
-      onPress={onPress}
-    >
-      <Text style={[styles.modalItemText, isSelected && styles.modalItemTextActive]}>
-        {item.name}
-      </Text>
-      {isSelected && (
-        <FontAwesome6 name="check" size={14} color="#2563EB" />
-      )}
-    </TouchableOpacity>
-  ), [styles]);
 
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
@@ -415,7 +372,7 @@ export default function SearchScreen() {
                 {renderFilterChip(
                   { id: -1, name: '' },
                   false,
-                  () => setProvinceModalVisible(true),
+                  handleProvinceMore,
                   true
                 )}
               </ScrollView>
@@ -447,7 +404,7 @@ export default function SearchScreen() {
                 {renderFilterChip(
                   { id: -1, name: '' },
                   false,
-                  () => setIndustryModalVisible(true),
+                  handleIndustryMore,
                   true
                 )}
               </ScrollView>
@@ -517,78 +474,6 @@ export default function SearchScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* 省份选择弹窗 */}
-      <Modal
-        visible={provinceModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setProvinceModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setProvinceModalVisible(false)}
-        >
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>选择省份</Text>
-              <TouchableOpacity onPress={() => setProvinceModalVisible(false)}>
-                <FontAwesome6 name="xmark" size={18} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={[{ id: 0, name: '全部' }, ...allProvinces]}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) =>
-                renderModalItem(
-                  item,
-                  selectedProvince === item.name || (item.name === '全部' && !selectedProvince),
-                  () => handleProvinceSelect(item.name)
-                )
-              }
-              showsVerticalScrollIndicator={false}
-              style={styles.modalList}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* 行业选择弹窗 */}
-      <Modal
-        visible={industryModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIndustryModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIndustryModalVisible(false)}
-        >
-          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>选择行业</Text>
-              <TouchableOpacity onPress={() => setIndustryModalVisible(false)}>
-                <FontAwesome6 name="xmark" size={18} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={[{ id: 0, name: '全部' }, ...allIndustries]}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) =>
-                renderModalItem(
-                  item,
-                  selectedIndustry === item.name || (item.name === '全部' && !selectedIndustry),
-                  () => handleIndustrySelect(item.name)
-                )
-              }
-              showsVerticalScrollIndicator={false}
-              style={styles.modalList}
-            />
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </Screen>
   );
 }
