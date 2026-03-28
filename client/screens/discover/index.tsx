@@ -83,7 +83,6 @@ export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const router = useSafeRouter();
 
-  const [activeFilter, setActiveFilter] = useState<string>('all');
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [recommendBids, setRecommendBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,17 +93,10 @@ export default function DiscoverScreen() {
   const [selectedProvince, setSelectedProvince] = useState<string>('');
   const [provinceModalVisible, setProvinceModalVisible] = useState(false);
 
-  const filters = [
-    { key: 'all', label: '全部' },
-    { key: 'today', label: '今日新增' },
-    { key: 'urgent', label: '紧急招标' },
-    { key: 'high_budget', label: '大额项目' },
-  ];
-
   useEffect(() => {
     fetchProvinces();
     fetchData();
-  }, [activeFilter]);
+  }, []);
 
   const fetchProvinces = async () => {
     try {
@@ -159,21 +151,6 @@ export default function DiscoverScreen() {
       params.append('page', '1');
       params.append('pageSize', '6');
 
-      // 根据筛选条件添加参数
-      switch (activeFilter) {
-        case 'today': {
-          const today = new Date().toISOString().split('T')[0];
-          params.append('publishDateFrom', today);
-          break;
-        }
-        case 'urgent':
-          params.append('isUrgent', 'true');
-          break;
-        case 'high_budget':
-          params.append('minBudget', '10000000');
-          break;
-      }
-
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
       );
@@ -222,13 +199,7 @@ export default function DiscoverScreen() {
   };
 
   const handleViewAllBids = () => {
-    if (activeFilter === 'urgent') {
-      router.push('/bidList', { type: 'urgent' });
-    } else if (activeFilter === 'today') {
-      router.push('/bidList', { type: 'today' });
-    } else {
-      router.push('/bidList', { type: 'today' });
-    }
+    router.push('/bidList', { type: 'today' });
   };
 
   const handleProvinceSelect = (provinceName: string) => {
@@ -445,23 +416,6 @@ export default function DiscoverScreen() {
                 </View>
                 <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
               </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* 筛选条件 */}
-          <View style={[styles.sectionContainer, { paddingBottom: Spacing.sm }]}>
-            <View style={styles.filterContainer}>
-              {filters.map((filter) => (
-                <TouchableOpacity
-                  key={filter.key}
-                  style={[styles.filterChip, activeFilter === filter.key && styles.filterChipActive]}
-                  onPress={() => setActiveFilter(filter.key)}
-                >
-                  <Text style={[styles.filterChipText, activeFilter === filter.key && styles.filterChipTextActive]}>
-                    {filter.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
             </View>
           </View>
 
