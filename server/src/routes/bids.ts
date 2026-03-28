@@ -51,7 +51,6 @@ router.get('/', async (req, res) => {
       .not('project_location', 'is', null)
       // 过滤已截止的招标（截止时间大于当前时间）
       .gt('deadline', new Date().toISOString())
-      .order('is_urgent', { ascending: false })
       .order('publish_date', { ascending: false });
 
     // 应用筛选条件
@@ -67,8 +66,11 @@ router.get('/', async (req, res) => {
     if (bidType) {
       query = query.eq('bid_type', bidType as string);
     }
-    if (isUrgent !== undefined) {
-      query = query.eq('is_urgent', isUrgent === 'true');
+    // 紧急招标筛选：投标截止日期在4天内
+    if (isUrgent === 'true') {
+      const now = new Date();
+      const fourDaysLater = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+      query = query.lte('deadline', fourDaysLater.toISOString());
     }
     if (minBudget) {
       query = query.gte('budget', Number(minBudget));
@@ -95,10 +97,24 @@ router.get('/', async (req, res) => {
       throw new Error(`查询招标列表失败: ${error.message}`);
     }
 
+    // 动态计算紧急状态：投标截止日期在4天内的项目为紧急
+    const now = new Date();
+    const fourDaysLater = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+    
+    const processedData = data?.map(item => {
+      const deadline = item.deadline ? new Date(item.deadline) : null;
+      // 如果截止日期存在且在4天内，标记为紧急
+      const isUrgent = deadline && deadline <= fourDaysLater && deadline > now;
+      return {
+        ...item,
+        is_urgent: isUrgent
+      };
+    }) || [];
+
     res.json({
       success: true,
       data: {
-        list: data,
+        list: processedData,
         total: count,
         page: pageNum,
         pageSize: sizeNum,
