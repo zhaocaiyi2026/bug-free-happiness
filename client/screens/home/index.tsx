@@ -95,56 +95,10 @@ export default function HomeScreen() {
     { key: 'cityWin', label: '本市中标', icon: 'award' },
   ];
 
-  useEffect(() => {
-    fetchData(1);
-    fetchWinBids();
-  }, [activeFilter]);
-
-  // 请求定位权限并获取位置
-  const requestLocation = async () => {
-    try {
-      setLocating(true);
-      
-      // 请求权限
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('提示', '需要定位权限才能使用此功能，请在设置中开启');
-        setLocating(false);
-        return;
-      }
-
-      // 获取位置
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      // 逆地理编码
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      if (reverseGeocode.length > 0) {
-        const address = reverseGeocode[0];
-        const province = address.region || address.subregion || '';
-        const city = address.city || address.subregion || '';
-        
-        setUserLocation({ province, city });
-        
-        Alert.alert('定位成功', `已定位到：${province} ${city}`, [
-          { text: '好的', style: 'default' }
-        ]);
-      }
-    } catch (error) {
-      console.error('定位失败:', error);
-      Alert.alert('定位失败', '无法获取您的位置，请检查定位服务是否开启');
-    } finally {
-      setLocating(false);
-    }
-  };
-
+  // 获取招标数据
   const fetchData = async (pageNum: number) => {
     try {
+      setLoading(true);
       // 判断是否为中标筛选
       const isWinBidFilter = activeFilter === 'provinceWin' || activeFilter === 'cityWin';
       
@@ -230,6 +184,7 @@ export default function HomeScreen() {
     }
   };
 
+  // 获取中标统计数据
   const fetchWinBids = async () => {
     try {
       // 获取今日中标数量
@@ -247,6 +202,54 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('获取中标列表失败:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData(1);
+    fetchWinBids();
+  }, [activeFilter]);
+
+  // 请求定位权限并获取位置
+  const requestLocation = async () => {
+    try {
+      setLocating(true);
+      
+      // 请求权限
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('提示', '需要定位权限才能使用此功能，请在设置中开启');
+        setLocating(false);
+        return;
+      }
+
+      // 获取位置
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      // 逆地理编码
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+        const province = address.region || address.subregion || '';
+        const city = address.city || address.subregion || '';
+        
+        setUserLocation({ province, city });
+        
+        Alert.alert('定位成功', `已定位到：${province} ${city}`, [
+          { text: '好的', style: 'default' }
+        ]);
+      }
+    } catch (error) {
+      console.error('定位失败:', error);
+      Alert.alert('定位失败', '无法获取您的位置，请检查定位服务是否开启');
+    } finally {
+      setLocating(false);
     }
   };
 
