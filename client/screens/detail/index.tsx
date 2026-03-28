@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
@@ -36,11 +37,12 @@ export default function DetailScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const params = useSafeSearchParams<{ id: number }>();
+  const insets = useSafeAreaInsets();
 
   const [bid, setBid] = useState<Bid | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [userId] = useState(1); // 模拟用户ID，实际应从登录状态获取
+  const [userId] = useState(1);
 
   useEffect(() => {
     if (params.id) {
@@ -89,7 +91,6 @@ export default function DetailScreen() {
   const handleToggleFavorite = async () => {
     try {
       if (isFavorite) {
-        // 取消收藏
         const res = await fetch(
           `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites/${params.id}?userId=${userId}`,
           { method: 'DELETE' }
@@ -101,7 +102,6 @@ export default function DetailScreen() {
           Alert.alert('成功', '已取消收藏');
         }
       } else {
-        // 添加收藏
         const res = await fetch(
           `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites`,
           {
@@ -126,26 +126,34 @@ export default function DetailScreen() {
   };
 
   const formatBudget = (budget: number | null) => {
-    if (!budget) return '预算面议';
+    if (!budget) return { value: '面议', unit: '' };
     if (budget >= 100000000) {
-      return `${(budget / 100000000).toFixed(2)}亿元`;
+      return { value: (budget / 100000000).toFixed(2), unit: '亿' };
     } else if (budget >= 10000) {
-      return `${(budget / 10000).toFixed(0)}万元`;
+      return { value: (budget / 10000).toFixed(0), unit: '万' };
     }
-    return `${budget}元`;
+    return { value: String(budget), unit: '' };
   };
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '暂无';
     const date = new Date(dateStr);
-    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+  };
+
+  const getDaysRemaining = (deadline: string | null) => {
+    if (!deadline) return null;
+    const end = new Date(deadline);
+    const now = new Date();
+    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
   };
 
   if (loading) {
     return (
-      <Screen backgroundColor="#FAF9F6" statusBarStyle="dark">
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#000000" />
+          <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>加载中...</Text>
         </View>
       </Screen>
@@ -154,118 +162,154 @@ export default function DetailScreen() {
 
   if (!bid) return null;
 
+  const budget = formatBudget(bid.budget);
+  const daysRemaining = getDaysRemaining(bid.deadline);
+
   return (
-    <Screen backgroundColor="#FAF9F6" statusBarStyle="dark">
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Header - 紧凑型 */}
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <FontAwesome6 name="arrow-left" size={20} color="#FFFFFF" />
+              <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>招标详情</Text>
-          </View>
-          <Text style={styles.category}>{bid.industry || '综合'}</Text>
-          <Text style={styles.title}>{bid.title}</Text>
-          {bid.is_urgent && (
-            <View style={styles.urgentBadge}>
-              <FontAwesome6 name="triangle-exclamation" size={12} color="#FFFFFF" />
-              <Text style={styles.urgentBadgeText}>紧急招标</Text>
+            <View style={styles.headerRight}>
+              <TouchableOpacity style={styles.headerButton} onPress={handleToggleFavorite}>
+                <FontAwesome6 
+                  name={isFavorite ? 'heart' : 'heart'} 
+                  size={16} 
+                  color={isFavorite ? '#C8102E' : '#FFFFFF'} 
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.headerButton}>
+                <FontAwesome6 name="share-nodes" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
             </View>
-          )}
+          </View>
+
+          {/* 标题区 */}
+          <View style={styles.titleSection}>
+            <View style={styles.titleRow}>
+              <View style={styles.categoryTag}>
+                <Text style={styles.categoryTagText}>{bid.industry?.slice(0, 4) || '项目'}</Text>
+              </View>
+              {bid.is_urgent && (
+                <View style={styles.urgentTag}>
+                  <FontAwesome6 name="bolt" size={9} color="#FFFFFF" />
+                  <Text style={styles.urgentTagText}>紧急</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.title}>{bid.title}</Text>
+          </View>
         </View>
 
-        {/* Content */}
-        <View style={styles.content}>
-          {/* 元信息卡片 */}
-          <View style={styles.metaCard}>
-            <View style={styles.metaRow}>
-              <View style={styles.metaIcon}>
-                <FontAwesome6 name="money-bill-wave" size={20} color="#C8102E" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.metaLabel}>项目预算</Text>
-                <Text style={styles.budgetValue}>{formatBudget(bid.budget)}</Text>
-              </View>
-            </View>
-
-            <View style={styles.metaRow}>
-              <View style={styles.metaIcon}>
-                <FontAwesome6 name="location-dot" size={20} color="#1A1A1A" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.metaLabel}>项目地点</Text>
-                <Text style={styles.metaValue}>
-                  {bid.province} {bid.city}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.metaRow}>
-              <View style={styles.metaIcon}>
-                <FontAwesome6 name="calendar" size={20} color="#1A1A1A" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.metaLabel}>发布时间</Text>
-                <Text style={styles.metaValue}>{formatDate(bid.publish_date)}</Text>
-              </View>
-            </View>
-
-            <View style={styles.metaRow}>
-              <View style={styles.metaIcon}>
-                <FontAwesome6 name="clock" size={20} color="#C8102E" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.metaLabel}>截止时间</Text>
-                <Text style={styles.metaValue}>{formatDate(bid.deadline)}</Text>
-              </View>
-            </View>
-
-            <View style={styles.metaRow}>
-              <View style={styles.metaIcon}>
-                <FontAwesome6 name="eye" size={20} color="#1A1A1A" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.metaLabel}>浏览次数</Text>
-                <Text style={styles.metaValue}>{bid.view_count} 次</Text>
-              </View>
-            </View>
+        {/* 核心信息卡片 */}
+        <View style={styles.coreInfoCard}>
+          {/* 预算 */}
+          <View style={styles.budgetRow}>
+            <Text style={styles.budgetLabel}>项目预算</Text>
+            <Text style={styles.budgetValue}>{budget.value}</Text>
+            {budget.unit && <Text style={styles.budgetUnit}>{budget.unit}元</Text>}
           </View>
 
-          {/* 项目详情 */}
-          <Text style={styles.sectionTitle}>项目详情</Text>
-          <Text style={styles.contentText}>{bid.content || '暂无详情'}</Text>
+          {/* 信息网格 */}
+          <View style={styles.infoGrid}>
+            {/* 地点 */}
+            <View style={styles.infoItem}>
+              <View style={[styles.infoIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
+                <FontAwesome6 name="location-dot" size={12} color="#2563EB" />
+              </View>
+              <Text style={styles.infoLabel}>项目地点</Text>
+              <Text style={styles.infoValue}>{bid.province} {bid.city}</Text>
+            </View>
 
-          <View style={styles.divider} />
+            {/* 招标方式 */}
+            <View style={styles.infoItem}>
+              <View style={[styles.infoIcon, { backgroundColor: 'rgba(5,150,105,0.1)' }]}>
+                <FontAwesome6 name="file-signature" size={12} color="#059669" />
+              </View>
+              <Text style={styles.infoLabel}>招标方式</Text>
+              <Text style={styles.infoValue}>{bid.bid_type || '公开招标'}</Text>
+            </View>
 
-          {/* 信息来源 */}
-          <View style={styles.sourceCard}>
+            {/* 发布时间 */}
+            <View style={styles.infoItem}>
+              <View style={[styles.infoIcon, { backgroundColor: 'rgba(107,114,128,0.1)' }]}>
+                <FontAwesome6 name="calendar" size={12} color="#6B7280" />
+              </View>
+              <Text style={styles.infoLabel}>发布时间</Text>
+              <Text style={styles.infoValue}>{formatDate(bid.publish_date)}</Text>
+            </View>
+
+            {/* 截止时间 */}
+            <View style={styles.infoItem}>
+              <View style={[styles.infoIcon, { backgroundColor: 'rgba(200,16,46,0.1)' }]}>
+                <FontAwesome6 name="clock" size={12} color="#C8102E" />
+              </View>
+              <Text style={styles.infoLabel}>截止时间</Text>
+              <Text style={[styles.infoValue, styles.infoValueRed]}>
+                {formatDate(bid.deadline)}
+                {daysRemaining !== null && ` (剩${daysRemaining}天)`}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 项目详情 */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIcon}>
+              <FontAwesome6 name="file-lines" size={11} color="#2563EB" />
+            </View>
+            <Text style={styles.sectionTitle}>项目详情</Text>
+          </View>
+          <Text style={styles.contentText}>
+            {bid.content || '暂无详细信息，请联系招标方获取更多资料。'}
+          </Text>
+          
+          {/* 来源 */}
+          <View style={styles.sourceRow}>
             <Text style={styles.sourceLabel}>信息来源</Text>
             <Text style={styles.sourceValue}>{bid.source || '官方渠道'}</Text>
-            {bid.source_url && (
-              <Text style={{ fontSize: 12, color: '#C8102E' }}>查看原文</Text>
-            )}
           </View>
+        </View>
+
+        {/* 相关提示 */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIcon, { backgroundColor: 'rgba(200,16,46,0.1)' }]}>
+              <FontAwesome6 name="circle-info" size={11} color="#C8102E" />
+            </View>
+            <Text style={styles.sectionTitle}>温馨提示</Text>
+          </View>
+          <Text style={styles.contentText}>
+            1. 请在截止时间前完成投标{'\n'}
+            2. 仔细阅读招标文件要求{'\n'}
+            3. 如有疑问请及时联系招标方
+          </Text>
         </View>
       </ScrollView>
 
       {/* 底部操作栏 */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.sm }]}>
         <TouchableOpacity
           style={[styles.actionButton, styles.secondaryButton]}
           onPress={handleToggleFavorite}
         >
           <FontAwesome6
             name={isFavorite ? 'heart' : 'heart'}
-            size={18}
-            color={isFavorite ? '#C8102E' : '#1A1A1A'}
+            size={16}
+            color={isFavorite ? '#C8102E' : '#374151'}
           />
           <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
             {isFavorite ? '已收藏' : '收藏'}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.actionButton, styles.primaryButton]}>
-          <FontAwesome6 name="bell" size={18} color="#FFFFFF" />
+          <FontAwesome6 name="bell" size={16} color="#FFFFFF" />
           <Text style={[styles.actionButtonText, styles.primaryButtonText]}>设置提醒</Text>
         </TouchableOpacity>
       </View>
