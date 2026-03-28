@@ -18,10 +18,28 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
+    appTitleWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    appLogo: {
+      width: 36,
+      height: 36,
+      borderRadius: BorderRadius.lg,
+      backgroundColor: '#2563EB',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: Spacing.sm,
+    },
+    appTitleContainer: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+    },
     appTitle: {
-      fontSize: 22,
+      fontSize: 28,
       fontWeight: '800',
       color: '#1C1917',
+      letterSpacing: 1,
     },
     appTitleAccent: {
       color: '#2563EB',
@@ -32,8 +50,8 @@ export const createStyles = (theme: Theme) => {
       gap: Spacing.sm,
     },
     iconButton: {
-      width: 38,
-      height: 38,
+      width: 40,
+      height: 40,
       borderRadius: BorderRadius.md,
       backgroundColor: '#F5F5F5',
       justifyContent: 'center',
@@ -45,8 +63,8 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#F5F5F5',
       borderRadius: BorderRadius.md,
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      marginTop: Spacing.sm,
+      paddingVertical: Spacing.sm + 2,
+      marginTop: Spacing.md,
     },
     searchPlaceholder: {
       fontSize: 13,
