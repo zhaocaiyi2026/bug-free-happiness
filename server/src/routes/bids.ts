@@ -131,6 +131,73 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * 获取首页统计数据
+ * 返回：今日新增、紧急招标、今日中标的数量
+ */
+router.get('/stats', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+
+    // 获取今日日期范围（UTC）
+    const todayDate = new Date();
+    const todayStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()).toISOString();
+    const todayEnd = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() + 1).toISOString();
+
+    // 计算紧急招标截止时间（4天内）
+    const now = new Date();
+    const fourDaysLater = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+
+    // 并行查询三个统计数据
+    const [todayBidsResult, urgentBidsResult, todayWinBidsResult] = await Promise.all([
+      // 今日新增招标数量
+      client
+        .from('bids')
+        .select('id', { count: 'exact', head: true })
+        .not('contact_person', 'is', null)
+        .not('contact_phone', 'is', null)
+        .not('project_location', 'is', null)
+        .gte('publish_date', todayStart)
+        .lt('publish_date', todayEnd),
+
+      // 紧急招标数量（投标截止日期在4天内且未截止）
+      client
+        .from('bids')
+        .select('id', { count: 'exact', head: true })
+        .not('contact_person', 'is', null)
+        .not('contact_phone', 'is', null)
+        .not('project_location', 'is', null)
+        .gt('deadline', now.toISOString())
+        .lte('deadline', fourDaysLater.toISOString()),
+
+      // 今日中标数量
+      client
+        .from('win_bids')
+        .select('id', { count: 'exact', head: true })
+        .not('win_company', 'is', null)
+        .not('win_amount', 'is', null)
+        .gt('win_amount', 0)
+        .gte('publish_date', todayStart)
+        .lt('publish_date', todayEnd)
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        todayBids: todayBidsResult.count || 0,
+        urgentBids: urgentBidsResult.count || 0,
+        todayWinBids: todayWinBidsResult.count || 0
+      }
+    });
+  } catch (error) {
+    console.error('获取统计数据失败:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : '获取统计数据失败'
+    });
+  }
+});
+
+/**
  * 获取招标详情
  * Path参数：
  * - id: number (招标ID)

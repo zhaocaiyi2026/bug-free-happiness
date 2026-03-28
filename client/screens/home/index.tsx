@@ -97,6 +97,32 @@ export default function HomeScreen() {
     { key: 'cityWin', label: '本市中标', icon: 'award' },
   ];
 
+  // 获取首页统计数据
+  const fetchStats = async () => {
+    try {
+      /**
+       * 服务端文件：server/src/routes/bids.ts
+       * 接口：GET /api/v1/bids/stats
+       * 返回：今日新增、紧急招标、今日中标的数量
+       */
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids/stats`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        setStats(prev => ({
+          ...prev,
+          todayCount: data.data.todayBids || 0,
+          urgentCount: data.data.urgentBids || 0,
+          winBidCount: data.data.todayWinBids || 0,
+        }));
+      }
+    } catch (error) {
+      console.error('获取统计数据失败:', error);
+    }
+  };
+
   // 获取招标数据
   const fetchData = async (pageNum: number) => {
     try {
@@ -130,11 +156,6 @@ export default function HomeScreen() {
           
           if (pageNum === 1) {
             setBids(bidItems);
-            setStats(prev => ({
-              ...prev,
-              todayCount: data.data.total || 156,
-              urgentCount: data.data.list.filter((b: Bid) => b.is_urgent).length || 8,
-            }));
           } else {
             setBids((prev) => [...prev, ...bidItems]);
           }
@@ -202,12 +223,6 @@ export default function HomeScreen() {
         if (data.success) {
           if (pageNum === 1) {
             setBids(data.data.list);
-            // 更新统计数据
-            setStats(prev => ({
-              ...prev,
-              todayCount: data.data.total || 156,
-              urgentCount: data.data.list.filter((b: Bid) => b.is_urgent).length || 8,
-            }));
           } else {
             setBids((prev) => [...prev, ...data.data.list]);
           }
@@ -222,31 +237,10 @@ export default function HomeScreen() {
     }
   };
 
-  // 获取中标统计数据
-  const fetchWinBids = async () => {
-    try {
-      // 获取今日中标数量
-      const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?page=1&pageSize=1&today=true`
-      );
-      const data = await res.json();
-
-      if (data.success) {
-        setWinBids(data.data.list);
-        setStats(prev => ({
-          ...prev,
-          winBidCount: data.data.total || 0,
-        }));
-      }
-    } catch (error) {
-      console.error('获取中标列表失败:', error);
-    }
-  };
-
   useEffect(() => {
     fetchData(1);
-    fetchWinBids();
-  }, [activeFilter]);
+    fetchStats();
+  }, [activeFilter, userLocation?.province]);
 
   // 打开系统定位设置
   const openLocationSettings = async () => {
