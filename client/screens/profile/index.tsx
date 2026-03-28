@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
@@ -100,10 +101,33 @@ export default function ProfileScreen() {
         router.push('/feedback');
         break;
       case 'logout':
-        Alert.alert('退出登录', '确定要退出登录吗？', [
-          { text: '取消', style: 'cancel' },
-          { text: '确定', style: 'destructive', onPress: () => logout() },
-        ]);
+        console.log('[Profile] logout menu pressed');
+        if (Platform.OS === 'web') {
+          // Web 端使用 window.confirm
+          const confirmed = window.confirm('确定要退出登录吗？');
+          if (confirmed) {
+            console.log('[Profile] confirm logout');
+            logout();
+          }
+        } else {
+          // 移动端使用 Alert.alert
+          Alert.alert(
+            '退出登录',
+            '确定要退出登录吗？',
+            [
+              { text: '取消', style: 'cancel' },
+              {
+                text: '确定',
+                style: 'destructive',
+                onPress: () => {
+                  console.log('[Profile] confirm logout');
+                  logout();
+                }
+              },
+            ],
+            { cancelable: true }
+          );
+        }
         break;
       case 'about':
         Alert.alert('关于招标通', '招标通 v1.0.0\n\n专业的招标信息聚合平台\n\n整合20,000+数据源\n提供实时招标、中标信息\n助力企业把握商机');
@@ -323,6 +347,7 @@ export default function ProfileScreen() {
           <TouchableOpacity 
             style={[styles.menuSection, { padding: Spacing.lg, marginTop: Spacing.sm }]} 
             onPress={() => handleMenuPress('logout')}
+            activeOpacity={0.7}
           >
             <View style={styles.menuItemContent}>
               <View style={[styles.menuIcon, { backgroundColor: 'rgba(200, 16, 46, 0.1)' }]}>

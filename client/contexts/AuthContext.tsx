@@ -61,8 +61,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = useCallback(async () => {
     try {
+      console.log('[AuthContext] logout - clearing user data');
       await AsyncStorage.removeItem(USER_STORAGE_KEY);
       setUser(null);
+      console.log('[AuthContext] logout - user cleared');
     } catch (error) {
       console.error('清除用户信息失败:', error);
     }
