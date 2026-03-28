@@ -45,6 +45,10 @@ router.get('/', async (req, res) => {
     let query = client
       .from('bids')
       .select('id, title, budget, province, city, industry, bid_type, publish_date, deadline, source, is_urgent, status, view_count, created_at', { count: 'exact' })
+      // 只返回有完整联系人和项目信息的数据
+      .not('contact_person', 'is', null)
+      .not('contact_phone', 'is', null)
+      .not('project_location', 'is', null)
       .order('is_urgent', { ascending: false })
       .order('publish_date', { ascending: false });
 
@@ -118,11 +122,14 @@ router.get('/:id', async (req, res) => {
     const client = getSupabaseClient();
     const { id } = req.params;
 
-    // 获取招标详情
+    // 获取招标详情（必须有完整联系人和项目信息）
     const { data: bid, error } = await client
       .from('bids')
       .select('*')
       .eq('id', Number(id))
+      .not('contact_person', 'is', null)
+      .not('contact_phone', 'is', null)
+      .not('project_location', 'is', null)
       .maybeSingle();
 
     if (error) {
@@ -132,7 +139,7 @@ router.get('/:id', async (req, res) => {
     if (!bid) {
       return res.status(404).json({
         success: false,
-        message: '招标信息不存在'
+        message: '招标信息不存在或信息不完整'
       });
     }
 
@@ -167,6 +174,10 @@ router.get('/urgent/list', async (req, res) => {
       .select('id, title, budget, province, city, industry, deadline, publish_date')
       .eq('is_urgent', true)
       .eq('status', 'active')
+      // 只返回有完整联系人和项目信息的数据
+      .not('contact_person', 'is', null)
+      .not('contact_phone', 'is', null)
+      .not('project_location', 'is', null)
       .order('deadline', { ascending: true })
       .limit(5);
 
