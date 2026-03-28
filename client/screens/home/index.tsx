@@ -88,11 +88,11 @@ export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locating, setLocating] = useState(false);
 
-  // 快捷筛选入口：全部、本省、本市、本省中标、本市中标
+  // 快捷筛选入口：全部、全省招标、全市招标、本省中标、本市中标
   const filters = [
     { key: 'all', label: '全部', icon: 'layer-group' },
-    { key: 'province', label: '本省', icon: 'map' },
-    { key: 'city', label: '本市', icon: 'city' },
+    { key: 'province', label: '全省招标', icon: 'map' },
+    { key: 'city', label: '全市招标', icon: 'city' },
     { key: 'provinceWin', label: '本省中标', icon: 'trophy' },
     { key: 'cityWin', label: '本市中标', icon: 'award' },
   ];
@@ -104,63 +104,41 @@ export default function HomeScreen() {
       // 判断是否为中标筛选
       const isWinBidFilter = activeFilter === 'provinceWin' || activeFilter === 'cityWin';
       
-      // "全部"筛选同时获取招标和中标数据
+      // "全部"筛选只显示招标数据（按省份筛选）
       if (activeFilter === 'all') {
-        // 并行获取招标和中标数据
-        const [bidsRes, winBidsRes] = await Promise.all([
-          fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?page=${pageNum}&pageSize=10`),
-          fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?page=${pageNum}&pageSize=10`)
-        ]);
+        const params = new URLSearchParams();
+        params.append('page', String(pageNum));
+        params.append('pageSize', '20');
         
-        const bidsData = await bidsRes.json();
-        const winBidsData = await winBidsRes.json();
-        
-        if (bidsData.success && winBidsData.success) {
+        // 如果用户已定位，按省份筛选
+        if (userLocation?.province) {
+          params.append('province', userLocation.province);
+        }
+
+        const res = await fetch(
+          `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
+        );
+        const data = await res.json();
+
+        if (data.success) {
           // 为招标数据添加类型标识
-          const bidItems = bidsData.data.list.map((item: Bid) => ({
+          const bidItems = data.data.list.map((item: Bid) => ({
             ...item,
             isWinBid: false,
             bidType: '招标' as const,
           }));
           
-          // 为中标数据添加类型标识并转换格式
-          const winBidItems = winBidsData.data.list.map((item: WinBid) => ({
-            id: item.id,
-            title: item.title,
-            budget: item.win_amount,
-            province: item.province,
-            city: item.city,
-            industry: item.industry,
-            bid_type: '中标',
-            publish_date: item.publish_date,
-            deadline: null,
-            is_urgent: false,
-            view_count: 0,
-            isWinBid: true,
-            bidType: '中标' as const,
-            winCompany: item.win_company,
-          }));
-          
-          // 合并并按发布时间排序
-          const allItems = [...bidItems, ...winBidItems].sort((a, b) => {
-            const dateA = a.publish_date ? new Date(a.publish_date).getTime() : 0;
-            const dateB = b.publish_date ? new Date(b.publish_date).getTime() : 0;
-            return dateB - dateA;
-          });
-          
           if (pageNum === 1) {
-            setBids(allItems);
+            setBids(bidItems);
             setStats(prev => ({
               ...prev,
-              todayCount: bidsData.data.total || 156,
-              urgentCount: bidsData.data.list.filter((b: Bid) => b.is_urgent).length || 8,
-              winBidCount: winBidsData.data.total || 0,
+              todayCount: data.data.total || 156,
+              urgentCount: data.data.list.filter((b: Bid) => b.is_urgent).length || 8,
             }));
           } else {
-            setBids((prev) => [...prev, ...allItems]);
+            setBids((prev) => [...prev, ...bidItems]);
           }
-          // 由于合并了两页数据，需要判断是否还有更多
-          setHasMore(bidsData.data.page < bidsData.data.totalPages || winBidsData.data.page < winBidsData.data.totalPages);
+          setHasMore(data.data.page < data.data.totalPages);
         }
       } else if (isWinBidFilter) {
         // 获取中标数据
