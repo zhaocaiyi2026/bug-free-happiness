@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
@@ -34,9 +34,8 @@ interface Customer {
   source_date: string | null;
 }
 
-// 常用行业
+// 常用行业（不含全部，全部改为跳转到筛选页）
 const POPULAR_INDUSTRIES = [
-  { id: 0, name: '全部', code: '' },
   { id: 1, name: '医疗设备', code: 'medical' },
   { id: 2, name: '建筑工程', code: 'construction' },
 ];
@@ -46,6 +45,12 @@ export default function PotentialCustomersScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
+  
+  // 接收页面参数
+  const params = useSafeSearchParams<{
+    industry?: string;
+    customerType?: string;
+  }>();
 
   const [keyword, setKeyword] = useState('');
   const [selectedIndustry, setSelectedIndustry] = useState('');
@@ -58,10 +63,21 @@ export default function PotentialCustomersScreen() {
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  // 初始加载
+  // 监听参数变化，更新筛选状态
+  useEffect(() => {
+    if (params?.industry) {
+      setSelectedIndustry(params.industry);
+    }
+    if (params?.customerType && ['all', 'bidder', 'winner'].includes(params.customerType)) {
+      setCustomerType(params.customerType as 'all' | 'bidder' | 'winner');
+    }
+  }, [params]);
+
+  // 初始加载或筛选变化时搜索
   useEffect(() => {
     handleSearch();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIndustry, customerType]);
 
   const handleSearch = async () => {
     setPage(1);
@@ -172,17 +188,28 @@ export default function PotentialCustomersScreen() {
     }
   };
 
-  const handleIndustrySelect = (industryName: string) => {
-    const newIndustry = industryName === '全部' ? '' : industryName;
-    setSelectedIndustry(newIndustry);
-    // 选择行业后立即搜索（使用新值，不依赖状态更新）
-    fetchCustomersWithParams(1, true, keyword, newIndustry, customerType);
+  const handleIndustrySelect = () => {
+    // 点击"全部"跳转到行业筛选页面
+    router.push('/filter-select', {
+      type: 'industry',
+      selected: selectedIndustry,
+      returnTo: 'potential-customers',
+      customerType: customerType,
+    });
+  };
+
+  const handleIndustryChipSelect = (industryName: string) => {
+    // 快捷行业按钮直接筛选
+    setSelectedIndustry(industryName);
+  };
+
+  const handleClearIndustry = () => {
+    // 清除行业筛选
+    setSelectedIndustry('');
   };
 
   const handleCustomerTypeChange = (newType: 'all' | 'bidder' | 'winner') => {
     setCustomerType(newType);
-    // 切换类型后立即搜索（使用当前状态值）
-    fetchCustomersWithParams(1, true, keyword, selectedIndustry, newType);
   };
 
   // 拨打电话
@@ -399,17 +426,45 @@ export default function PotentialCustomersScreen() {
             <Text style={styles.filterLabel}>行业筛选</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+                {/* 全部按钮 - 点击跳转到行业筛选页面 */}
+                <TouchableOpacity
+                  style={[styles.filterChip, !selectedIndustry && styles.filterChipActive]}
+                  onPress={handleIndustrySelect}
+                >
+                  <Text style={[styles.filterChipText, !selectedIndustry && styles.filterChipTextActive]}>
+                    全部
+                  </Text>
+                  <FontAwesome6 name="chevron-right" size={10} color={!selectedIndustry ? '#FFFFFF' : '#6B7280'} style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
+                
+                {/* 快捷行业按钮 */}
                 {POPULAR_INDUSTRIES.map((item) => {
-                  // "全部"按钮：选中当 selectedIndustry 为空；其他按钮：选中当名称匹配
-                  const isSelected = item.name === '全部' 
-                    ? !selectedIndustry 
-                    : selectedIndustry === item.name;
-                  return renderFilterChip(
-                    item,
-                    isSelected,
-                    () => handleIndustrySelect(item.name)
+                  const isSelected = selectedIndustry === item.name;
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[styles.filterChip, isSelected && styles.filterChipActive]}
+                      onPress={() => handleIndustryChipSelect(item.name)}
+                    >
+                      <Text style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}>
+                        {item.name}
+                      </Text>
+                    </TouchableOpacity>
                   );
                 })}
+                
+                {/* 已选行业标签（非快捷选项时显示） */}
+                {selectedIndustry && !POPULAR_INDUSTRIES.find(i => i.name === selectedIndustry) && (
+                  <TouchableOpacity
+                    style={[styles.filterChip, styles.filterChipActive]}
+                    onPress={handleClearIndustry}
+                  >
+                    <Text style={[styles.filterChipText, styles.filterChipTextActive]}>
+                      {selectedIndustry}
+                    </Text>
+                    <FontAwesome6 name="times" size={10} color="#FFFFFF" style={{ marginLeft: 4 }} />
+                  </TouchableOpacity>
+                )}
               </ScrollView>
             </View>
           </View>

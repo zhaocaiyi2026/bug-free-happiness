@@ -41,10 +41,13 @@ export default function FilterSelectScreen() {
     keyword?: string;
     industry?: string;
     province?: string;
+    returnTo?: string;
+    customerType?: string;
   }>();
 
   const filterType = params?.type || 'province';
   const selectedValue = params?.selected || '';
+  const returnTo = params?.returnTo || 'search';
   // 保留原有的筛选参数
   const existingKeyword = params?.keyword || '';
   const existingIndustry = params?.industry || '';
@@ -92,7 +95,17 @@ export default function FilterSelectScreen() {
   }, [allItems, searchKeyword]);
 
   const handleSelect = useCallback((itemName: string) => {
-    // 构建完整的筛选参数，保留原有条件
+    // 根据返回目标页面处理
+    if (returnTo === 'potential-customers') {
+      // 返回潜在客户页面
+      router.replace('/potential-customers', {
+        industry: itemName,
+        customerType: params?.customerType || 'all',
+      });
+      return;
+    }
+    
+    // 默认返回搜索页面
     const searchParams: {
       autoSearch: string;
       keyword?: string;
