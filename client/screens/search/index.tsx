@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -80,6 +80,9 @@ export default function SearchScreen() {
     autoSearch?: string;
   }>();
 
+  // 用于追踪是否已执行过自动搜索
+  const hasAutoSearchedRef = useRef(false);
+
   // 搜索类型：bid-招标，winBid-中标
   const [searchType, setSearchType] = useState<'bid' | 'winBid'>('bid');
   
@@ -103,9 +106,14 @@ export default function SearchScreen() {
     fetchFilters();
   }, []);
 
-  // 处理从发现页面传来的参数
+  // 处理从发现页面传来的参数 - 只执行一次
   useEffect(() => {
-    if (searchParams) {
+    // 如果已经执行过自动搜索，则跳过
+    if (hasAutoSearchedRef.current) return;
+    
+    if (searchParams && searchParams.autoSearch === 'true') {
+      hasAutoSearchedRef.current = true;
+      
       // 设置关键词
       if (searchParams.keyword) {
         setKeyword(searchParams.keyword);
@@ -118,19 +126,18 @@ export default function SearchScreen() {
       if (searchParams.province) {
         setSelectedProvince(searchParams.province);
       }
-      // 自动搜索
-      if (searchParams.autoSearch === 'true') {
-        // 延迟执行，等待筛选数据加载完成
-        setTimeout(() => {
-          handleSearchWithParams(
-            searchParams.keyword || '',
-            searchParams.industry || '',
-            searchParams.province || ''
-          );
-        }, 500);
-      }
+      
+      // 延迟执行，等待筛选数据加载完成
+      setTimeout(() => {
+        handleSearchWithParams(
+          searchParams.keyword || '',
+          searchParams.industry || '',
+          searchParams.province || ''
+        );
+      }, 500);
     }
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams?.autoSearch]);
 
   const fetchFilters = async () => {
     try {
