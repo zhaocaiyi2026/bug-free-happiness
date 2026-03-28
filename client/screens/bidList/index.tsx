@@ -226,6 +226,9 @@ export default function BidListScreen() {
             {item.industry?.slice(0, 4) || '项目'}
           </Text>
         </View>
+        <View style={styles.typeTag}>
+          <Text style={styles.typeTagText}>招标</Text>
+        </View>
         {item.is_urgent && (
           <View style={styles.urgentTag}>
             <Text style={styles.urgentTagText}>紧急</Text>

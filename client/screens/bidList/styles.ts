@@ -142,6 +142,18 @@ export const createStyles = (theme: Theme) => {
       color: '#2563EB',
       fontWeight: '600',
     },
+    // 类型标签（招标/中标）
+    typeTag: {
+      backgroundColor: 'rgba(37, 99, 235, 0.15)',
+      paddingHorizontal: Spacing.xs + 2,
+      paddingVertical: 1,
+      borderRadius: 3,
+    },
+    typeTagText: {
+      fontSize: 10,
+      color: '#2563EB',
+      fontWeight: '700',
+    },
     urgentTag: {
       backgroundColor: '#C8102E',
       paddingHorizontal: Spacing.xs + 2,

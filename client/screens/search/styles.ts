@@ -202,6 +202,11 @@ export const createStyles = (theme: Theme) => {
       borderWidth: 1,
       borderColor: '#E5E7EB',
     },
+    winBidCard: {
+      borderColor: '#86EFAC',
+      backgroundColor: '#F0FDF4',
+      borderWidth: 1.5,
+    },
     cardHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -218,6 +223,24 @@ export const createStyles = (theme: Theme) => {
       fontSize: 10,
       color: '#2563EB',
       fontWeight: '600',
+    },
+    // 类型标签（招标/中标）
+    typeTag: {
+      backgroundColor: 'rgba(37, 99, 235, 0.15)',
+      paddingHorizontal: Spacing.xs + 2,
+      paddingVertical: 1,
+      borderRadius: 3,
+    },
+    typeTagWin: {
+      backgroundColor: 'rgba(5, 150, 105, 0.2)',
+    },
+    typeTagText: {
+      fontSize: 10,
+      color: '#2563EB',
+      fontWeight: '700',
+    },
+    typeTagTextWin: {
+      color: '#059669',
     },
     urgentTag: {
       backgroundColor: '#C8102E',
@@ -241,6 +264,15 @@ export const createStyles = (theme: Theme) => {
       fontSize: 15,
       fontWeight: '800',
       color: '#2563EB',
+      marginBottom: 2,
+    },
+    bidBudgetWin: {
+      color: '#059669',
+    },
+    bidWinCompany: {
+      fontSize: 10,
+      color: '#059669',
+      fontWeight: '500',
       marginBottom: 2,
     },
     bidMetaRow: {

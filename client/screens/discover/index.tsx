@@ -286,6 +286,9 @@ export default function DiscoverScreen() {
               {bid.industry?.slice(0, 4) || '项目'}
             </Text>
           </View>
+          <View style={styles.typeTag}>
+            <Text style={styles.typeTagText}>招标</Text>
+          </View>
           {bid.is_urgent && (
             <View style={styles.urgentTag}>
               <Text style={styles.urgentTagText}>紧急</Text>

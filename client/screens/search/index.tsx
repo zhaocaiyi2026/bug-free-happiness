@@ -244,11 +244,23 @@ export default function SearchScreen() {
     </TouchableOpacity>
   ), [styles]);
 
-  const renderResultItem = useCallback(({ item }: { item: Bid }) => (
-    <TouchableOpacity style={styles.bidCard} onPress={() => handleBidPress(item.id)} activeOpacity={0.7}>
+  const renderResultItem = useCallback(({ item }: { item: Bid }) => {
+    const isWinBid = searchType === 'winBid';
+    
+    return (
+    <TouchableOpacity 
+      style={[styles.bidCard, isWinBid && styles.winBidCard]} 
+      onPress={() => handleBidPress(item.id)} 
+      activeOpacity={0.7}
+    >
       <View style={styles.cardHeader}>
         <View style={styles.categoryTag}>
           <Text style={styles.categoryTagText}>{item.industry || '综合'}</Text>
+        </View>
+        <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
+          <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]}>
+            {isWinBid ? '中标' : '招标'}
+          </Text>
         </View>
         {item.is_urgent && (
           <View style={styles.urgentTag}>
@@ -257,14 +269,19 @@ export default function SearchScreen() {
         )}
       </View>
       <Text style={styles.bidTitle} numberOfLines={2}>{item.title}</Text>
-      <Text style={styles.bidBudget}>{formatBudget(item.budget)}</Text>
+      <Text style={[styles.bidBudget, isWinBid && styles.bidBudgetWin]}>{formatBudget(item.budget)}</Text>
+      {isWinBid && (item as any).win_company && (
+        <Text style={styles.bidWinCompany} numberOfLines={1}>
+          中标单位: {(item as any).win_company}
+        </Text>
+      )}
       <View style={styles.bidMetaRow}>
         <Text style={styles.bidMeta}>{item.province} {item.city}</Text>
         <Text style={styles.bidMetaSeparator}>|</Text>
         <Text style={styles.bidMeta}>{formatDate(item.publish_date)}</Text>
       </View>
     </TouchableOpacity>
-  ), [styles, handleBidPress]);
+  )}, [styles, handleBidPress, searchType]);
 
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
