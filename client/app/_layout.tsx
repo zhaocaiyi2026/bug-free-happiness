@@ -22,8 +22,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     // 导航未挂载或鉴权正在加载中，直接返回
     if (!rootState?.key || isLoading) return;
 
-    // 判断是否在登录页、用户协议页、隐私政策页（这些页面不需要登录）
-    const publicRoutes = ['login', 'agreement', 'privacy'];
+    // 判断是否在公开页面（不需要登录）
+    const publicRoutes = ['login', 'register', 'agreement', 'privacy'];
     const inPublicRoute = segments.some(s => publicRoutes.includes(s));
 
     console.log('[AuthGuard] isAuthenticated:', isAuthenticated, 'inPublicRoute:', inPublicRoute, 'segments:', segments);
@@ -34,8 +34,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       router.replace('/login');
     }
 
-    // 已登录保护：已登录但在登录页 → 跳转首页
-    if (isAuthenticated && segments.includes('login')) {
+    // 已登录保护：已登录但在登录页或注册页 → 跳转首页
+    const authRoutes = ['login', 'register'];
+    const inAuthRoute = segments.some(s => authRoutes.includes(s));
+    if (isAuthenticated && inAuthRoute) {
       console.log('[AuthGuard] Redirecting to home');
       router.replace('/');
     }
@@ -79,6 +81,7 @@ export default function RootLayout() {
               <Stack.Screen name="feedback" options={{ title: "意见反馈" }} />
               <Stack.Screen name="agreement" options={{ title: "用户协议" }} />
               <Stack.Screen name="privacy" options={{ title: "隐私政策" }} />
+              <Stack.Screen name="register" options={{ title: "注册" }} />
             </Stack>
           </AuthGuard>
           <Toast />

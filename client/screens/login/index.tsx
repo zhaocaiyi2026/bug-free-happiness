@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -31,19 +31,13 @@ export default function LoginScreen() {
   const { login } = useAuth();
 
   const [mode, setMode] = useState<LoginMode>('sms');
-  const [isRegister, setIsRegister] = useState(false);
   const [account, setAccount] = useState(''); // 手机号或昵称
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [smsCode, setSmsCode] = useState('');
-  const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [errorMessage, setErrorMessage] = useState(''); // 错误提示
-
-  const passwordRef = useRef<TextInput>(null);
-  const smsCodeRef = useRef<TextInput>(null);
 
   // 倒计时
   useEffect(() => {
@@ -70,12 +64,6 @@ export default function LoginScreen() {
     }
     return isPhoneValid || isNicknameValid;
   }, [mode, isPhoneValid, isNicknameValid]);
-
-  // 判断账号类型
-  const getAccountType = () => {
-    if (isPhoneValid) return 'phone';
-    return 'nickname';
-  };
 
   // 发送验证码
   const handleSendSms = async () => {
@@ -114,8 +102,8 @@ export default function LoginScreen() {
     }
   };
 
-  // 登录/注册
-  const handleSubmit = async () => {
+  // 登录
+  const handleLogin = async () => {
     if (!isAccountValid) {
       setErrorMessage(mode === 'sms' ? '请输入正确的手机号' : '请输入手机号或昵称');
       return;
@@ -136,34 +124,13 @@ export default function LoginScreen() {
       return;
     }
 
-    if (isRegister) {
-      if (!password) {
-        setErrorMessage('请设置密码');
-        return;
-      }
-      if (password !== confirmPassword) {
-        setErrorMessage('两次输入的密码不一致');
-        return;
-      }
-      if (password.length < 6) {
-        setErrorMessage('密码至少6位');
-        return;
-      }
-      // 注册必须是手机号
-      if (!isPhoneValid) {
-        setErrorMessage('注册需要使用手机号');
-        return;
-      }
-    }
-
     setLoading(true);
     setErrorMessage('');
 
     try {
-      const endpoint = isRegister ? '/api/v1/auth/register' : '/api/v1/auth/login';
       const body: any = {};
 
-      if (mode === 'sms' || isRegister) {
+      if (mode === 'sms') {
         body.phone = account;
         body.smsCode = smsCode;
       } else {
@@ -176,12 +143,8 @@ export default function LoginScreen() {
         body.password = password;
       }
 
-      if (isRegister && nickname) {
-        body.nickname = nickname;
-      }
-
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}${endpoint}`,
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/auth/login`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -200,7 +163,7 @@ export default function LoginScreen() {
           setErrorMessage('验证码错误或已过期，请重新获取');
         } else if (errorMsg.includes('密码')) {
           setErrorMessage('密码错误，请重试');
-        } else if (errorMsg.includes('用户不存在') || errorMsg.includes('未注册')) {
+        } else if (errorMsg.includes('不存在') || errorMsg.includes('未注册')) {
           setErrorMessage('账号不存在，请先注册');
         } else {
           setErrorMessage(errorMsg);
@@ -229,6 +192,11 @@ export default function LoginScreen() {
     router.push('/privacy');
   };
 
+  // 跳转注册页面
+  const goToRegister = () => {
+    router.push('/register');
+  };
+
   return (
     <Screen backgroundColor="#FFFFFF" statusBarStyle="dark">
       <KeyboardAvoidingView
@@ -255,7 +223,7 @@ export default function LoginScreen() {
             <View style={styles.modeTabs}>
               <TouchableOpacity
                 style={[styles.modeTab, mode === 'sms' && styles.modeTabActive]}
-                onPress={() => { setMode('sms'); setIsRegister(false); setErrorMessage(''); }}
+                onPress={() => { setMode('sms'); setErrorMessage(''); }}
               >
                 <Text style={[styles.modeTabText, mode === 'sms' && styles.modeTabTextActive]}>
                   短信登录
@@ -323,12 +291,12 @@ export default function LoginScreen() {
               )}
 
               {/* 密码 */}
-              {(mode === 'password' || isRegister) && (
+              {mode === 'password' && (
                 <View style={styles.inputGroup}>
                   <FontAwesome6 name="lock" size={18} color="#9CA3AF" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
-                    placeholder={isRegister ? '请设置密码（至少6位）' : '请输入密码'}
+                    placeholder="请输入密码"
                     placeholderTextColor="#9CA3AF"
                     value={password}
                     onChangeText={setPassword}
@@ -336,35 +304,6 @@ export default function LoginScreen() {
                     maxLength={20}
                   />
                 </View>
-              )}
-
-              {/* 确认密码（仅注册） */}
-              {isRegister && (
-                <>
-                  <View style={styles.inputGroup}>
-                    <FontAwesome6 name="lock" size={18} color="#9CA3AF" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="请再次输入密码"
-                      placeholderTextColor="#9CA3AF"
-                      value={confirmPassword}
-                      onChangeText={setConfirmPassword}
-                      secureTextEntry
-                      maxLength={20}
-                    />
-                  </View>
-                  <View style={styles.inputGroup}>
-                    <FontAwesome6 name="user" size={18} color="#9CA3AF" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="请输入昵称（选填）"
-                      placeholderTextColor="#9CA3AF"
-                      value={nickname}
-                      onChangeText={setNickname}
-                      maxLength={20}
-                    />
-                  </View>
-                </>
               )}
 
               {/* 错误提示 */}
@@ -391,41 +330,25 @@ export default function LoginScreen() {
               {/* 登录按钮 */}
               <TouchableOpacity
                 style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-                onPress={handleSubmit}
+                onPress={handleLogin}
                 disabled={loading}
               >
                 {loading ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.submitButtonText}>
-                    {isRegister ? '注册' : '登录'}
-                  </Text>
+                  <Text style={styles.submitButtonText}>登录</Text>
                 )}
               </TouchableOpacity>
 
               {/* 注册链接 */}
-              {!isRegister && (
-                <TouchableOpacity
-                  style={styles.registerLink}
-                  onPress={() => { setIsRegister(true); setMode('password'); setErrorMessage(''); }}
-                >
-                  <Text style={styles.registerLinkText}>
-                    还没有账号？<Text style={styles.registerLinkHighlight}>立即注册</Text>
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {/* 返回登录链接 */}
-              {isRegister && (
-                <TouchableOpacity
-                  style={styles.registerLink}
-                  onPress={() => { setIsRegister(false); setErrorMessage(''); }}
-                >
-                  <Text style={styles.registerLinkText}>
-                    已有账号？<Text style={styles.registerLinkHighlight}>返回登录</Text>
-                  </Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={styles.registerLink}
+                onPress={goToRegister}
+              >
+                <Text style={styles.registerLinkText}>
+                  还没有账号？<Text style={styles.registerLinkHighlight}>立即注册</Text>
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* 分割线 */}
