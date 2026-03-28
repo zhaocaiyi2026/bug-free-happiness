@@ -11,7 +11,28 @@ import type { DataSourceConfig } from './types';
 
 // 数据源配置列表
 export const DATA_SOURCE_CONFIGS: DataSourceConfig[] = [
-  // ==================== 官方数据源（优先级最高）====================
+  // ==================== 免费数据源（优先级最高）====================
+  
+  {
+    name: '思通数据免费API',
+    platform: 'stonedt',
+    baseUrl: 'http://data.stonedt.com',
+    apiEndpoint: 'http://data.stonedt.com/api',
+    enabled: true,
+    priority: 110,  // 最高优先级，免费且可用
+    rateLimit: {
+      requestsPerSecond: 1,  // 控制请求频率
+      requestsPerDay: 500,   // 免费版有配额限制
+    },
+    auth: {
+      type: 'api_key',
+      // 关注微信公众号"思通数据"获取
+      apiKey: process.env.STONEDT_APP_ID,
+      secret: process.env.STONEDT_APP_SECRET,
+    },
+  },
+  
+  // ==================== 官方数据源 ====================
   
   {
     name: '中国政府采购网',
@@ -161,6 +182,7 @@ export const SYNC_BATCH_CONFIG = {
 
 // 数据源优先级权重（用于多源聚合时的排序）
 export const SOURCE_PRIORITY_WEIGHTS = {
+  stonedt: 1.0,     // 思通数据免费API，推荐使用
   ccgp: 1.0,        // 政府采购网最权威
   cebpub: 0.95,     // 招标投标平台
   ggzy: 0.9,        // 公共资源交易平台

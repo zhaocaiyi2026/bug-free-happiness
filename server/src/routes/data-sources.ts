@@ -1,174 +1,226 @@
 /**
- * 数据源管理 API 路由
- * 
- * 提供数据源状态查询、手动同步等接口
+ * 数据源管理路由
  */
 
 import { Router } from 'express';
+import type { Request, Response } from 'express';
+import { getEnabledSources, SYNC_BATCH_CONFIG } from '../services/data-sources/config';
+import { apiSpaceService } from '../services/data-sources/apispace-service';
+import { ccgpService } from '../services/data-sources/ccgp-service';
+import { stoneDTService } from '../services/data-sources/stonedt-service';
 import {
-  getSyncStatus,
-  manualSync,
-  getSyncLogs,
-  getEnabledSources,
-  apiSpaceService,
-} from '../services/data-sources';
-import type { OfficialDataSource } from '../services/data-sources/types';
+  startSyncScheduler,
+  stopSyncScheduler,
+  runIncrementalSync,
+  runFullSync,
+  getActiveSyncTasks,
+} from '../services/data-sources/sync-scheduler';
 
 const router = Router();
 
 /**
- * 获取数据源状态
+ * 获取所有可用数据源状态
  * GET /api/v1/data-sources/status
  */
-router.get('/status', async (req, res) => {
+router.get('/status', async (req: Request, res: Response) => {
   try {
-    const status = getSyncStatus();
-    const sources = getEnabledSources();
+    const enabledSources = getEnabledSources();
+    
+    const sourcesStatus = enabledSources.map(source => {
+      let isAvailable = false;
+      
+      switch (source.platform) {
+        case 'apispace':
+          isAvailable = apiSpaceService.isAvailable();
+          break;
+        case 'ccgp':
+          isAvailable = ccgpService.isAvailable();
+          break;
+        case 'stonedt':
+          isAvailable = stoneDTService.isAvailable();
+          break;
+      }
+      
+      return {
+        platform: source.platform,
+        name: source.name,
+        priority: source.priority,
+        isAvailable,
+        isEnabled: source.enabled,
+        apiType: source.auth?.type || 'none',
+      };
+    });
     
     res.json({
       success: true,
       data: {
-        isRunning: status.isRunning,
-        activeTasks: status.activeTasks,
-        enabledSources: sources.map(s => ({
-          platform: s.platform,
-          name: s.name,
-          priority: s.priority,
-          enabled: s.enabled,
-        })),
+        sources: sourcesStatus,
+        config: {
+          maxRecordsPerSync: SYNC_BATCH_CONFIG.maxRecordsPerSync,
+          batchSize: SYNC_BATCH_CONFIG.batchSize,
+        },
       },
     });
   } catch (error) {
-    console.error('[DataSources] Get status failed:', error);
+    console.error('[DataSources] Error getting status:', error);
+    console.error('[DataSources] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     res.status(500).json({
       success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      error: 'Failed to get data sources status',
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
 
 /**
- * 手动触发同步
- * POST /api/v1/data-sources/sync
- * Body: { platform?: string }
+ * 手动触发同步（增量）
+ * POST /api/v1/data-sources/sync/incremental
  */
-router.post('/sync', async (req, res) => {
+router.post('/sync/incremental', async (req: Request, res: Response) => {
   try {
     const { platform } = req.body;
     
-    console.log(`[DataSources] Manual sync triggered for: ${platform || 'all'}`);
-    
-    const result = await manualSync(platform);
-    
-    res.json({
-      success: true,
-      data: Array.isArray(result) ? result : [result],
-    });
+    if (platform) {
+      // 同步指定平台
+      const result = await runIncrementalSync(platform);
+      res.json({
+        success: true,
+        data: result,
+        message: `Incremental sync triggered for ${platform}`,
+      });
+    } else {
+      // 同步所有启用的平台
+      await runIncrementalSync();
+      res.json({
+        success: true,
+        message: 'Incremental sync triggered for all enabled sources',
+      });
+    }
   } catch (error) {
-    console.error('[DataSources] Manual sync failed:', error);
+    console.error('[DataSources] Error triggering incremental sync:', error);
     res.status(500).json({
       success: false,
-      error: {
-        code: 'SYNC_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      error: 'Failed to trigger incremental sync',
     });
   }
 });
 
 /**
- * 获取同步日志
- * GET /api/v1/data-sources/logs
- * Query: platform?, limit?, offset?
+ * 手动触发同步（全量）
+ * POST /api/v1/data-sources/sync/full
  */
-router.get('/logs', async (req, res) => {
+router.post('/sync/full', async (req: Request, res: Response) => {
   try {
-    const { platform, limit, offset } = req.query;
-    
-    const logs = await getSyncLogs({
-      platform: platform as OfficialDataSource | undefined,
-      limit: limit ? parseInt(limit as string) : 20,
-      offset: offset ? parseInt(offset as string) : 0,
-    });
-    
+    await runFullSync();
     res.json({
       success: true,
-      data: logs,
+      message: 'Full sync triggered for all enabled sources',
     });
   } catch (error) {
-    console.error('[DataSources] Get logs failed:', error);
+    console.error('[DataSources] Error triggering full sync:', error);
     res.status(500).json({
       success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      error: 'Failed to trigger full sync',
     });
   }
 });
 
 /**
- * 测试APISpace连接
- * GET /api/v1/data-sources/test-apispace
+ * 获取当前活跃的同步任务
+ * GET /api/v1/data-sources/sync/tasks
  */
-router.get('/test-apispace', async (req, res) => {
+router.get('/sync/tasks', async (req: Request, res: Response) => {
   try {
-    // 测试搜索功能
-    const result = await apiSpaceService.searchBids({
-      keyword: '采购',
-      pageSize: 5,
+    const tasks = getActiveSyncTasks();
+    res.json({
+      success: true,
+      data: tasks,
+    });
+  } catch (error) {
+    console.error('[DataSources] Error getting sync tasks:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get sync tasks',
+    });
+  }
+});
+
+/**
+ * 启动定时同步调度器
+ * POST /api/v1/data-sources/scheduler/start
+ */
+router.post('/scheduler/start', async (req: Request, res: Response) => {
+  try {
+    startSyncScheduler();
+    res.json({
+      success: true,
+      message: 'Sync scheduler started',
+    });
+  } catch (error) {
+    console.error('[DataSources] Error starting scheduler:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to start sync scheduler',
+    });
+  }
+});
+
+/**
+ * 停止定时同步调度器
+ * POST /api/v1/data-sources/scheduler/stop
+ */
+router.post('/scheduler/stop', async (req: Request, res: Response) => {
+  try {
+    stopSyncScheduler();
+    res.json({
+      success: true,
+      message: 'Sync scheduler stopped',
+    });
+  } catch (error) {
+    console.error('[DataSources] Error stopping scheduler:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to stop sync scheduler',
+    });
+  }
+});
+
+/**
+ * 测试思通数据API连接
+ * GET /api/v1/data-sources/test/stonedt
+ */
+router.get('/test/stonedt', async (req: Request, res: Response) => {
+  try {
+    const isAvailable = stoneDTService.isAvailable();
+    
+    if (!isAvailable) {
+      res.json({
+        success: false,
+        message: 'StoneDT API is not configured',
+        hint: 'Please set STONEDT_API_URL in environment variables',
+      });
+      return;
+    }
+    
+    // 尝试获取少量数据测试连接
+    const testData = await stoneDTService.fetchBidsBatch({
+      maxCount: 5,
     });
     
     res.json({
-      success: result.success,
+      success: true,
+      message: 'StoneDT API connection successful',
       data: {
-        connected: result.success,
-        sampleData: result.data?.slice(0, 3) || [],
-        error: result.error,
+        testRecordCount: testData.length,
+        sampleData: testData.slice(0, 2),
       },
     });
   } catch (error) {
-    console.error('[DataSources] Test APISpace failed:', error);
+    console.error('[DataSources] Error testing StoneDT API:', error);
     res.status(500).json({
       success: false,
-      error: {
-        code: 'TEST_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-    });
-  }
-});
-
-/**
- * 获取数据源配置列表
- * GET /api/v1/data-sources/configs
- */
-router.get('/configs', async (req, res) => {
-  try {
-    const sources = getEnabledSources();
-    
-    res.json({
-      success: true,
-      data: sources.map(s => ({
-        platform: s.platform,
-        name: s.name,
-        enabled: s.enabled,
-        priority: s.priority,
-        hasAuth: !!s.auth?.apiKey,
-        rateLimit: s.rateLimit,
-      })),
-    });
-  } catch (error) {
-    console.error('[DataSources] Get configs failed:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      error: 'Failed to test StoneDT API',
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

@@ -14,6 +14,7 @@ import { getSupabaseClient } from '../../storage/database/supabase-client';
 import type { UnifiedBidData, UnifiedWinBidData, OfficialDataSource } from './types';
 import { apiSpaceService } from './apispace-service';
 import { ccgpService } from './ccgp-service';
+import { stoneDTService } from './stonedt-service';
 import { SYNC_SCHEDULES, SYNC_BATCH_CONFIG, getEnabledSources } from './config';
 
 // 同步任务状态
@@ -199,6 +200,19 @@ export async function syncFromSource(
         } else {
           console.log('[DataSync] CCGP API not configured, skipping');
         }
+        break;
+        
+      case 'stonedt':
+        bidsData = await stoneDTService.fetchBidsBatch({
+          startDate: options.startDate,
+          endDate: options.endDate,
+          maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
+        });
+        winBidsData = await stoneDTService.fetchWinBidsBatch({
+          startDate: options.startDate,
+          endDate: options.endDate,
+          maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
+        });
         break;
         
       default:
@@ -452,4 +466,25 @@ export async function getSyncLogs(options: {
   }
   
   return data || [];
+}
+
+/**
+ * 获取活跃的同步任务
+ */
+export function getActiveSyncTasks(): SyncTaskState[] {
+  return Array.from(activeTasks.values());
+}
+
+/**
+ * 启动同步调度器（别名）
+ */
+export function startSyncScheduler(): void {
+  startDataSyncScheduler();
+}
+
+/**
+ * 停止同步调度器（别名）
+ */
+export function stopSyncScheduler(): void {
+  stopDataSyncScheduler();
 }

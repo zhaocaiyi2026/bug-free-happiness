@@ -11,7 +11,8 @@ export type OfficialDataSource =
   | 'ggzy'           // 全国公共资源交易平台
   | 'province_gd'    // 广东省政府采购网
   | 'province_zj'    // 浙江省政府采购网
-  | 'apispace';      // APISpace 商业数据源（备用）
+  | 'apispace'       // APISpace 商业数据源（备用）
+  | 'stonedt';       // 思通数据免费API（推荐）
 
 // 数据源配置接口
 export interface DataSourceConfig {

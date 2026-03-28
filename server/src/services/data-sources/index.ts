@@ -19,6 +19,7 @@ export {
 // 数据源服务
 export { ApiSpaceService, apiSpaceService } from './apispace-service';
 export { CCGPService, ccgpService } from './ccgp-service';
+export { StoneDTService, stoneDTService } from './stonedt-service';
 
 // 同步调度器
 export {
@@ -30,4 +31,7 @@ export {
   manualSync,
   getSyncStatus,
   getSyncLogs,
+  getActiveSyncTasks,
+  startSyncScheduler,
+  stopSyncScheduler,
 } from './sync-scheduler';

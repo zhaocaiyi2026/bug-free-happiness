@@ -100,6 +100,13 @@ export class ApiSpaceService {
   }
   
   /**
+   * 检查服务是否可用
+   */
+  isAvailable(): boolean {
+    return !!this.apiKey && this.apiKey !== 'demo_key';
+  }
+  
+  /**
    * 搜索招标项目列表
    */
   async searchBids(params: DataSourceQueryParams): Promise<ApiResponse<UnifiedBidData[]>> {
