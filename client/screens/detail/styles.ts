@@ -195,6 +195,40 @@ export const createStyles = (theme: Theme) => {
       lineHeight: 22,
       color: '#4B5563',
     },
+    // 联系人信息列表
+    contactList: {
+      marginTop: Spacing.xs,
+    },
+    contactRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6',
+    },
+    contactIconWrap: {
+      width: 28,
+      height: 28,
+      borderRadius: 6,
+      backgroundColor: '#F9FAFB',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: Spacing.sm,
+    },
+    contactLabel: {
+      width: 70,
+      fontSize: 12,
+      color: '#9CA3AF',
+    },
+    contactValue: {
+      flex: 1,
+      fontSize: 13,
+      color: '#1C1917',
+      fontWeight: '500',
+    },
+    contactPhone: {
+      color: '#2563EB',
+    },
     // 来源信息
     sourceRow: {
       flexDirection: 'row',

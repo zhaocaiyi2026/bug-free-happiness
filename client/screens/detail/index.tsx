@@ -30,6 +30,16 @@ interface Bid {
   source_url: string | null;
   is_urgent: boolean;
   view_count: number;
+  // 联系人信息
+  contact_person: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  contact_address: string | null;
+  // 详细信息
+  project_location: string | null;
+  requirements: string | null;
+  open_bid_time: string | null;
+  open_bid_location: string | null;
 }
 
 export default function DetailScreen() {
@@ -257,6 +267,92 @@ export default function DetailScreen() {
             </View>
           </View>
         </View>
+
+        {/* 联系人信息卡片 */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
+              <FontAwesome6 name="address-card" size={11} color="#2563EB" />
+            </View>
+            <Text style={styles.sectionTitle}>联系方式</Text>
+          </View>
+          
+          {/* 联系人信息列表 */}
+          <View style={styles.contactList}>
+            {/* 联系人 */}
+            <View style={styles.contactRow}>
+              <View style={styles.contactIconWrap}>
+                <FontAwesome6 name="user" size={12} color="#6B7280" />
+              </View>
+              <Text style={styles.contactLabel}>联系人</Text>
+              <Text style={styles.contactValue}>{bid.contact_person || '暂无'}</Text>
+            </View>
+
+            {/* 联系电话 */}
+            <View style={styles.contactRow}>
+              <View style={styles.contactIconWrap}>
+                <FontAwesome6 name="phone" size={12} color="#059669" />
+              </View>
+              <Text style={styles.contactLabel}>联系电话</Text>
+              <Text style={[styles.contactValue, styles.contactPhone]}>
+                {bid.contact_phone || '暂无'}
+              </Text>
+            </View>
+
+            {/* 电子邮箱 */}
+            <View style={styles.contactRow}>
+              <View style={styles.contactIconWrap}>
+                <FontAwesome6 name="envelope" size={12} color="#2563EB" />
+              </View>
+              <Text style={styles.contactLabel}>电子邮箱</Text>
+              <Text style={styles.contactValue}>{bid.contact_email || '暂无'}</Text>
+            </View>
+
+            {/* 项目地址 */}
+            <View style={styles.contactRow}>
+              <View style={styles.contactIconWrap}>
+                <FontAwesome6 name="map-marker-alt" size={12} color="#C8102E" />
+              </View>
+              <Text style={styles.contactLabel}>项目地址</Text>
+              <Text style={styles.contactValue}>{bid.project_location || `${bid.province || ''}${bid.city || ''}`}</Text>
+            </View>
+
+            {/* 开标时间 */}
+            {bid.open_bid_time && (
+              <View style={styles.contactRow}>
+                <View style={styles.contactIconWrap}>
+                  <FontAwesome6 name="gavel" size={12} color="#9333EA" />
+                </View>
+                <Text style={styles.contactLabel}>开标时间</Text>
+                <Text style={styles.contactValue}>{formatDate(bid.open_bid_time)}</Text>
+              </View>
+            )}
+
+            {/* 开标地点 */}
+            {bid.open_bid_location && (
+              <View style={styles.contactRow}>
+                <View style={styles.contactIconWrap}>
+                  <FontAwesome6 name="building" size={12} color="#D97706" />
+                </View>
+                <Text style={styles.contactLabel}>开标地点</Text>
+                <Text style={styles.contactValue}>{bid.open_bid_location}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* 投标要求 */}
+        {bid.requirements && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIcon, { backgroundColor: 'rgba(217,119,6,0.1)' }]}>
+                <FontAwesome6 name="clipboard-list" size={11} color="#D97706" />
+              </View>
+              <Text style={styles.sectionTitle}>投标要求</Text>
+            </View>
+            <Text style={styles.contentText}>{bid.requirements}</Text>
+          </View>
+        )}
 
         {/* 项目详情 */}
         <View style={styles.sectionCard}>
