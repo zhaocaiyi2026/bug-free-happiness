@@ -1,48 +1,112 @@
-// @ts-nocheck
-/**
- * 通用认证上下文
- *
- * 基于固定的 API 接口实现，可复用到其他项目
- * 其他项目使用时，只需修改 @api 的导入路径指向项目的 api 模块
- *
- * 注意：
- * - 如果需要登录/鉴权场景，请扩展本文件，完善 login/logout、token 管理、用户信息获取与刷新等逻辑
- * - 将示例中的占位实现替换为项目实际的接口调用与状态管理
- */
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface UserOut {
+const USER_STORAGE_KEY = 'user';
 
+interface User {
+  id: number;
+  phone: string;
+  nickname: string;
+  avatar: string | null;
+  vip_level: number;
+  vip_expire_at: string | null;
+  points: number;
 }
 
 interface AuthContextType {
-  user: UserOut | null;
-  token: string | null;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string) => Promise<void>;
+  login: (userData: User) => Promise<void>;
   logout: () => Promise<void>;
-  updateUser: (userData: Partial<UserOut>) => void;
+  updateUser: (userData: Partial<User>) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const value: AuthContextType = {
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    isLoading: false,
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    // 登录逻辑，根据项目实际情况实现
-    login: async (token: string) => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+  // 初始化时从本地存储加载用户信息
+  useEffect(() => {
+    loadUser();
+  }, []);
 
-    // 登出逻辑，根据项目实际情况实现
-    logout: async () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-
-    // 更新用户信息，根据项目实际情况实现
-    updateUser: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+  const loadUser = async () => {
+    try {
+      const userStr = await AsyncStorage.getItem(USER_STORAGE_KEY);
+      if (userStr) {
+        setUser(JSON.parse(userStr));
+      }
+    } catch (error) {
+      console.error('加载用户信息失败:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const login = useCallback(async (userData: User) => {
+    try {
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+      setUser(userData);
+    } catch (error) {
+      console.error('保存用户信息失败:', error);
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem(USER_STORAGE_KEY);
+      setUser(null);
+    } catch (error) {
+      console.error('清除用户信息失败:', error);
+    }
+  }, []);
+
+  const updateUser = useCallback((userData: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return null;
+      const newUser = { ...prev, ...userData };
+      AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser)).catch(console.error);
+      return newUser;
+    });
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/auth/login`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: user.phone }),
+        }
+      );
+      const data = await res.json();
+      
+      if (data.success && data.data) {
+        await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.data));
+        setUser(data.data);
+      }
+    } catch (error) {
+      console.error('刷新用户信息失败:', error);
+    }
+  }, [user?.id, user?.phone]);
+
+  const value: AuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    logout,
+    updateUser,
+    refreshUser,
+  };
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

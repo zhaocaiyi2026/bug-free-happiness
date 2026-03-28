@@ -16,18 +16,9 @@ import { Spacing, BorderRadius } from '@/constants/theme';
 import { createStyles } from './styles';
 import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
 
 const FAVORITE_VIEWED_KEY = 'favorite_last_viewed_count';
-
-interface User {
-  id: number;
-  phone: string;
-  nickname: string;
-  avatar: string | null;
-  vip_level: number;
-  vip_expire_at: string | null;
-  points: number;
-}
 
 const VIP_LEVELS = ['普通会员', '青铜VIP', '白银VIP', '黄金VIP', '钻石VIP'];
 
@@ -36,8 +27,8 @@ export default function ProfileScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
+  const { user, logout, refreshUser } = useAuth();
 
-  const [user, setUser] = useState<User | null>(null);
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [lastViewedFavoriteCount, setLastViewedFavoriteCount] = useState(0);
   const [historyCount, setHistoryCount] = useState(56);
@@ -69,27 +60,12 @@ export default function ProfileScreen() {
 
   const fetchUserData = async () => {
     try {
-      // 模拟用户ID
-      const userId = 1;
-
-      // 获取用户信息
-      const loginRes = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/auth/login`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: '13800138000' }),
-        }
-      );
-      const loginData = await loginRes.json();
-
-      if (loginData.success) {
-        setUser(loginData.data);
-      }
+      // 刷新用户信息
+      await refreshUser();
 
       // 获取收藏数量
       const favRes = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites?userId=${userId}&pageSize=1`
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites?userId=${user?.id || 1}&pageSize=1`
       );
       const favData = await favRes.json();
 
@@ -122,6 +98,12 @@ export default function ProfileScreen() {
         break;
       case 'feedback':
         router.push('/feedback');
+        break;
+      case 'logout':
+        Alert.alert('退出登录', '确定要退出登录吗？', [
+          { text: '取消', style: 'cancel' },
+          { text: '确定', style: 'destructive', onPress: () => logout() },
+        ]);
         break;
       case 'about':
         Alert.alert('关于招标通', '招标通 v1.0.0\n\n专业的招标信息聚合平台\n\n整合20,000+数据源\n提供实时招标、中标信息\n助力企业把握商机');
@@ -184,7 +166,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.nickname}>{user?.nickname || '招标用户'}</Text>
-              <Text style={styles.phone}>{user?.phone || '138****8000'}</Text>
+              <Text style={styles.phone}>{user?.phone?.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') || '未登录'}</Text>
               {(user?.vip_level ?? 0) > 0 && (
                 <View style={styles.vipBadge}>
                   <FontAwesome6 name="crown" size={12} color="#FFD700" solid />
@@ -334,6 +316,19 @@ export default function ProfileScreen() {
               <Text style={styles.menuText}>关于招标通</Text>
               <Text style={{ fontSize: 13, color: '#9CA3AF', marginRight: Spacing.sm }}>v1.0.0</Text>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+            </View>
+          </TouchableOpacity>
+
+          {/* 退出登录 */}
+          <TouchableOpacity 
+            style={[styles.menuSection, { padding: Spacing.lg, marginTop: Spacing.sm }]} 
+            onPress={() => handleMenuPress('logout')}
+          >
+            <View style={styles.menuItemContent}>
+              <View style={[styles.menuIcon, { backgroundColor: 'rgba(200, 16, 46, 0.1)' }]}>
+                <FontAwesome6 name="right-from-bracket" size={18} color="#C8102E" />
+              </View>
+              <Text style={[styles.menuText, { color: '#C8102E' }]}>退出登录</Text>
             </View>
           </TouchableOpacity>
         </View>

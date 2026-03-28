@@ -3,22 +3,174 @@ import { getSupabaseClient } from '@/storage/database/supabase-client';
 
 const router = Router();
 
+// 验证码存储（生产环境应使用Redis）
+const smsCodeStore: Record<string, { code: string; expireAt: number }> = {};
+
+/**
+ * 发送短信验证码
+ * Body参数：
+ * - phone: string (手机号)
+ */
+router.post('/send-sms', async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: '请输入正确的手机号'
+      });
+    }
+
+    // 检查是否频繁发送（60秒内）
+    const existing = smsCodeStore[phone];
+    if (existing && existing.expireAt > Date.now() + 240000) {
+      return res.status(400).json({
+        success: false,
+        message: '验证码发送过于频繁，请稍后再试'
+      });
+    }
+
+    // 生成6位验证码
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // 存储5分钟有效
+    smsCodeStore[phone] = {
+      code,
+      expireAt: Date.now() + 300000
+    };
+
+    // 生产环境应该调用短信服务商API发送验证码
+    console.log(`[SMS] 发送验证码到 ${phone}: ${code}`);
+
+    res.json({
+      success: true,
+      message: '验证码发送成功'
+    });
+  } catch (error) {
+    console.error('发送验证码失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '发送验证码失败'
+    });
+  }
+});
+
+/**
+ * 用户注册
+ * Body参数：
+ * - phone: string (手机号)
+ * - password: string (密码)
+ * - smsCode?: string (验证码)
+ * - nickname?: string (昵称)
+ */
+router.post('/register', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const { phone, password, smsCode, nickname } = req.body;
+
+    if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: '请输入正确的手机号'
+      });
+    }
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: '密码至少6位'
+      });
+    }
+
+    // 验证短信验证码（如果有）
+    if (smsCode) {
+      const stored = smsCodeStore[phone];
+      if (!stored || stored.code !== smsCode || stored.expireAt < Date.now()) {
+        return res.status(400).json({
+          success: false,
+          message: '验证码错误或已过期'
+        });
+      }
+      // 删除已使用的验证码
+      delete smsCodeStore[phone];
+    }
+
+    // 检查用户是否已存在
+    const { data: existingUser } = await client
+      .from('users')
+      .select('id')
+      .eq('phone', phone)
+      .maybeSingle();
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: '该手机号已注册'
+      });
+    }
+
+    // 创建用户
+    const { data: newUser, error: createError } = await client
+      .from('users')
+      .insert({
+        phone,
+        password,
+        nickname: nickname || `用户${phone.slice(-4)}`,
+        vip_level: 0,
+        points: 0
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      throw new Error(`创建用户失败: ${createError.message}`);
+    }
+
+    res.json({
+      success: true,
+      data: newUser,
+      message: '注册成功'
+    });
+  } catch (error) {
+    console.error('注册失败:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : '注册失败'
+    });
+  }
+});
+
 /**
  * 用户登录
  * Body参数：
  * - phone: string (手机号)
- * - password?: string (密码，可选)
+ * - password?: string (密码)
+ * - smsCode?: string (验证码)
  */
 router.post('/login', async (req, res) => {
   try {
     const client = getSupabaseClient();
-    const { phone, password } = req.body;
+    const { phone, password, smsCode } = req.body;
 
     if (!phone) {
       return res.status(400).json({
         success: false,
         message: '手机号不能为空'
       });
+    }
+
+    // 短信验证码登录
+    if (smsCode && !password) {
+      const stored = smsCodeStore[phone];
+      if (!stored || stored.code !== smsCode || stored.expireAt < Date.now()) {
+        return res.status(400).json({
+          success: false,
+          message: '验证码错误或已过期'
+        });
+      }
+      // 删除已使用的验证码
+      delete smsCodeStore[phone];
     }
 
     // 查询用户
@@ -32,8 +184,16 @@ router.post('/login', async (req, res) => {
       throw new Error(`查询用户失败: ${error.message}`);
     }
 
-    // 如果用户不存在，创建新用户
+    // 如果用户不存在，创建新用户（短信登录时自动注册）
     if (!user) {
+      if (password) {
+        return res.status(401).json({
+          success: false,
+          message: '用户不存在，请先注册'
+        });
+      }
+
+      // 短信登录自动注册
       const { data: newUser, error: createError } = await client
         .from('users')
         .insert({
@@ -56,11 +216,19 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // 验证密码（如果设置了密码）
-    if (user.password && user.password !== password) {
+    // 验证密码（如果设置了密码且通过密码登录）
+    if (password && user.password && user.password !== password) {
       return res.status(401).json({
         success: false,
         message: '密码错误'
+      });
+    }
+
+    // 如果用户设置了密码但未提供密码（短信登录时）
+    if (user.password && !smsCode && !password) {
+      return res.status(400).json({
+        success: false,
+        message: '请输入密码'
       });
     }
 
@@ -81,8 +249,9 @@ router.post('/login', async (req, res) => {
 /**
  * 更新用户信息
  * Body参数：
- * - nickname: string (昵称)
- * - avatar: string (头像URL)
+ * - userId: number (用户ID)
+ * - nickname?: string (昵称)
+ * - avatar?: string (头像URL)
  */
 router.post('/profile', async (req, res) => {
   try {
