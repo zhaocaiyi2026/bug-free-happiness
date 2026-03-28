@@ -58,6 +58,16 @@ export const bids = pgTable("bids", {
 	isUrgent: boolean("is_urgent").default(false),
 	status: varchar({ length: 20 }).default('active'),
 	viewCount: integer("view_count").default(0),
+	// 新增联系人信息字段
+	contactPerson: varchar("contact_person", { length: 100 }),
+	contactPhone: varchar("contact_phone", { length: 50 }),
+	contactEmail: varchar("contact_email", { length: 200 }),
+	contactAddress: varchar("contact_address", { length: 500 }),
+	// 新增详细信息字段
+	projectLocation: varchar("project_location", { length: 500 }),
+	requirements: text(),
+	openBidTime: timestamp("open_bid_time", { mode: 'string' }),
+	openBidLocation: varchar("open_bid_location", { length: 500 }),
 	createdAt: timestamp("created_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).default(sql`CURRENT_TIMESTAMP`),
 });

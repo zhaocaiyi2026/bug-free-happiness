@@ -116,6 +116,16 @@ export async function saveBids(bids: BidInfo[]): Promise<{
       is_urgent: bid.isUrgent || false,
       status: 'active',
       view_count: 0,
+      // 新增联系人字段
+      contact_person: bid.contactPerson || null,
+      contact_phone: bid.contactPhone || null,
+      contact_email: bid.contactEmail || null,
+      contact_address: bid.contactAddress || null,
+      // 新增详细信息字段
+      project_location: bid.projectLocation || null,
+      requirements: bid.requirements || null,
+      open_bid_time: bid.openBidTime || null,
+      open_bid_location: bid.openBidLocation || null,
     }));
 
     const { error } = await client

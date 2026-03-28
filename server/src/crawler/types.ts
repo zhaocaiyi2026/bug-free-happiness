@@ -22,6 +22,16 @@ export interface BidInfo {
   source: string;             // 来源网站名称
   sourceUrl: string;          // 来源URL
   isUrgent?: boolean;         // 是否紧急
+  // 联系人信息
+  contactPerson?: string;     // 联系人
+  contactPhone?: string;      // 联系电话
+  contactEmail?: string;      // 联系邮箱
+  contactAddress?: string;    // 联系地址
+  // 详细信息
+  projectLocation?: string;   // 项目地点
+  requirements?: string;      // 资质要求
+  openBidTime?: string;       // 开标时间
+  openBidLocation?: string;   // 开标地点
 }
 
 // 解析器配置

@@ -14,6 +14,8 @@ import {
   getCrawlLogs,
   getAvailableParsers,
 } from '@/crawler';
+import { generateBids } from '@/crawler/mock-generator';
+import { saveBids } from '@/crawler/storage';
 
 const router = Router();
 
@@ -162,6 +164,42 @@ router.post('/run', async (req, res) => {
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : '触发爬取失败',
+    });
+  }
+});
+
+/**
+ * 生成模拟数据（开发测试用）
+ * POST /api/v1/crawler/generate
+ * Body参数：count (生成数量，默认50)
+ */
+router.post('/generate', async (req, res) => {
+  try {
+    const { count = 50 } = req.body;
+    
+    console.log(`[Crawler] Generating ${count} mock bids...`);
+    
+    // 生成模拟数据
+    const bids = generateBids(count);
+    
+    // 保存到数据库
+    const result = await saveBids(bids);
+    
+    res.json({
+      success: true,
+      data: {
+        generated: count,
+        saved: result.saved,
+        duplicates: result.duplicates,
+        errors: result.errors,
+      },
+      message: `成功生成 ${result.saved} 条招标信息`,
+    });
+  } catch (error) {
+    console.error('[Crawler] Generate error:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : '生成数据失败',
     });
   }
 });
