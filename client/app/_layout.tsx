@@ -84,6 +84,7 @@ export default function RootLayout() {
               <Stack.Screen name="register" options={{ title: "注册" }} />
               <Stack.Screen name="filter-select" options={{ title: "选择筛选" }} />
               <Stack.Screen name="potential-customers" options={{ title: "潜在客户" }} />
+              <Stack.Screen name="message-list" options={{ title: "消息列表" }} />
             </Stack>
           </AuthGuard>
           <Toast />
