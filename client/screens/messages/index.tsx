@@ -177,14 +177,24 @@ export default function MessagesScreen() {
     ]);
   };
 
-  const getMessageIcon = (type: string) => {
+  const getMessageIcon = (type: string, title: string) => {
+    // 根据消息类型和标题返回图标
+    if (title.includes('截止')) {
+      return { name: 'bell-slash', color: '#EC4899' }; // 粉红色铃铛（带斜杠）
+    }
+    if (title.includes('中标')) {
+      return { name: 'bell', color: '#EC4899' }; // 粉红色铃铛
+    }
+    if (title.includes('匹配')) {
+      return { name: 'book', color: '#10B981' }; // 绿色书本
+    }
     switch (type) {
       case 'system':
         return { name: 'gear', color: '#2563EB' };
       case 'subscribe':
         return { name: 'bookmark', color: '#059669' };
       case 'alert':
-        return { name: 'bell', color: '#C8102E' };
+        return { name: 'bell', color: '#EC4899' };
       default:
         return { name: 'envelope', color: '#6B7280' };
     }
@@ -210,7 +220,7 @@ export default function MessagesScreen() {
   };
 
   const renderMessage = useCallback(({ item }: { item: Message }) => {
-    const icon = getMessageIcon(item.type);
+    const icon = getMessageIcon(item.type, item.title);
     const iconBgStyle = item.type === 'system' 
       ? styles.messageIconSystem 
       : item.type === 'subscribe' 

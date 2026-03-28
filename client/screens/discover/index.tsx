@@ -399,7 +399,7 @@ export default function DiscoverScreen() {
               {/* 前期项目 */}
               <TouchableOpacity
                 style={[styles.featureCard, { opacity: 0.6 }]}
-                onPress={() => {}}
+                onPress={() => console.log('前期项目功能开发中')}
                 activeOpacity={0.7}
               >
                 <View style={[styles.featureIcon, { backgroundColor: '#FEF3C7' }]}>
