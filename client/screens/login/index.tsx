@@ -160,9 +160,8 @@ export default function LoginScreen() {
       if (data.success) {
         // 使用 auth context 保存用户信息
         await login(data.data);
-        Alert.alert('成功', data.message || '登录成功', [
-          { text: '确定', onPress: () => router.replace('/') }
-        ]);
+        // 直接跳转到首页，不显示弹窗
+        router.replace('/');
       } else {
         Alert.alert('失败', data.message || '操作失败');
       }

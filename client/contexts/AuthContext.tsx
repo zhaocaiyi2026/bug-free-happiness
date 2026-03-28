@@ -37,8 +37,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadUser = async () => {
     try {
       const userStr = await AsyncStorage.getItem(USER_STORAGE_KEY);
+      console.log('[AuthContext] loadUser - userStr:', userStr ? 'found' : 'not found');
       if (userStr) {
-        setUser(JSON.parse(userStr));
+        const userData = JSON.parse(userStr);
+        console.log('[AuthContext] loadUser - userData:', userData.phone);
+        setUser(userData);
       }
     } catch (error) {
       console.error('加载用户信息失败:', error);

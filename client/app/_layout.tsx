@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Stack, useSegments, useRootNavigationState, useRouter } from 'expo-router';
+import { Stack, useSegments, useRootNavigationState, useRouter, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { LogBox } from 'react-native';
+import { LogBox, ActivityIndicator, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ColorSchemeProvider } from '@/hooks/useColorScheme';
@@ -25,16 +25,29 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     // 判断是否在登录页
     const inLoginRoute = segments.includes('login');
 
+    console.log('[AuthGuard] isAuthenticated:', isAuthenticated, 'inLoginRoute:', inLoginRoute, 'segments:', segments);
+
     // 未登录保护：未登录且不在登录页 → 跳转登录页
     if (!isAuthenticated && !inLoginRoute) {
+      console.log('[AuthGuard] Redirecting to login');
       router.replace('/login');
     }
 
     // 已登录保护：已登录但在登录页 → 跳转首页
     if (isAuthenticated && inLoginRoute) {
+      console.log('[AuthGuard] Redirecting to home');
       router.replace('/');
     }
   }, [rootState?.key, isAuthenticated, isLoading, segments, router]);
+
+  // 加载中显示loading
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#2563EB" />
+      </View>
+    );
+  }
 
   return <>{children}</>;
 }
