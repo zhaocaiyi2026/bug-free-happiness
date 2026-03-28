@@ -78,17 +78,19 @@ export default function LoginScreen() {
       const data = await res.json();
 
       if (data.success) {
-        Alert.alert('成功', '验证码已发送');
+        // 开发环境：后端会返回验证码，方便测试
+        if (data.code) {
+          Alert.alert('验证码已发送', `【开发模式】验证码: ${data.code}\n\n正式环境验证码将发送到手机`);
+          setSmsCode(data.code); // 自动填充验证码
+        } else {
+          Alert.alert('成功', '验证码已发送到您的手机');
+        }
         setCountdown(60);
       } else {
-        // 模拟发送成功
-        Alert.alert('成功', '验证码已发送（模拟）');
-        setCountdown(60);
+        Alert.alert('发送失败', data.message || '请稍后重试');
       }
     } catch (error) {
-      // 模拟发送成功
-      Alert.alert('成功', '验证码已发送（模拟）');
-      setCountdown(60);
+      Alert.alert('网络错误', '请检查网络连接后重试');
     }
   };
 

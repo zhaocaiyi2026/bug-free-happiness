@@ -43,9 +43,14 @@ router.post('/send-sms', async (req, res) => {
     // 生产环境应该调用短信服务商API发送验证码
     console.log(`[SMS] 发送验证码到 ${phone}: ${code}`);
 
+    // 开发环境：返回验证码方便调试
+    const isDev = process.env.NODE_ENV !== 'production';
+    
     res.json({
       success: true,
-      message: '验证码发送成功'
+      message: '验证码发送成功',
+      // 开发环境返回验证码，方便测试
+      ...(isDev && { code })
     });
   } catch (error) {
     console.error('发送验证码失败:', error);
