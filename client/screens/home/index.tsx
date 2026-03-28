@@ -186,8 +186,9 @@ export default function HomeScreen() {
 
   const fetchWinBids = async () => {
     try {
+      // 获取今日中标数量
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?page=1&pageSize=5`
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?page=1&pageSize=1&today=true`
       );
       const data = await res.json();
 
@@ -195,7 +196,7 @@ export default function HomeScreen() {
         setWinBids(data.data.list);
         setStats(prev => ({
           ...prev,
-          winBidCount: data.data.total || 32,
+          winBidCount: data.data.total || 0,
         }));
       }
     } catch (error) {
@@ -419,7 +420,7 @@ export default function HomeScreen() {
             activeOpacity={0.7}
           >
             <Text style={[styles.statValue, styles.statValueGreen]}>{stats.winBidCount}</Text>
-            <Text style={styles.statLabel}>中标信息</Text>
+            <Text style={styles.statLabel}>今日中标</Text>
           </TouchableOpacity>
         </View>
 

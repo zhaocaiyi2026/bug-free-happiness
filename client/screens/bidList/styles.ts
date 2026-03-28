@@ -10,6 +10,9 @@ export const createStyles = (theme: Theme) => {
       paddingTop: Spacing.md,
       paddingBottom: Spacing.md,
     },
+    winHeader: {
+      backgroundColor: '#059669',
+    },
     headerTop: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -92,6 +95,35 @@ export const createStyles = (theme: Theme) => {
     bidCardUrgent: {
       borderColor: '#FCA5A5',
       backgroundColor: '#FFFBFC',
+    },
+    // 中标卡片样式
+    winBidCard: {
+      borderColor: '#86EFAC',
+      backgroundColor: '#F0FDF4',
+    },
+    winCategoryTag: {
+      backgroundColor: 'rgba(5, 150, 105, 0.1)',
+    },
+    winTag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      backgroundColor: '#059669',
+      paddingHorizontal: Spacing.xs + 2,
+      paddingVertical: 1,
+      borderRadius: 3,
+    },
+    winTagText: {
+      fontSize: 9,
+      color: '#FFFFFF',
+      fontWeight: '700',
+    },
+    winBudget: {
+      color: '#059669',
+    },
+    winCompany: {
+      color: '#059669',
+      fontWeight: '500',
     },
     cardHeader: {
       flexDirection: 'row',

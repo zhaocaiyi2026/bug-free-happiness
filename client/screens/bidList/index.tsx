@@ -35,13 +35,25 @@ interface Bid {
   view_count: number;
 }
 
-type ListType = 'today' | 'urgent' | 'nearby' | 'search';
+interface WinBid {
+  id: number;
+  title: string;
+  win_amount: number | null;
+  province: string | null;
+  city: string | null;
+  industry: string | null;
+  win_company: string | null;
+  publish_date: string | null;
+}
 
-const LIST_CONFIG: Record<ListType, { title: string; icon: string }> = {
+type ListType = 'today' | 'urgent' | 'nearby' | 'search' | 'win';
+
+const LIST_CONFIG: Record<ListType, { title: string; icon: string; isWinBid?: boolean }> = {
   today: { title: '今日新增', icon: 'calendar-day' },
   urgent: { title: '紧急招标', icon: 'bolt' },
   nearby: { title: '本省项目', icon: 'location-dot' },
   search: { title: '搜索结果', icon: 'magnifying-glass' },
+  win: { title: '今日中标', icon: 'trophy', isWinBid: true },
 };
 
 export default function BidListScreen() {
@@ -53,8 +65,10 @@ export default function BidListScreen() {
 
   const listType = params.type || 'today';
   const config = LIST_CONFIG[listType] || LIST_CONFIG.today;
+  const isWinBidList = config.isWinBid === true;
 
   const [bids, setBids] = useState<Bid[]>([]);
+  const [winBids, setWinBids] = useState<WinBid[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
@@ -67,6 +81,12 @@ export default function BidListScreen() {
 
   const fetchData = async (pageNum: number) => {
     try {
+      // 中标信息使用不同的API
+      if (isWinBidList) {
+        await fetchWinBids(pageNum);
+        return;
+      }
+
       const queryParams = new URLSearchParams();
       queryParams.append('page', String(pageNum));
       queryParams.append('pageSize', '20');
@@ -120,6 +140,36 @@ export default function BidListScreen() {
     }
   };
 
+  // 获取今日中标信息
+  const fetchWinBids = async (pageNum: number) => {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('page', String(pageNum));
+      queryParams.append('pageSize', '20');
+      queryParams.append('today', 'true');
+
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?${queryParams.toString()}`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        if (pageNum === 1) {
+          setWinBids(data.data.list);
+          setTotal(data.data.total);
+        } else {
+          setWinBids((prev) => [...prev, ...data.data.list]);
+        }
+        setHasMore(data.data.page < data.data.totalPages);
+      }
+    } catch (error) {
+      console.error('获取中标列表失败:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   const handleRefresh = () => {
     setRefreshing(true);
     setPage(1);
@@ -136,6 +186,10 @@ export default function BidListScreen() {
 
   const handleBidPress = (bidId: number) => {
     router.push('/detail', { id: bidId });
+  };
+
+  const handleWinBidPress = (winBidId: number) => {
+    router.push('/win-bid-detail', { id: winBidId });
   };
 
   const formatBudget = (budget: number | null) => {
@@ -187,6 +241,34 @@ export default function BidListScreen() {
     </TouchableOpacity>
   ), [styles, CARD_WIDTH]);
 
+  const renderWinBidItem = useCallback(({ item, index }: { item: WinBid; index: number }) => (
+    <TouchableOpacity
+      style={[styles.bidCard, styles.winBidCard, { width: CARD_WIDTH - 4 }]}
+      onPress={() => handleWinBidPress(item.id)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardHeader}>
+        <View style={[styles.categoryTag, styles.winCategoryTag]}>
+          <Text style={styles.categoryTagText} numberOfLines={1}>
+            {item.industry?.slice(0, 4) || '中标'}
+          </Text>
+        </View>
+        <View style={styles.winTag}>
+          <FontAwesome6 name="trophy" size={10} color="#FFFFFF" />
+          <Text style={styles.winTagText}>中标</Text>
+        </View>
+      </View>
+      <Text style={styles.bidTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
+      <Text style={[styles.bidBudget, styles.winBudget]}>{formatBudget(item.win_amount)}元</Text>
+      <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
+      <Text style={[styles.bidDeadline, styles.winCompany]} numberOfLines={1}>
+        {item.win_company}
+      </Text>
+    </TouchableOpacity>
+  ), [styles, CARD_WIDTH]);
+
   if (loading) {
     return (
       <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
@@ -200,7 +282,7 @@ export default function BidListScreen() {
           </View>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color={isWinBidList ? '#059669' : '#2563EB'} />
           <Text style={styles.loadingText}>加载中...</Text>
         </View>
       </Screen>
@@ -211,7 +293,7 @@ export default function BidListScreen() {
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
       <View style={{ flex: 1 }}>
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+        <View style={[styles.header, isWinBidList && styles.winHeader, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
@@ -229,51 +311,93 @@ export default function BidListScreen() {
         {/* 统计条 */}
         <View style={styles.statsBar}>
           <View style={styles.statsItem}>
-            <FontAwesome6 name="file-lines" size={14} color="#2563EB" />
-            <Text style={styles.statsText}>共 {total} 条招标信息</Text>
+            <FontAwesome6 
+              name={isWinBidList ? "trophy" : "file-lines"} 
+              size={14} 
+              color={isWinBidList ? '#059669' : '#2563EB'} 
+            />
+            <Text style={styles.statsText}>
+              共 {total} 条{isWinBidList ? '今日中标' : '招标'}信息
+            </Text>
           </View>
           <View style={styles.statsItem}>
             <FontAwesome6 name="clock" size={14} color="#6B7280" />
             <Text style={styles.statsTextMuted}>
-              {listType === 'today' ? '今日发布' : listType === 'urgent' ? '紧急处理' : '本省项目'}
+              {isWinBidList ? '今日发布' : listType === 'today' ? '今日发布' : listType === 'urgent' ? '紧急处理' : '本省项目'}
             </Text>
           </View>
         </View>
 
-        {/* 双列网格招标列表 */}
-        <FlatList
-          key={`bids-list-${listType}`}
-          data={bids}
-          renderItem={renderBidItem}
-          keyExtractor={(item) => String(item.id)}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={['#2563EB']}
-              tintColor="#2563EB"
-            />
-          }
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            loading && page > 1 ? (
-              <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: Spacing.md }} />
-            ) : null
-          }
-          ListEmptyComponent={
-            !loading ? (
-              <View style={styles.emptyContainer}>
-                <FontAwesome6 name="folder-open" size={40} color="#D1D5DB" style={styles.emptyIcon} />
-                <Text style={styles.emptyText}>暂无招标信息</Text>
-              </View>
-            ) : null
-          }
-        />
+        {/* 双列网格列表 */}
+        {isWinBidList ? (
+          <FlatList
+            key="win-bids-list"
+            data={winBids}
+            renderItem={renderWinBidItem}
+            keyExtractor={(item) => String(item.id)}
+            numColumns={2}
+            columnWrapperStyle={styles.columnWrapper}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={['#059669']}
+                tintColor="#059669"
+              />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loading && page > 1 ? (
+                <ActivityIndicator size="small" color="#059669" style={{ marginVertical: Spacing.md }} />
+              ) : null
+            }
+            ListEmptyComponent={
+              !loading ? (
+                <View style={styles.emptyContainer}>
+                  <FontAwesome6 name="trophy" size={40} color="#D1D5DB" style={styles.emptyIcon} />
+                  <Text style={styles.emptyText}>暂无今日中标信息</Text>
+                </View>
+              ) : null
+            }
+          />
+        ) : (
+          <FlatList
+            key={`bids-list-${listType}`}
+            data={bids}
+            renderItem={renderBidItem}
+            keyExtractor={(item) => String(item.id)}
+            numColumns={2}
+            columnWrapperStyle={styles.columnWrapper}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={['#2563EB']}
+                tintColor="#2563EB"
+              />
+            }
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loading && page > 1 ? (
+                <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: Spacing.md }} />
+              ) : null
+            }
+            ListEmptyComponent={
+              !loading ? (
+                <View style={styles.emptyContainer}>
+                  <FontAwesome6 name="folder-open" size={40} color="#D1D5DB" style={styles.emptyIcon} />
+                  <Text style={styles.emptyText}>暂无招标信息</Text>
+                </View>
+              ) : null
+            }
+          />
+        )}
       </View>
     </Screen>
   );

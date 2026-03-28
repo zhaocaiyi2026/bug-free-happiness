@@ -16,6 +16,7 @@ const router = Router();
  * - city: string (城市筛选)
  * - industry: string (行业筛选)
  * - keyword: string (关键词搜索)
+ * - today: boolean (仅返回今日中标)
  */
 router.get('/', async (req, res) => {
   try {
@@ -27,12 +28,17 @@ router.get('/', async (req, res) => {
       city,
       industry,
       keyword,
+      today,
     } = req.query;
 
     const pageNum = Number(page);
     const sizeNum = Number(pageSize);
     const start = (pageNum - 1) * sizeNum;
     const end = start + sizeNum - 1;
+
+    // 获取今日日期（UTC）
+    const todayDate = new Date();
+    const todayStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()).toISOString();
 
     let query = client
       .from('win_bids')
@@ -42,6 +48,11 @@ router.get('/', async (req, res) => {
       .not('win_amount', 'is', null)
       .gt('win_amount', 0)
       .order('publish_date', { ascending: false });
+
+    // 今日中标筛选
+    if (today === 'true') {
+      query = query.gte('publish_date', todayStart);
+    }
 
     // 应用筛选条件
     if (province) {
