@@ -69,6 +69,54 @@ export default function PotentialCustomersScreen() {
     await fetchCustomers(1, true);
   };
 
+  const fetchCustomersWithParams = async (
+    pageNum: number,
+    isRefresh: boolean,
+    searchKeyword: string,
+    searchIndustry: string,
+    searchCustomerType: string
+  ) => {
+    try {
+      if (isRefresh) {
+        setLoading(true);
+      }
+
+      const params = new URLSearchParams();
+      params.append('page', String(pageNum));
+      params.append('pageSize', '20');
+      
+      if (searchKeyword) params.append('keyword', searchKeyword);
+      if (searchIndustry) params.append('industry', searchIndustry);
+      if (searchCustomerType !== 'all') params.append('customerType', searchCustomerType);
+
+      /**
+       * 服务端文件：server/src/routes/potential-customers.ts
+       * 接口：GET /api/v1/potential-customers
+       * Query参数：page, pageSize, industry, keyword, customerType
+       */
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/potential-customers?${params.toString()}`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        if (isRefresh || pageNum === 1) {
+          setCustomers(data.data.list);
+        } else {
+          setCustomers((prev) => [...prev, ...data.data.list]);
+        }
+        setTotal(data.data.total);
+        setHasMore(pageNum < data.data.totalPages);
+      }
+    } catch (error) {
+      console.error('获取潜在客户失败:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setHasSearched(true);
+    }
+  };
+
   const fetchCustomers = async (pageNum: number, isRefresh: boolean = false) => {
     try {
       if (isRefresh) {
@@ -125,7 +173,20 @@ export default function PotentialCustomersScreen() {
   };
 
   const handleIndustrySelect = (industryName: string) => {
-    setSelectedIndustry(industryName === '全部' ? '' : industryName);
+    const newIndustry = industryName === '全部' ? '' : industryName;
+    setSelectedIndustry(newIndustry);
+    // 选择行业后自动搜索
+    setTimeout(() => {
+      fetchCustomersWithParams(1, true, keyword, newIndustry, customerType);
+    }, 50);
+  };
+
+  const handleCustomerTypeChange = (newType: 'all' | 'bidder' | 'winner') => {
+    setCustomerType(newType);
+    // 切换类型后自动搜索
+    setTimeout(() => {
+      fetchCustomersWithParams(1, true, keyword, selectedIndustry, newType);
+    }, 50);
   };
 
   // 拨打电话
@@ -297,7 +358,7 @@ export default function PotentialCustomersScreen() {
         <View style={styles.typeSection}>
           <TouchableOpacity
             style={[styles.typeTab, customerType === 'all' && styles.typeTabActive]}
-            onPress={() => setCustomerType('all')}
+            onPress={() => handleCustomerTypeChange('all')}
           >
             <FontAwesome6
               name="users"
@@ -310,7 +371,7 @@ export default function PotentialCustomersScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.typeTab, customerType === 'bidder' && styles.typeTabActive]}
-            onPress={() => setCustomerType('bidder')}
+            onPress={() => handleCustomerTypeChange('bidder')}
           >
             <FontAwesome6
               name="file-contract"
@@ -323,7 +384,7 @@ export default function PotentialCustomersScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.typeTab, customerType === 'winner' && styles.typeTabActive]}
-            onPress={() => setCustomerType('winner')}
+            onPress={() => handleCustomerTypeChange('winner')}
           >
             <FontAwesome6
               name="trophy"
