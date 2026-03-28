@@ -14,6 +14,8 @@ import {
   runIncrementalSync,
   runFullSync,
   getActiveSyncTasks,
+  saveBidsData,
+  saveWinBidsData,
 } from '../services/data-sources/sync-scheduler';
 
 const router = Router();
@@ -186,40 +188,142 @@ router.post('/scheduler/stop', async (req: Request, res: Response) => {
 });
 
 /**
- * 测试思通数据API连接
- * GET /api/v1/data-sources/test/stonedt
+ * 测试思通数据API连接（支持动态传入凭证）
+ * POST /api/v1/data-sources/test/stonedt
+ * Body参数：appId, appSecret (可选，不传则使用环境变量)
  */
-router.get('/test/stonedt', async (req: Request, res: Response) => {
+router.post('/test/stonedt', async (req: Request, res: Response) => {
   try {
+    const { appId, appSecret } = req.body;
+    
+    // 如果传入了凭证，临时设置
+    if (appId && appSecret) {
+      stoneDTService.setCredentials(appId, appSecret);
+    }
+    
     const isAvailable = stoneDTService.isAvailable();
     
     if (!isAvailable) {
       res.json({
         success: false,
-        message: 'StoneDT API is not configured',
-        hint: 'Please set STONEDT_API_URL in environment variables',
+        message: '思通数据API未配置',
+        hint: '请关注微信公众号"思通数据"，点击菜单"数据工具"-"获取授权"获取appId和appSecret',
+        configGuide: {
+          step1: '关注微信公众号"思通数据"',
+          step2: '点击菜单"数据工具"-"获取授权"',
+          step3: '复制返回的appId和appSecret',
+          step4: '在环境变量中配置 STONEDT_APP_ID 和 STONEDT_APP_SECRET',
+        },
       });
       return;
     }
     
-    // 尝试获取少量数据测试连接
-    const testData = await stoneDTService.fetchBidsBatch({
-      maxCount: 5,
-    });
-    
-    res.json({
-      success: true,
-      message: 'StoneDT API connection successful',
-      data: {
-        testRecordCount: testData.length,
-        sampleData: testData.slice(0, 2),
-      },
-    });
+    // 尝试获取Token测试连接
+    try {
+      // 尝试获取少量数据测试连接
+      const testData = await stoneDTService.searchBids({
+        keyword: '招标',
+        page: 1,
+        pageSize: 5,
+      });
+      
+      if (testData.success) {
+        // 获取配额信息
+        const quota = await stoneDTService.getQuota();
+        
+        res.json({
+          success: true,
+          message: '思通数据API连接成功',
+          data: {
+            testRecordCount: testData.data?.length || 0,
+            totalRecords: testData.pagination?.total || 0,
+            quota: quota ? {
+              todayQuota: quota.todayQuota,
+              appQuota: quota.appQuota,
+              concurrentIp: quota.concurrentIp,
+            } : null,
+            sampleData: testData.data?.slice(0, 2),
+          },
+        });
+      } else {
+        res.json({
+          success: false,
+          message: '思通数据API连接失败',
+          error: testData.error?.message || '未知错误',
+        });
+      }
+    } catch (apiError) {
+      res.json({
+        success: false,
+        message: '思通数据API连接失败',
+        error: apiError instanceof Error ? apiError.message : '未知错误',
+        hint: '请检查appId和appSecret是否正确',
+      });
+    }
   } catch (error) {
     console.error('[DataSources] Error testing StoneDT API:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to test StoneDT API',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 从思通数据同步招标数据
+ * POST /api/v1/data-sources/sync/stonedt
+ * Body参数：appId, appSecret, maxCount (可选)
+ */
+router.post('/sync/stonedt', async (req: Request, res: Response) => {
+  try {
+    const { appId, appSecret, maxCount = 100 } = req.body;
+    
+    // 如果传入了凭证，临时设置
+    if (appId && appSecret) {
+      stoneDTService.setCredentials(appId, appSecret);
+    }
+    
+    if (!stoneDTService.isAvailable()) {
+      res.json({
+        success: false,
+        message: '思通数据API未配置，请提供appId和appSecret',
+      });
+      return;
+    }
+    
+    // 获取招标数据
+    console.log(`[DataSources] 开始从思通数据同步，最大条数: ${maxCount}`);
+    const bidsData = await stoneDTService.fetchBidsBatch({ maxCount });
+    console.log(`[DataSources] 获取到 ${bidsData.length} 条招标数据`);
+    
+    // 获取中标数据
+    const winBidsData = await stoneDTService.fetchWinBidsBatch({ maxCount: Math.floor(maxCount / 2) });
+    console.log(`[DataSources] 获取到 ${winBidsData.length} 条中标数据`);
+    
+    // 保存到数据库
+    const savedBids = await saveBidsData(bidsData, 'stonedt');
+    const savedWinBids = await saveWinBidsData(winBidsData, 'stonedt');
+    
+    res.json({
+      success: true,
+      message: '数据同步完成',
+      data: {
+        bids: {
+          fetched: bidsData.length,
+          saved: savedBids,
+        },
+        winBids: {
+          fetched: winBidsData.length,
+          saved: savedWinBids,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error syncing from StoneDT:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync from StoneDT',
       details: error instanceof Error ? error.message : 'Unknown error',
     });
   }

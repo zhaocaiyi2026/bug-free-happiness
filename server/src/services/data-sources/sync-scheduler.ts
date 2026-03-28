@@ -280,7 +280,7 @@ export async function syncFromSource(
 /**
  * 保存招标数据
  */
-async function saveBidsData(data: UnifiedBidData[], platform: OfficialDataSource): Promise<number> {
+export async function saveBidsData(data: UnifiedBidData[], platform: OfficialDataSource): Promise<number> {
   if (data.length === 0) return 0;
   
   const supabase = getSupabaseClient();
@@ -340,7 +340,7 @@ async function saveBidsData(data: UnifiedBidData[], platform: OfficialDataSource
 /**
  * 保存中标数据
  */
-async function saveWinBidsData(data: UnifiedWinBidData[], platform: OfficialDataSource): Promise<number> {
+export async function saveWinBidsData(data: UnifiedWinBidData[], platform: OfficialDataSource): Promise<number> {
   if (data.length === 0) return 0;
   
   const supabase = getSupabaseClient();

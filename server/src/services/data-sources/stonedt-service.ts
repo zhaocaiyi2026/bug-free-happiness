@@ -5,15 +5,16 @@
  * 
  * 获取授权：
  * 1. 关注微信公众号"思通数据"
- * 2. 点击菜单"体验账号"-"招标接口"
+ * 2. 点击菜单"数据工具"-"获取授权"
  * 3. 自动返回appId和appSecret
  * 
- * 接口说明：
- * - 招标列表：POST /api/invitationOftenderlist
- * - 招标详情：POST /api/invitationOftenderdetail
- * - 配额查询：POST /api/appquota
+ * API说明：
+ * - 获取Token: GET http://data.stonedt.com/auth/token?appid={appId}&appsecret={appSecret}
+ * - 招标列表：POST http://data.stonedt.com/api/invitationOftenderlist
+ * - 招标详情：POST http://data.stonedt.com/api/invitationOftenderdetail
+ * - 配额查询：POST http://data.stonedt.com/api/appquota
  * 
- * 费用：永久免费
+ * 费用：永久免费（每日5000条限制）
  */
 
 import axios from 'axios';
@@ -25,7 +26,7 @@ import type {
 } from './types';
 
 // 思通数据API配置
-const STONEDT_BASE_URL = 'http://data.stonedt.com/api';
+const STONEDT_BASE_URL = 'http://data.stonedt.com';
 
 // 请求参数类型
 interface StoneDTListParams {
@@ -56,6 +57,12 @@ interface StoneDTDetailResponse {
   code: number;
   message: string;
   data: StoneDTBidItem;
+}
+
+interface StoneDTTokenResponse {
+  code: number;
+  token: string;
+  message?: string;
 }
 
 interface StoneDTQuotaResponse {
@@ -113,6 +120,7 @@ const INDUSTRY_DICT: Record<string, string> = {
   '食品饮品': '食品饮料',
   '材料配件': '材料配件',
   '水利水电': '水利工程',
+  '软件和信息技术': 'IT服务',
 };
 
 /**
@@ -139,27 +147,40 @@ export class StoneDTService {
   }
   
   /**
-   * 获取Token
+   * 获取Token（通过官方API）
    */
   private async getToken(): Promise<string> {
-    // Token有效期内直接返回
+    // Token有效期内直接返回（设置23小时有效期）
     if (this.token && Date.now() < this.tokenExpireTime) {
       return this.token;
     }
     
-    // 生成Token（根据文档要求）
-    // Token格式：Base64(appId:timestamp:signature)
-    const timestamp = Date.now();
-    const signStr = `${this.appId}${timestamp}${this.appSecret}`;
-    
-    // 使用简单的签名方式
-    const crypto = await import('crypto');
-    const signature = crypto.createHash('md5').update(signStr).digest('hex');
-    
-    this.token = `${this.appId}:${timestamp}:${signature}`;
-    this.tokenExpireTime = timestamp + 3600000; // 1小时有效
-    
-    return this.token;
+    try {
+      // 调用官方Token获取接口
+      const response = await axios.get<StoneDTTokenResponse>(
+        `${this.baseUrl}/auth/token`,
+        {
+          params: {
+            appid: this.appId,
+            appsecret: this.appSecret,
+          },
+          timeout: 10000,
+        }
+      );
+      
+      if (response.data.code === 200 && response.data.token) {
+        this.token = response.data.token;
+        this.tokenExpireTime = Date.now() + 23 * 60 * 60 * 1000; // 23小时有效
+        console.log('[StoneDT] Token获取成功');
+        return this.token;
+      } else {
+        console.error('[StoneDT] Token获取失败:', response.data.message);
+        throw new Error(response.data.message || 'Token获取失败');
+      }
+    } catch (error) {
+      console.error('[StoneDT] Token获取异常:', error);
+      throw error;
+    }
   }
   
   /**
@@ -189,7 +210,7 @@ export class StoneDTService {
     
     try {
       const listParams: StoneDTListParams = {
-        keyword: params.keyword || '',
+        keyword: params.keyword || '招标',
         starttime: params.publishDateStart?.toISOString().split('T')[0] || 
                    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         endtime: params.publishDateEnd?.toISOString().split('T')[0],
@@ -211,7 +232,7 @@ export class StoneDTService {
       });
       
       const response = await axios.post<StoneDTListResponse>(
-        `${this.baseUrl}/invitationOftenderlist`,
+        `${this.baseUrl}/api/invitationOftenderlist`,
         formData.toString(),
         { 
           headers,
@@ -224,7 +245,7 @@ export class StoneDTService {
           success: false,
           error: {
             code: 'API_ERROR',
-            message: response.data.message || '查询失败',
+            message: response.data.message || `错误码: ${response.data.code}`,
           },
         };
       }
@@ -278,7 +299,7 @@ export class StoneDTService {
       formData.append('article_public_id', articlePublicId);
       
       const response = await axios.post<StoneDTDetailResponse>(
-        `${this.baseUrl}/invitationOftenderdetail`,
+        `${this.baseUrl}/api/invitationOftenderdetail`,
         formData.toString(),
         { 
           headers,
@@ -333,7 +354,7 @@ export class StoneDTService {
       formData.append('api_name', 'tender');
       
       const response = await axios.post<StoneDTQuotaResponse>(
-        `${this.baseUrl}/appquota`,
+        `${this.baseUrl}/api/appquota`,
         formData.toString(),
         { 
           headers,
@@ -381,7 +402,7 @@ export class StoneDTService {
     
     while (hasMore && results.length < maxCount) {
       const response = await this.searchBids({
-        keyword: options.keyword,
+        keyword: options.keyword || '招标',
         province: options.province,
         industry: options.industry,
         publishDateStart: startDate,
@@ -433,7 +454,7 @@ export class StoneDTService {
         const headers = await this.createHeaders();
         
         const formData = new URLSearchParams();
-        formData.append('keyword', options.keyword || '');
+        formData.append('keyword', options.keyword || '中标');
         formData.append('starttime', startDate.toISOString().split('T')[0]);
         formData.append('endtime', endDate.toISOString().split('T')[0]);
         if (options.province) formData.append('province', options.province);
@@ -443,7 +464,7 @@ export class StoneDTService {
         formData.append('size', '20');
         
         const response = await axios.post<StoneDTListResponse>(
-          `${this.baseUrl}/invitationOftenderlist`,
+          `${this.baseUrl}/api/invitationOftenderlist`,
           formData.toString(),
           { headers, timeout: 30000 }
         );
@@ -539,6 +560,16 @@ export class StoneDTService {
    */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  
+  /**
+   * 设置凭证（用于动态配置）
+   */
+  setCredentials(appId: string, appSecret: string): void {
+    this.appId = appId;
+    this.appSecret = appSecret;
+    this.token = null; // 清除旧token
+    this.tokenExpireTime = 0;
   }
 }
 
