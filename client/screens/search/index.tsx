@@ -339,12 +339,19 @@ export default function SearchScreen() {
         <View style={styles.typeSection}>
           <TouchableOpacity
             style={[styles.typeTab, searchType === 'bid' && styles.typeTabActive]}
-            onPress={() => setSearchType('bid')}
+            onPress={() => {
+              setSearchType('bid');
+              // 切换类型时清空搜索结果
+              if (hasSearched) {
+                setResults([]);
+                setHasSearched(false);
+              }
+            }}
           >
             <FontAwesome6
               name="file-contract"
               size={14}
-              color={searchType === 'bid' ? '#2563EB' : '#6B7280'}
+              color={searchType === 'bid' ? '#FFFFFF' : '#6B7280'}
             />
             <Text style={[styles.typeTabText, searchType === 'bid' && styles.typeTabTextActive]}>
               招标信息
@@ -352,12 +359,19 @@ export default function SearchScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.typeTab, searchType === 'winBid' && styles.typeTabActive]}
-            onPress={() => setSearchType('winBid')}
+            onPress={() => {
+              setSearchType('winBid');
+              // 切换类型时清空搜索结果
+              if (hasSearched) {
+                setResults([]);
+                setHasSearched(false);
+              }
+            }}
           >
             <FontAwesome6
               name="trophy"
               size={14}
-              color={searchType === 'winBid' ? '#2563EB' : '#6B7280'}
+              color={searchType === 'winBid' ? '#FFFFFF' : '#6B7280'}
             />
             <Text style={[styles.typeTabText, searchType === 'winBid' && styles.typeTabTextActive]}>
               中标信息

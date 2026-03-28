@@ -55,7 +55,7 @@ export const createStyles = (theme: Theme) => {
     // 搜索类型切换
     typeSection: {
       flexDirection: 'row',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#F5F5F5',
       marginHorizontal: Spacing.sm,
       marginTop: Spacing.sm,
       borderRadius: BorderRadius.lg,
@@ -68,16 +68,11 @@ export const createStyles = (theme: Theme) => {
       justifyContent: 'center',
       paddingVertical: Spacing.sm + 2,
       borderRadius: BorderRadius.md,
-      backgroundColor: '#F5F5F5',
+      backgroundColor: 'transparent',
       marginHorizontal: 2,
     },
     typeTabActive: {
-      backgroundColor: '#FFFFFF',
-      shadowColor: '#2563EB',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 2,
+      backgroundColor: '#2563EB',
     },
     typeTabText: {
       fontSize: 13,
@@ -86,7 +81,7 @@ export const createStyles = (theme: Theme) => {
       marginLeft: Spacing.xs,
     },
     typeTabTextActive: {
-      color: '#2563EB',
+      color: '#FFFFFF',
       fontWeight: '600',
     },
     // 筛选区域
