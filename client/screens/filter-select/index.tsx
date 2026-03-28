@@ -38,10 +38,17 @@ export default function FilterSelectScreen() {
   const params = useSafeSearchParams<{
     type: FilterType;
     selected?: string;
+    keyword?: string;
+    industry?: string;
+    province?: string;
   }>();
 
   const filterType = params?.type || 'province';
   const selectedValue = params?.selected || '';
+  // 保留原有的筛选参数
+  const existingKeyword = params?.keyword || '';
+  const existingIndustry = params?.industry || '';
+  const existingProvince = params?.province || '';
 
   const [searchKeyword, setSearchKeyword] = useState('');
   const [allItems, setAllItems] = useState<(Province | Industry)[]>([]);
@@ -85,19 +92,36 @@ export default function FilterSelectScreen() {
   }, [allItems, searchKeyword]);
 
   const handleSelect = useCallback((itemName: string) => {
-    // 返回搜索页面并传递选择结果
-    if (filterType === 'province') {
-      router.push('/search', { 
-        province: itemName,
-        autoSearch: 'true' 
-      });
-    } else {
-      router.push('/search', { 
-        industry: itemName,
-        autoSearch: 'true' 
-      });
+    // 构建完整的筛选参数，保留原有条件
+    const searchParams: {
+      autoSearch: string;
+      keyword?: string;
+      industry?: string;
+      province?: string;
+    } = { autoSearch: 'true' };
+    
+    // 保留原有的关键词
+    if (existingKeyword) {
+      searchParams.keyword = existingKeyword;
     }
-  }, [filterType, router]);
+    
+    // 根据筛选类型设置对应参数
+    if (filterType === 'province') {
+      searchParams.province = itemName;
+      // 保留原有的行业筛选
+      if (existingIndustry) {
+        searchParams.industry = existingIndustry;
+      }
+    } else {
+      searchParams.industry = itemName;
+      // 保留原有的省份筛选
+      if (existingProvince) {
+        searchParams.province = existingProvince;
+      }
+    }
+    
+    router.push('/search', searchParams);
+  }, [filterType, router, existingKeyword, existingIndustry, existingProvince]);
 
   const renderItem = useCallback(({ item }: { item: Province | Industry }) => {
     const isSelected = selectedValue === item.name;

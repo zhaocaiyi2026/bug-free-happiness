@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -69,9 +69,6 @@ export default function SearchScreen() {
     autoSearch?: string;
   }>();
 
-  // 用于追踪是否已执行过自动搜索
-  const hasAutoSearchedRef = useRef(false);
-
   // 搜索类型：bid-招标，winBid-中标
   const [searchType, setSearchType] = useState<'bid' | 'winBid'>('bid');
   
@@ -89,38 +86,36 @@ export default function SearchScreen() {
     // 可以在这里获取数据用于其他用途
   }, []);
 
-  // 处理从发现页面传来的参数 - 只执行一次
+  // 监听参数变化并更新状态
   useEffect(() => {
-    // 如果已经执行过自动搜索，则跳过
-    if (hasAutoSearchedRef.current) return;
-    
-    if (searchParams && searchParams.autoSearch === 'true') {
-      hasAutoSearchedRef.current = true;
-      
-      // 设置关键词
-      if (searchParams.keyword) {
+    if (searchParams) {
+      // 更新关键词
+      if (searchParams.keyword !== undefined) {
         setKeyword(searchParams.keyword);
       }
-      // 设置行业
-      if (searchParams.industry) {
+      // 更新行业
+      if (searchParams.industry !== undefined) {
         setSelectedIndustry(searchParams.industry);
       }
-      // 设置省份
-      if (searchParams.province) {
+      // 更新省份
+      if (searchParams.province !== undefined) {
         setSelectedProvince(searchParams.province);
       }
       
-      // 延迟执行，等待筛选数据加载完成
-      setTimeout(() => {
-        handleSearchWithParams(
-          searchParams.keyword || '',
-          searchParams.industry || '',
-          searchParams.province || ''
-        );
-      }, 500);
+      // 如果带有 autoSearch 参数，执行自动搜索
+      if (searchParams.autoSearch === 'true') {
+        // 延迟执行，等待状态更新完成
+        setTimeout(() => {
+          handleSearchWithParams(
+            searchParams.keyword || '',
+            searchParams.industry || '',
+            searchParams.province || ''
+          );
+        }, 100);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams?.autoSearch]);
+  }, [searchParams?.keyword, searchParams?.industry, searchParams?.province, searchParams?.autoSearch]);
 
   const handleSearch = async () => {
     await handleSearchWithParams(keyword, selectedIndustry, selectedProvince);
@@ -194,7 +189,10 @@ export default function SearchScreen() {
   const handleProvinceMore = () => {
     router.push('/filter-select', { 
       type: 'province',
-      selected: selectedProvince 
+      selected: selectedProvince,
+      keyword: keyword,
+      industry: selectedIndustry,
+      province: selectedProvince,
     });
   };
 
@@ -202,7 +200,10 @@ export default function SearchScreen() {
   const handleIndustryMore = () => {
     router.push('/filter-select', { 
       type: 'industry',
-      selected: selectedIndustry 
+      selected: selectedIndustry,
+      keyword: keyword,
+      industry: selectedIndustry,
+      province: selectedProvince,
     });
   };
 
