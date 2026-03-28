@@ -161,9 +161,16 @@ export const createStyles = (theme: Theme) => {
       marginBottom: Spacing.md,
       flexDirection: 'row',
       justifyContent: 'space-around',
+      alignItems: 'center',
     },
     statItem: {
       alignItems: 'center',
+      flex: 1,
+    },
+    statDivider: {
+      width: 1,
+      height: 32,
+      backgroundColor: '#E5E7EB',
     },
     statValue: {
       fontSize: 24,

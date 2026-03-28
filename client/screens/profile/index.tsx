@@ -244,18 +244,33 @@ export default function ProfileScreen() {
 
           {/* 统计卡片 */}
           <View style={styles.statsCard}>
-            <View style={styles.statItem}>
+            <TouchableOpacity 
+              style={styles.statItem} 
+              onPress={async () => {
+                await AsyncStorage.setItem(FAVORITE_VIEWED_KEY, String(favoriteCount));
+                setLastViewedFavoriteCount(favoriteCount);
+                router.navigate('/favorites');
+              }}
+            >
               <Text style={styles.statValue}>{favoriteCount}</Text>
               <Text style={styles.statLabel}>收藏项目</Text>
-            </View>
-            <View style={styles.statItem}>
+            </TouchableOpacity>
+            <View style={styles.statDivider} />
+            <TouchableOpacity 
+              style={styles.statItem}
+              onPress={() => Alert.alert('我的积分', `当前积分：${user?.points || 0}\n\n积分可通过以下方式获取：\n• 每日签到 +10积分\n• 邀请好友 +50积分\n• 完善资料 +20积分`)}
+            >
               <Text style={styles.statValue}>{user?.points || 0}</Text>
               <Text style={styles.statLabel}>我的积分</Text>
-            </View>
-            <View style={styles.statItem}>
+            </TouchableOpacity>
+            <View style={styles.statDivider} />
+            <TouchableOpacity 
+              style={styles.statItem}
+              onPress={() => router.push('/subscribe')}
+            >
               <Text style={styles.statValue}>{subscribeCount}</Text>
               <Text style={styles.statLabel}>订阅关键词</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* 菜单列表 */}

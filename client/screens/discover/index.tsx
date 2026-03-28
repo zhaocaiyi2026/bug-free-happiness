@@ -257,7 +257,15 @@ export default function DiscoverScreen() {
       <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
-            <Text style={styles.headerTitle}>发现</Text>
+            <View style={styles.appTitleWrapper}>
+              <View style={styles.appLogo}>
+                <FontAwesome6 name="gavel" size={18} color="#FFFFFF" />
+              </View>
+              <View style={styles.appTitleContainer}>
+                <Text style={styles.appTitle}>招标</Text>
+                <Text style={[styles.appTitle, styles.appTitleAccent]}>通</Text>
+              </View>
+            </View>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>
               <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
             </TouchableOpacity>
@@ -278,10 +286,18 @@ export default function DiscoverScreen() {
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
       <View style={{ flex: 1 }}>
-        {/* Header - 紧凑型 */}
+        {/* Header - 品牌增强型 */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
-            <Text style={styles.headerTitle}>发现</Text>
+            <View style={styles.appTitleWrapper}>
+              <View style={styles.appLogo}>
+                <FontAwesome6 name="gavel" size={18} color="#FFFFFF" />
+              </View>
+              <View style={styles.appTitleContainer}>
+                <Text style={styles.appTitle}>招标</Text>
+                <Text style={[styles.appTitle, styles.appTitleAccent]}>通</Text>
+              </View>
+            </View>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>
               <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
             </TouchableOpacity>
