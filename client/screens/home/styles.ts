@@ -250,6 +250,12 @@ export const createStyles = (theme: Theme) => {
       color: '#2563EB',
       fontWeight: '600',
     },
+    // 标签行（紧急+类型）
+    tagRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    },
     // 类型标签（招标/中标）
     typeTag: {
       backgroundColor: 'rgba(37, 99, 235, 0.15)',

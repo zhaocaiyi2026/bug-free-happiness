@@ -440,10 +440,17 @@ export default function HomeScreen() {
               {item.industry?.slice(0, 4) || '项目'}
             </Text>
           </View>
-          <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
-            <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]} numberOfLines={1}>
-              {item.bidType || (isWinBid ? '中标' : '招标')}
-            </Text>
+          <View style={styles.tagRow}>
+            {item.is_urgent && (
+              <View style={styles.urgentTag}>
+                <Text style={styles.urgentTagText}>紧急</Text>
+              </View>
+            )}
+            <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
+              <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]} numberOfLines={1}>
+                {item.bidType || (isWinBid ? '中标' : '招标')}
+              </Text>
+            </View>
           </View>
         </View>
         <Text style={styles.bidTitle} numberOfLines={2}>
