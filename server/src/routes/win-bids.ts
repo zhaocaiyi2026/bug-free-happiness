@@ -37,6 +37,10 @@ router.get('/', async (req, res) => {
     let query = client
       .from('win_bids')
       .select('*', { count: 'exact' })
+      // 只返回有完整中标信息的数据：必须有中标单位和中标金额
+      .not('win_company', 'is', null)
+      .not('win_amount', 'is', null)
+      .gt('win_amount', 0)
       .order('publish_date', { ascending: false });
 
     // 应用筛选条件
@@ -95,6 +99,9 @@ router.get('/:id', async (req, res) => {
       .from('win_bids')
       .select('*')
       .eq('id', Number(id))
+      // 必须有完整中标信息
+      .not('win_company', 'is', null)
+      .not('win_amount', 'is', null)
       .maybeSingle();
 
     if (error) {
@@ -104,7 +111,7 @@ router.get('/:id', async (req, res) => {
     if (!winBid) {
       return res.status(404).json({
         success: false,
-        message: '中标信息不存在',
+        message: '中标信息不存在或信息不完整',
       });
     }
 

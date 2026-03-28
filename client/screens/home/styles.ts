@@ -58,18 +58,69 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
     },
     searchContainer: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: '#F5F5F5',
       borderRadius: BorderRadius.md,
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm + 2,
-      marginTop: Spacing.md,
     },
     searchPlaceholder: {
       fontSize: 13,
       color: '#9CA3AF',
       marginLeft: Spacing.sm,
+    },
+    // 搜索行（包含搜索框和定位按钮）
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      marginTop: Spacing.md,
+    },
+    locationButton: {
+      width: 44,
+      height: 44,
+      borderRadius: BorderRadius.md,
+      backgroundColor: '#F5F5F5',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    locationButtonActive: {
+      backgroundColor: 'rgba(37, 99, 235, 0.1)',
+      borderWidth: 1,
+      borderColor: '#2563EB',
+    },
+    // 位置筛选条
+    locationFilterSection: {
+      flexDirection: 'row',
+      backgroundColor: '#FFFFFF',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      gap: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F0F0F0',
+    },
+    locationChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs + 2,
+      borderRadius: BorderRadius.full,
+      backgroundColor: '#F5F5F5',
+      gap: Spacing.xs,
+    },
+    locationChipActive: {
+      backgroundColor: '#2563EB',
+    },
+    locationChipText: {
+      fontSize: 12,
+      color: '#2563EB',
+      fontWeight: '500',
+    },
+    locationChipTextActive: {
+      color: '#FFFFFF',
+      fontWeight: '600',
     },
     // 统计卡片 - 紧凑型
     statsCard: {

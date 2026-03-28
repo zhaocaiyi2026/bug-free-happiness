@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
@@ -15,6 +16,7 @@ import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
+import * as Location from 'expo-location';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_GAP = Spacing.sm;
@@ -50,6 +52,13 @@ interface Stats {
   todayCount: number;
   urgentCount: number;
   winBidCount: number;
+  provinceCount: number;
+  cityCount: number;
+}
+
+interface UserLocation {
+  province: string;
+  city: string;
 }
 
 export default function HomeScreen() {
@@ -60,13 +69,22 @@ export default function HomeScreen() {
 
   const [bids, setBids] = useState<Bid[]>([]);
   const [winBids, setWinBids] = useState<WinBid[]>([]);
-  const [stats, setStats] = useState<Stats>({ todayCount: 156, urgentCount: 8, winBidCount: 32 });
+  const [stats, setStats] = useState<Stats>({ 
+    todayCount: 156, 
+    urgentCount: 8, 
+    winBidCount: 32,
+    provinceCount: 0,
+    cityCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
   const [activeFilter, setActiveFilter] = useState('all');
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationFilter, setLocationFilter] = useState<'all' | 'province' | 'city'>('all');
 
   const filters = [
     { key: 'all', label: '全部' },
@@ -78,13 +96,66 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchData(1);
     fetchWinBids();
-  }, [activeFilter]);
+  }, [activeFilter, locationFilter]);
+
+  // 请求定位权限并获取位置
+  const requestLocation = async () => {
+    try {
+      setLocating(true);
+      
+      // 请求权限
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('提示', '需要定位权限才能使用此功能，请在设置中开启');
+        setLocating(false);
+        return;
+      }
+
+      // 获取位置
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      // 逆地理编码
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      if (reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+        const province = address.region || address.subregion || '';
+        const city = address.city || address.subregion || '';
+        
+        setUserLocation({ province, city });
+        
+        // 自动切换到本省筛选
+        setLocationFilter('province');
+        
+        Alert.alert('定位成功', `已定位到：${province} ${city}`, [
+          { text: '好的', style: 'default' }
+        ]);
+      }
+    } catch (error) {
+      console.error('定位失败:', error);
+      Alert.alert('定位失败', '无法获取您的位置，请检查定位服务是否开启');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const fetchData = async (pageNum: number) => {
     try {
       const params = new URLSearchParams();
       params.append('page', String(pageNum));
       params.append('pageSize', '20');
+
+      // 根据位置筛选
+      if (locationFilter === 'province' && userLocation?.province) {
+        params.append('province', userLocation.province);
+      } else if (locationFilter === 'city' && userLocation?.city) {
+        params.append('city', userLocation.city);
+      }
 
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
@@ -269,11 +340,58 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
-            <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
-            <Text style={styles.searchPlaceholder}>搜索招标信息、行业...</Text>
-          </TouchableOpacity>
+          <View style={styles.searchRow}>
+            <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
+              <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
+              <Text style={styles.searchPlaceholder}>搜索招标信息、行业...</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.locationButton, userLocation && styles.locationButtonActive]} 
+              onPress={requestLocation}
+              disabled={locating}
+            >
+              {locating ? (
+                <ActivityIndicator size="small" color="#2563EB" />
+              ) : (
+                <FontAwesome6 
+                  name="location-crosshairs" 
+                  size={16} 
+                  color={userLocation ? "#2563EB" : "#6B7280"} 
+                />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* 位置筛选条 */}
+        {userLocation && (
+          <View style={styles.locationFilterSection}>
+            <TouchableOpacity 
+              style={[styles.locationChip, locationFilter === 'all' && styles.locationChipActive]}
+              onPress={() => { setLocationFilter('all'); setPage(1); setLoading(true); }}
+            >
+              <Text style={[styles.locationChipText, locationFilter === 'all' && styles.locationChipTextActive]}>全部</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.locationChip, locationFilter === 'province' && styles.locationChipActive]}
+              onPress={() => { setLocationFilter('province'); setPage(1); setLoading(true); }}
+            >
+              <FontAwesome6 name="map" size={11} color={locationFilter === 'province' ? '#FFFFFF' : '#2563EB'} />
+              <Text style={[styles.locationChipText, locationFilter === 'province' && styles.locationChipTextActive]}>
+                {userLocation.province}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.locationChip, locationFilter === 'city' && styles.locationChipActive]}
+              onPress={() => { setLocationFilter('city'); setPage(1); setLoading(true); }}
+            >
+              <FontAwesome6 name="city" size={11} color={locationFilter === 'city' ? '#FFFFFF' : '#2563EB'} />
+              <Text style={[styles.locationChipText, locationFilter === 'city' && styles.locationChipTextActive]}>
+                {userLocation.city}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* 统计卡片 - 今日新增、紧急招标、中标信息 */}
         <View style={styles.statsCard}>
