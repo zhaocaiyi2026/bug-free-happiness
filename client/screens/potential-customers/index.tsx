@@ -399,13 +399,17 @@ export default function PotentialCustomersScreen() {
             <Text style={styles.filterLabel}>行业筛选</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-                {POPULAR_INDUSTRIES.map((item) =>
-                  renderFilterChip(
+                {POPULAR_INDUSTRIES.map((item) => {
+                  // "全部"按钮：选中当 selectedIndustry 为空；其他按钮：选中当名称匹配
+                  const isSelected = item.name === '全部' 
+                    ? !selectedIndustry 
+                    : selectedIndustry === item.name;
+                  return renderFilterChip(
                     item,
-                    selectedIndustry === item.name || (item.name === '全部' && !selectedIndustry),
+                    isSelected,
                     () => handleIndustrySelect(item.name)
-                  )
-                )}
+                  );
+                })}
               </ScrollView>
             </View>
           </View>
