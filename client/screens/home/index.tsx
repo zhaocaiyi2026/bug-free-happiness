@@ -102,7 +102,65 @@ export default function HomeScreen() {
       // 判断是否为中标筛选
       const isWinBidFilter = activeFilter === 'provinceWin' || activeFilter === 'cityWin';
       
-      if (isWinBidFilter) {
+      // "全部"筛选同时获取招标和中标数据
+      if (activeFilter === 'all') {
+        // 并行获取招标和中标数据
+        const [bidsRes, winBidsRes] = await Promise.all([
+          fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?page=${pageNum}&pageSize=10`),
+          fetch(`${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?page=${pageNum}&pageSize=10`)
+        ]);
+        
+        const bidsData = await bidsRes.json();
+        const winBidsData = await winBidsRes.json();
+        
+        if (bidsData.success && winBidsData.success) {
+          // 为招标数据添加类型标识
+          const bidItems = bidsData.data.list.map((item: Bid) => ({
+            ...item,
+            isWinBid: false,
+            bidType: '招标' as const,
+          }));
+          
+          // 为中标数据添加类型标识并转换格式
+          const winBidItems = winBidsData.data.list.map((item: WinBid) => ({
+            id: item.id,
+            title: item.title,
+            budget: item.win_amount,
+            province: item.province,
+            city: item.city,
+            industry: item.industry,
+            bid_type: '中标',
+            publish_date: item.publish_date,
+            deadline: null,
+            is_urgent: false,
+            view_count: 0,
+            isWinBid: true,
+            bidType: '中标' as const,
+            winCompany: item.win_company,
+          }));
+          
+          // 合并并按发布时间排序
+          const allItems = [...bidItems, ...winBidItems].sort((a, b) => {
+            const dateA = a.publish_date ? new Date(a.publish_date).getTime() : 0;
+            const dateB = b.publish_date ? new Date(b.publish_date).getTime() : 0;
+            return dateB - dateA;
+          });
+          
+          if (pageNum === 1) {
+            setBids(allItems);
+            setStats(prev => ({
+              ...prev,
+              todayCount: bidsData.data.total || 156,
+              urgentCount: bidsData.data.list.filter((b: Bid) => b.is_urgent).length || 8,
+              winBidCount: winBidsData.data.total || 0,
+            }));
+          } else {
+            setBids((prev) => [...prev, ...allItems]);
+          }
+          // 由于合并了两页数据，需要判断是否还有更多
+          setHasMore(bidsData.data.page < bidsData.data.totalPages || winBidsData.data.page < winBidsData.data.totalPages);
+        }
+      } else if (isWinBidFilter) {
         // 获取中标数据
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
@@ -215,10 +273,32 @@ export default function HomeScreen() {
     try {
       setLocating(true);
       
+      // 先检查定位服务是否开启
+      const isLocationEnabled = await Location.hasServicesEnabledAsync();
+      if (!isLocationEnabled) {
+        Alert.alert(
+          '定位服务未开启', 
+          '请在手机设置中开启定位服务（GPS），以便使用位置相关功能',
+          [
+            { text: '取消', style: 'cancel' },
+            { text: '知道了', style: 'default' }
+          ]
+        );
+        setLocating(false);
+        return;
+      }
+      
       // 请求权限
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('提示', '需要定位权限才能使用此功能，请在设置中开启');
+        Alert.alert(
+          '定位权限被拒绝', 
+          '需要定位权限才能使用此功能，请在手机设置中为应用开启定位权限',
+          [
+            { text: '取消', style: 'cancel' },
+            { text: '知道了', style: 'default' }
+          ]
+        );
         setLocating(false);
         return;
       }
@@ -247,7 +327,14 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('定位失败:', error);
-      Alert.alert('定位失败', '无法获取您的位置，请检查定位服务是否开启');
+      Alert.alert(
+        '定位失败', 
+        '无法获取您的位置，请检查：\n1. 定位服务是否开启\n2. 应用是否有定位权限\n3. 网络是否正常',
+        [
+          { text: '取消', style: 'cancel' },
+          { text: '重试', onPress: requestLocation }
+        ]
+      );
     } finally {
       setLocating(false);
     }
@@ -267,12 +354,26 @@ export default function HomeScreen() {
     }
   };
 
-  const handleFilterPress = (filterKey: string) => {
+  const handleFilterPress = async (filterKey: string) => {
     // 如果是位置相关筛选，检查是否已定位
     if (filterKey !== 'all' && !userLocation) {
+      // 先检查定位服务是否开启
+      const isLocationEnabled = await Location.hasServicesEnabledAsync();
+      if (!isLocationEnabled) {
+        Alert.alert(
+          '定位服务未开启', 
+          '使用此功能需要开启定位服务，请在手机设置中开启GPS定位',
+          [
+            { text: '取消', style: 'cancel' },
+            { text: '去定位', onPress: requestLocation }
+          ]
+        );
+        return;
+      }
+      
       Alert.alert(
-        '提示', 
-        '使用此功能需要先定位，是否现在定位？',
+        '需要定位', 
+        '使用此功能需要先获取您的位置，是否现在定位？',
         [
           { text: '取消', style: 'cancel' },
           { text: '定位', onPress: requestLocation }
@@ -336,28 +437,24 @@ export default function HomeScreen() {
               {item.industry?.slice(0, 4) || '项目'}
             </Text>
           </View>
-          {item.is_urgent && (
-            <View style={styles.urgentTag}>
-              <Text style={styles.urgentTagText}>紧急</Text>
-            </View>
-          )}
-          {isWinBid && (
-            <View style={styles.winTag}>
-              <Text style={styles.winTagText}>中标</Text>
-            </View>
-          )}
+          <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
+            <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]} numberOfLines={1}>
+              {item.bidType || (isWinBid ? '中标' : '招标')}
+            </Text>
+          </View>
         </View>
         <Text style={styles.bidTitle} numberOfLines={2}>
           {item.title}
         </Text>
-        <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
+        <Text style={[styles.bidBudget, isWinBid && styles.bidBudgetWin]}>{formatBudget(item.budget)}元</Text>
         {isWinBid && item.winCompany && (
           <Text style={styles.bidWinCompany} numberOfLines={1}>
-            {item.winCompany}
+            中标单位: {item.winCompany}
           </Text>
         )}
         <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
         {!isWinBid && <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>}
+        {isWinBid && item.publish_date && <Text style={styles.bidPublishDate}>发布 {formatDeadline(item.publish_date)}</Text>}
       </TouchableOpacity>
     );
   }, [styles, CARD_WIDTH]);
