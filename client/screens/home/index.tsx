@@ -557,11 +557,7 @@ export default function HomeScreen() {
 
         {/* 快捷筛选入口 */}
         <View style={styles.filterSection}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterContainer}
-          >
+          <View style={styles.filterContainer}>
             {filters.map((filter) => {
               const isActive = activeFilter === filter.key;
               const isLocationFilter = filter.key !== 'all';
@@ -590,7 +586,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </View>
         </View>
 
         {/* 双列网格招标列表 */}
