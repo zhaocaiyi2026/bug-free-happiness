@@ -234,7 +234,8 @@ export default function SearchScreen() {
     item: { id: number; name: string },
     isSelected: boolean,
     onPress: () => void,
-    isMore: boolean = false
+    isMore: boolean = false,
+    showClose: boolean = false
   ) => (
     <TouchableOpacity
       key={item.id}
@@ -253,6 +254,14 @@ export default function SearchScreen() {
           name="chevron-down"
           size={8}
           color={isSelected ? '#FFFFFF' : '#6B7280'}
+          style={{ marginLeft: 4 }}
+        />
+      )}
+      {showClose && isSelected && (
+        <FontAwesome6
+          name="xmark"
+          size={10}
+          color="#FFFFFF"
           style={{ marginLeft: 4 }}
         />
       )}
@@ -386,6 +395,16 @@ export default function SearchScreen() {
             <Text style={styles.filterLabel}>省份</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+                {/* 如果选中的省份不在热门列表中，额外显示一个已选中的标签 */}
+                {selectedProvince && !POPULAR_PROVINCES.find(p => p.name === selectedProvince) && (
+                  renderFilterChip(
+                    { id: -2, name: selectedProvince },
+                    true,
+                    () => handleProvinceSelect(''),
+                    false,
+                    true
+                  )
+                )}
                 {POPULAR_PROVINCES.map((item) =>
                   renderFilterChip(
                     item,
@@ -408,6 +427,16 @@ export default function SearchScreen() {
             <Text style={styles.filterLabel}>行业</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+                {/* 如果选中的行业不在热门列表中，额外显示一个已选中的标签 */}
+                {selectedIndustry && !POPULAR_INDUSTRIES.find(p => p.name === selectedIndustry) && (
+                  renderFilterChip(
+                    { id: -2, name: selectedIndustry },
+                    true,
+                    () => handleIndustrySelect(''),
+                    false,
+                    true
+                  )
+                )}
                 {POPULAR_INDUSTRIES.map((item) =>
                   renderFilterChip(
                     item,
