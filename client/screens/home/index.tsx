@@ -9,6 +9,8 @@ import {
   Dimensions,
   Alert,
   ScrollView,
+  Linking,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
@@ -268,6 +270,27 @@ export default function HomeScreen() {
     fetchWinBids();
   }, [activeFilter]);
 
+  // 打开系统定位设置
+  const openLocationSettings = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        // Android: 直接打开位置服务设置页面
+        await Linking.openSettings();
+      } else {
+        // iOS: 打开应用设置页面（iOS没有直接的定位服务设置页面）
+        await Linking.openSettings();
+      }
+    } catch (error) {
+      console.error('打开设置失败:', error);
+      // 如果打开失败，尝试通用方式
+      try {
+        await Linking.openSettings();
+      } catch (e) {
+        Alert.alert('提示', '无法自动打开设置，请手动前往系统设置开启定位服务');
+      }
+    }
+  };
+
   // 请求定位权限并获取位置
   const requestLocation = async () => {
     try {
@@ -281,7 +304,7 @@ export default function HomeScreen() {
           '请在手机设置中开启定位服务（GPS），以便使用位置相关功能',
           [
             { text: '取消', style: 'cancel' },
-            { text: '知道了', style: 'default' }
+            { text: '去设置', onPress: openLocationSettings }
           ]
         );
         setLocating(false);
@@ -296,7 +319,7 @@ export default function HomeScreen() {
           '需要定位权限才能使用此功能，请在手机设置中为应用开启定位权限',
           [
             { text: '取消', style: 'cancel' },
-            { text: '知道了', style: 'default' }
+            { text: '去设置', onPress: openLocationSettings }
           ]
         );
         setLocating(false);
@@ -332,6 +355,7 @@ export default function HomeScreen() {
         '无法获取您的位置，请检查：\n1. 定位服务是否开启\n2. 应用是否有定位权限\n3. 网络是否正常',
         [
           { text: '取消', style: 'cancel' },
+          { text: '去设置', onPress: openLocationSettings },
           { text: '重试', onPress: requestLocation }
         ]
       );
@@ -365,7 +389,8 @@ export default function HomeScreen() {
           '使用此功能需要开启定位服务，请在手机设置中开启GPS定位',
           [
             { text: '取消', style: 'cancel' },
-            { text: '去定位', onPress: requestLocation }
+            { text: '去设置', onPress: openLocationSettings },
+            { text: '重试定位', onPress: requestLocation }
           ]
         );
         return;
