@@ -59,15 +59,6 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'more', name: '更多', icon: 'ellipsis', count: 0, color: '#6B7280' },
 ];
 
-const hotTags = [
-  { name: '市政工程', isHot: true },
-  { name: '信息化建设', isHot: false },
-  { name: '医疗器械', isHot: true },
-  { name: '智慧城市', isHot: false },
-  { name: '新能源', isHot: false },
-  { name: '园林绿化', isHot: true },
-];
-
 const CATEGORY_ICONS: Record<string, string> = {
   '建筑工程': 'building',
   'IT服务': 'laptop-code',
@@ -214,15 +205,6 @@ export default function DiscoverScreen() {
     // 跳转到搜索页面并自动搜索该行业
     router.push('/search', { 
       industry: category.name,
-      province: selectedProvince,
-      autoSearch: 'true'
-    });
-  };
-
-  // 点击热门标签 - 自动搜索该标签
-  const handleTagPress = (tag: string) => {
-    router.push('/search', { 
-      keyword: tag,
       province: selectedProvince,
       autoSearch: 'true'
     });
@@ -416,26 +398,6 @@ export default function DiscoverScreen() {
                   {category.count > 0 && (
                     <Text style={styles.categoryCount}>{category.count}</Text>
                   )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* 热门标签 */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>热门标签</Text>
-            </View>
-            <View style={styles.tagsContainer}>
-              {hotTags.map((tag, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.tag, tag.isHot && styles.tagHot]}
-                  onPress={() => handleTagPress(tag.name)}
-                >
-                  <Text style={[styles.tagText, tag.isHot && styles.tagTextHot]}>
-                    {tag.name}
-                  </Text>
                 </TouchableOpacity>
               ))}
             </View>

@@ -143,29 +143,6 @@ export const createStyles = (theme: Theme) => {
       color: '#9CA3AF',
       marginTop: 1,
     },
-    // 标签
-    tagsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: Spacing.sm,
-    },
-    tag: {
-      backgroundColor: 'rgba(37, 99, 235, 0.08)',
-      borderRadius: BorderRadius.full,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xs + 2,
-    },
-    tagHot: {
-      backgroundColor: 'rgba(200, 16, 46, 0.08)',
-    },
-    tagText: {
-      fontSize: 13,
-      color: '#2563EB',
-      fontWeight: '500',
-    },
-    tagTextHot: {
-      color: '#C8102E',
-    },
     // 特色功能区
     featureGrid: {
       gap: Spacing.sm,
