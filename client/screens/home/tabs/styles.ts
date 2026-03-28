@@ -4,50 +4,83 @@ import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     listContainer: {
-      paddingHorizontal: Spacing.lg,
+      padding: Spacing.md,
       paddingBottom: Spacing['5xl'],
     },
+    columnWrapper: {
+      justifyContent: 'space-between',
+    },
     bidCard: {
+      width: '48%',
       backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      padding: Spacing.lg,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      padding: Spacing.md,
       marginBottom: Spacing.md,
     },
-    bidCategory: {
-      fontSize: 12,
-      color: '#C8102E',
-      fontWeight: '700',
-      textTransform: 'uppercase',
-      letterSpacing: 2,
+    bidCardUrgent: {
+      borderColor: '#C8102E',
+      borderWidth: 2,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
       marginBottom: Spacing.sm,
+    },
+    categoryTag: {
+      backgroundColor: '#2563EB',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderRadius: BorderRadius.xs,
+    },
+    categoryTagText: {
+      fontSize: 11,
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
+    urgentTag: {
+      backgroundColor: '#C8102E',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderRadius: BorderRadius.xs,
+    },
+    urgentTagText: {
+      fontSize: 10,
+      color: '#FFFFFF',
+      fontWeight: '700',
     },
     bidTitle: {
-      fontFamily: 'NotoSerifSC-Bold',
-      fontSize: 17,
-      lineHeight: 26,
-      color: '#1A1A1A',
-      marginBottom: Spacing.md,
-    },
-    bidMetaRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#1C1917',
+      lineHeight: 20,
       marginBottom: Spacing.sm,
     },
-    bidMetaItem: {
-      fontSize: 13,
-      color: '#8C8C8C',
-      marginRight: Spacing.lg,
-    },
     bidBudget: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: '700',
-      color: '#1A1A1A',
-      marginTop: Spacing.sm,
+      color: '#1C1917',
+      marginBottom: Spacing.xs,
     },
-    bidDate: {
-      fontSize: 12,
-      color: '#8C8C8C',
+    bidMeta: {
+      fontSize: 11,
+      color: '#9CA3AF',
+      lineHeight: 16,
+    },
+    bidDeadline: {
+      fontSize: 11,
+      color: '#C8102E',
       marginTop: Spacing.xs,
+    },
+    headerInfo: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+    },
+    headerInfoText: {
+      fontSize: 13,
+      color: '#9CA3AF',
     },
     loadingContainer: {
       flex: 1,
@@ -57,7 +90,7 @@ export const createStyles = (theme: Theme) => {
     },
     loadingText: {
       fontSize: 14,
-      color: '#8C8C8C',
+      color: '#9CA3AF',
       marginTop: Spacing.md,
     },
     emptyContainer: {
@@ -68,7 +101,7 @@ export const createStyles = (theme: Theme) => {
     },
     emptyText: {
       fontSize: 14,
-      color: '#8C8C8C',
+      color: '#9CA3AF',
     },
   });
 };

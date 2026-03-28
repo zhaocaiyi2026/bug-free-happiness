@@ -26,12 +26,7 @@ interface Bid {
   view_count: number;
 }
 
-interface Props {
-  province?: string;
-  city?: string;
-}
-
-export default function AllBidsTab({ province, city }: Props) {
+export default function AllBidsTab() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
@@ -88,19 +83,21 @@ export default function AllBidsTab({ province, city }: Props) {
   };
 
   const formatBudget = (budget: number | null) => {
-    if (!budget) return '预算面议';
+    if (!budget) return '面议';
     if (budget >= 100000000) {
-      return `${(budget / 100000000).toFixed(2)}亿元`;
+      return `${(budget / 100000000).toFixed(2)}亿`;
     } else if (budget >= 10000) {
-      return `${(budget / 10000).toFixed(0)}万元`;
+      return `${(budget / 10000).toFixed(0)}万`;
     }
-    return `${budget}元`;
+    return `${budget}`;
   };
 
-  const formatDate = (dateStr: string | null) => {
+  const formatDeadline = (dateStr: string | null) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}/${day}`;
   };
 
   const handleBidPress = (bidId: number) => {
@@ -108,29 +105,33 @@ export default function AllBidsTab({ province, city }: Props) {
   };
 
   const renderBidItem = ({ item }: { item: Bid }) => (
-    <TouchableOpacity style={styles.bidCard} onPress={() => handleBidPress(item.id)}>
-      <Text style={styles.bidCategory}>{item.industry || '综合'}</Text>
-      <Text style={styles.bidTitle} numberOfLines={3}>
-        {item.title}
-      </Text>
-      <View style={styles.bidMetaRow}>
-        <Text style={styles.bidMetaItem}>{item.province} {item.city}</Text>
-        {item.bid_type && (
-          <>
-            <View style={{ width: 1, height: 12, backgroundColor: '#E5E5E5', marginRight: Spacing.md }} />
-            <Text style={styles.bidMetaItem}>{item.bid_type}</Text>
-          </>
+    <TouchableOpacity
+      style={[styles.bidCard, item.is_urgent && styles.bidCardUrgent]}
+      onPress={() => handleBidPress(item.id)}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.categoryTag}>
+          <Text style={styles.categoryTagText}>{item.industry?.slice(0, 4) || '项目'}</Text>
+        </View>
+        {item.is_urgent && (
+          <View style={styles.urgentTag}>
+            <Text style={styles.urgentTagText}>紧急</Text>
+          </View>
         )}
       </View>
-      <Text style={styles.bidBudget}>{formatBudget(item.budget)}</Text>
-      <Text style={styles.bidDate}>发布于 {formatDate(item.publish_date)}</Text>
+      <Text style={styles.bidTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
+      <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
+      <Text style={styles.bidMeta}>{item.province} · {item.city}</Text>
+      <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#000000" />
+        <ActivityIndicator size="large" color="#2563EB" />
         <Text style={styles.loadingText}>加载中...</Text>
       </View>
     );
@@ -138,16 +139,19 @@ export default function AllBidsTab({ province, city }: Props) {
 
   return (
     <FlatList
+      key="all-bids-list"
       data={bids}
       renderItem={renderBidItem}
       keyExtractor={(item) => String(item.id)}
+      numColumns={2}
+      columnWrapperStyle={styles.columnWrapper}
       contentContainerStyle={styles.listContainer}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#2563EB']} />}
       onEndReached={handleLoadMore}
       onEndReachedThreshold={0.5}
       ListFooterComponent={
         loading && page > 1 ? (
-          <ActivityIndicator size="small" color="#000000" style={{ marginVertical: Spacing.lg }} />
+          <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: Spacing.lg }} />
         ) : null
       }
       ListEmptyComponent={

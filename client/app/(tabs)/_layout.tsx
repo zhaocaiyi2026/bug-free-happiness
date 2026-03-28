@@ -5,7 +5,7 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function TabLayout() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
@@ -13,22 +13,26 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FAF9F6',
-          borderTopColor: '#E5E5E5',
-          borderTopWidth: StyleSheet.hairlineWidth,
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E5E7EB',
+          borderTopWidth: 1,
           height: Platform.OS === 'web' ? 60 : 50 + insets.bottom,
           paddingBottom: Platform.OS === 'web' ? 0 : insets.bottom,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
         },
-        tabBarActiveTintColor: '#1A1A1A',
-        tabBarInactiveTintColor: '#BFBFBF',
+        tabBarActiveTintColor: '#2563EB',
+        tabBarInactiveTintColor: '#9CA3AF',
         tabBarItemStyle: {
           height: Platform.OS === 'web' ? 60 : undefined,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-          textTransform: 'uppercase',
-          letterSpacing: 1,
+          fontSize: 10,
+          fontWeight: '500',
+          marginTop: 2,
         },
       }}
     >
@@ -37,7 +41,7 @@ export default function TabLayout() {
         options={{
           title: '首页',
           tabBarIcon: ({ color }) => (
-            <FontAwesome6 name="house" size={20} color={color} />
+            <FontAwesome6 name="house" size={20} color={color} solid />
           ),
         }}
       />
@@ -71,5 +75,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-import { StyleSheet } from 'react-native';

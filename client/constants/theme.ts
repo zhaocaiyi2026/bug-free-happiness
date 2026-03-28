@@ -3,15 +3,15 @@ export const Colors = {
     textPrimary: "#1C1917",
     textSecondary: "#78716c",
     textMuted: "#9CA3AF",
-    primary: "#4F46E5", // Indigo-600 - 品牌主色，代表科技与智能
-    accent: "#8B5CF6", // Violet-500 - 辅助色，代表创造力
+    primary: "#2563EB", // 蓝色主色调 - 专业、可靠
+    accent: "#C8102E", // 编辑红 - 紧急、强调
     success: "#10B981", // Emerald-500
     error: "#EF4444",
-    backgroundRoot: "#FAFAFA",
+    backgroundRoot: "#F5F5F5", // 浅灰背景
     backgroundDefault: "#FFFFFF",
-    backgroundTertiary: "#F9FAFB", // 更浅的背景色，用于去线留白
+    backgroundTertiary: "#F9FAFB", // 更浅的背景色
     buttonPrimaryText: "#FFFFFF",
-    tabIconSelected: "#4F46E5",
+    tabIconSelected: "#2563EB",
     border: "#E5E7EB",
     borderLight: "#F3F4F6",
   },
@@ -19,15 +19,15 @@ export const Colors = {
     textPrimary: "#FAFAF9",
     textSecondary: "#A8A29E",
     textMuted: "#6F767E",
-    primary: "#818CF8", // Indigo-400 - 暗色模式品牌主色
-    accent: "#A78BFA", // Violet-400
+    primary: "#3B82F6", // 蓝色 - 暗色模式
+    accent: "#EF4444", // 红色
     success: "#34D399",
     error: "#F87171",
-    backgroundRoot: "#09090B", // 更深的背景色
+    backgroundRoot: "#09090B",
     backgroundDefault: "#1C1C1E",
-    backgroundTertiary: "#1F1F22", // 暗色模式去线留白背景
+    backgroundTertiary: "#1F1F22",
     buttonPrimaryText: "#09090B",
-    tabIconSelected: "#818CF8",
+    tabIconSelected: "#3B82F6",
     border: "#3F3F46",
     borderLight: "#27272A",
   },

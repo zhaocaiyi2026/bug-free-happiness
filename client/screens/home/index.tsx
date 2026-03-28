@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
-import { ThemedText } from '@/components/ThemedText';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
@@ -24,7 +23,7 @@ import FollowBidsTab from './tabs/FollowBidsTab';
 const layout = Dimensions.get('window');
 
 export default function HomeScreen() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
@@ -47,27 +46,16 @@ export default function HomeScreen() {
   const renderTabBar = (props: any) => (
     <TabBar
       {...props}
-      style={{
-        backgroundColor: '#000000',
-        elevation: 0,
-        shadowOpacity: 0,
-      }}
-      indicatorStyle={{
-        backgroundColor: '#C8102E',
-        height: 3,
-      }}
-      tabStyle={{
-        width: 'auto',
-        paddingHorizontal: Spacing.lg,
-      }}
+      style={styles.tabBar}
+      indicatorStyle={styles.tabIndicator}
+      tabStyle={{ width: 'auto', paddingHorizontal: Spacing.lg }}
       labelStyle={{
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '500',
         textTransform: 'none',
-        letterSpacing: 1,
       }}
-      activeColor="#FFFFFF"
-      inactiveColor="#8C8C8C"
+      activeColor="#2563EB"
+      inactiveColor="#9CA3AF"
       scrollEnabled={false}
     />
   );
@@ -76,24 +64,26 @@ export default function HomeScreen() {
     router.navigate('/search');
   };
 
+  const handleFavoritePress = () => {
+    router.navigate('/favorites');
+  };
+
   return (
-    <Screen backgroundColor="#FAF9F6" statusBarStyle="light">
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
       <View style={{ flex: 1 }}>
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
-            <View>
-              <Text style={styles.headerTitle}>招标信息</Text>
-              <Text style={styles.headerSubtitle}>TENDER INFO</Text>
-            </View>
-            <TouchableOpacity onPress={() => router.navigate('/profile')}>
-              <FontAwesome6 name="user" size={24} color="#FFFFFF" />
+            {/* 搜索框 */}
+            <TouchableOpacity style={styles.searchBox} onPress={handleSearchPress}>
+              <FontAwesome6 name="magnifying-glass" size={16} color="#9CA3AF" />
+              <Text style={styles.searchPlaceholder}>搜索招标信息</Text>
+            </TouchableOpacity>
+            {/* 收藏按钮 */}
+            <TouchableOpacity style={styles.favoriteButton} onPress={handleFavoritePress}>
+              <FontAwesome6 name="heart" size={18} color="#C8102E" />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearchPress}>
-            <FontAwesome6 name="magnifying-glass" size={18} color="#8C8C8C" />
-            <Text style={styles.searchButtonText}>搜索招标信息...</Text>
-          </TouchableOpacity>
         </View>
 
         {/* TabView */}
@@ -104,7 +94,7 @@ export default function HomeScreen() {
           initialLayout={{ width: layout.width }}
           renderTabBar={renderTabBar}
           lazy
-          style={{ backgroundColor: '#FAF9F6' }}
+          style={{ backgroundColor: '#F5F5F5' }}
         />
       </View>
     </Screen>
