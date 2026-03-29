@@ -214,6 +214,14 @@ export default function BidListScreen() {
     return `${month}/${day}`;
   };
 
+  const formatPublishDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${month}月${day}日发布`;
+  };
+
   const renderBidItem = useCallback(({ item, index }: { item: Bid; index: number }) => (
     <TouchableOpacity
       style={[
@@ -244,9 +252,15 @@ export default function BidListScreen() {
       </Text>
       <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
       <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
-      <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>
+      {listType === 'today' ? (
+        <Text style={styles.bidDeadline}>{formatPublishDate(item.publish_date)}</Text>
+      ) : listType === 'urgent' ? (
+        <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>
+      ) : (
+        <Text style={styles.bidDeadline}>发布 {formatPublishDate(item.publish_date)}</Text>
+      )}
     </TouchableOpacity>
-  ), [styles, CARD_WIDTH]);
+  ), [styles, CARD_WIDTH, listType]);
 
   const renderWinBidItem = useCallback(({ item, index }: { item: WinBid; index: number }) => (
     <TouchableOpacity
@@ -271,7 +285,7 @@ export default function BidListScreen() {
       <Text style={[styles.bidBudget, styles.winBudget]}>{formatBudget(item.win_amount)}元</Text>
       <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
       <Text style={[styles.bidDeadline, styles.winCompany]} numberOfLines={1}>
-        {item.win_company}
+        {formatPublishDate(item.publish_date)} · {item.win_company}
       </Text>
     </TouchableOpacity>
   ), [styles, CARD_WIDTH]);
