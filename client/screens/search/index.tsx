@@ -135,6 +135,11 @@ export default function SearchScreen() {
       if (searchIndustry) params.append('industry', searchIndustry);
       if (minBudget) params.append('minBudget', minBudget);
       if (maxBudget) params.append('maxBudget', maxBudget);
+      
+      // 搜索页面包含过期招标（主页不显示过期招标）
+      if (searchType === 'bid') {
+        params.append('includeExpired', 'true');
+      }
 
       const endpoint = searchType === 'bid' ? '/api/v1/bids' : '/api/v1/win-bids';
       const res = await fetch(

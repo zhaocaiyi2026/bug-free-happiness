@@ -43,6 +43,7 @@ router.get('/', async (req, res) => {
     let query = client
       .from('win_bids')
       .select('*', { count: 'exact' })
+      // 按发布日期倒序排列
       .order('publish_date', { ascending: false });
 
     // 今日中标筛选
@@ -63,6 +64,15 @@ router.get('/', async (req, res) => {
     if (keyword) {
       query = query.or(`title.ilike.%${keyword}%,win_company.ilike.%${keyword}%`);
     }
+
+    // 核心过滤条件：
+    // 1. 必须有中标单位
+    // 2. 必须有中标金额
+    query = query
+      .not('win_company', 'is', null)
+      .neq('win_company', '')
+      .not('win_amount', 'is', null)
+      .gt('win_amount', 0);
 
     // 分页
     query = query.range(start, end);
