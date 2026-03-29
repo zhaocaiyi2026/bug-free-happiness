@@ -176,19 +176,19 @@ export default function SearchScreen() {
     await AsyncStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
   };
 
-  // 点击历史记录搜索
+  // 点击历史记录搜索 - 保留省份筛选
   const handleHistoryPress = (historyKeyword: string) => {
     setKeyword(historyKeyword);
-    // 点击历史记录时，取消行业筛选
+    // 点击历史记录时，保留省份筛选，清空行业（因为历史记录是关键词搜索）
     setSelectedIndustry('');
     handleSearchWithParams(historyKeyword, '', selectedProvince);
   };
 
-  // 执行搜索
+  // 执行搜索 - 使用所有当前筛选条件
   const handleSearch = async () => {
     Keyboard.dismiss();
-    // 用户输入关键词搜索时，只使用关键词
-    await handleSearchWithParams(keyword, '', selectedProvince);
+    // 叠加所有筛选条件：关键词 + 行业 + 省份
+    await handleSearchWithParams(keyword, selectedIndustry, selectedProvince);
   };
 
   const handleSearchWithParams = async (
@@ -266,9 +266,9 @@ export default function SearchScreen() {
                 newExamples[newExamples.length - 1] = result.value;
                 setIndustryExamples(newExamples);
               }
-              // 执行搜索（行业选择时清空省份筛选）
+              // 执行搜索（保留省份筛选）
               setTimeout(() => {
-                handleSearchWithParams(result.value, '', '');
+                handleSearchWithParams(result.value, result.value, selectedProvince);
               }, 50);
             }
           }
@@ -325,6 +325,7 @@ export default function SearchScreen() {
     const newProvince = provinceName === selectedProvince ? '' : provinceName;
     setSelectedProvince(newProvince);
     setTimeout(() => {
+      // 保留关键词和行业筛选
       handleSearchWithParams(keyword, selectedIndustry, newProvince);
     }, 50);
   };
@@ -334,16 +335,14 @@ export default function SearchScreen() {
     setSelectedIndustry(newIndustry);
     setKeyword(newIndustry);
     setTimeout(() => {
-      handleSearchWithParams(newIndustry, '', '');
+      // 保留省份筛选，不再清空
+      handleSearchWithParams(newIndustry, newIndustry, selectedProvince);
     }, 50);
   };
 
-  // 用户输入关键词时的处理
+  // 用户输入关键词时的处理 - 不再清空行业筛选
   const handleKeywordChange = (text: string) => {
     setKeyword(text);
-    if (text.length > 0 && selectedIndustry) {
-      setSelectedIndustry('');
-    }
   };
 
   // 跳转到省份选择页面
