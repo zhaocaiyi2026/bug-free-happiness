@@ -501,6 +501,7 @@ export default function HomeScreen() {
                     color="#FFFFFF" 
                   />
                 </TouchableOpacity>
+                <Text style={styles.locationButtonText}>地区</Text>
               </View>
             </View>
             

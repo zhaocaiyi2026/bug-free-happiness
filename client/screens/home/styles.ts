@@ -54,9 +54,9 @@ export const createStyles = (theme: Theme) => {
       marginTop: 2,
     },
     headerActions: {
-      flexDirection: 'row',
+      flexDirection: 'column',
       alignItems: 'center',
-      gap: Spacing.sm,
+      gap: 2,
     },
     
     // ==================== Search Bar ====================
@@ -380,6 +380,11 @@ export const createStyles = (theme: Theme) => {
     locationButtonActive: {
       backgroundColor: 'rgba(255,255,255,0.25)',
       borderColor: 'rgba(255,255,255,0.4)',
+    },
+    locationButtonText: {
+      fontSize: 10,
+      color: 'rgba(255,255,255,0.8)',
+      marginTop: 2,
     },
     
     // ==================== Location Info ====================
