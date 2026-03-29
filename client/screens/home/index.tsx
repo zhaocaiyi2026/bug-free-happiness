@@ -466,7 +466,7 @@ export default function HomeScreen() {
           style={[
             styles.headerGradient, 
             { 
-              paddingTop: insets.top + Spacing.md,
+              paddingTop: insets.top + Spacing.sm,
               backgroundColor: '#2563EB',
             }
           ]}

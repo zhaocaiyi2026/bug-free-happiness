@@ -11,7 +11,7 @@ export const createStyles = (theme: Theme) => {
     // ==================== Header ====================
     headerGradient: {
       paddingTop: 0,
-      paddingBottom: Spacing['2xl'],
+      paddingBottom: Spacing.xl,
       borderBottomLeftRadius: 32,
       borderBottomRightRadius: 32,
     },
@@ -22,7 +22,7 @@ export const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: Spacing.lg,
+      marginBottom: Spacing.md,
     },
     appBrand: {
       flexDirection: 'row',
