@@ -60,9 +60,6 @@ export default function PotentialCustomersScreen() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  
-  // 动态筛选示例列表（当用户选择不在示例中的选项时，替换最后一个）
-  const [industryExamples, setIndustryExamples] = useState<string[]>(DEFAULT_INDUSTRY_EXAMPLES);
 
   // 监听参数变化，更新筛选状态
   useEffect(() => {
@@ -224,12 +221,6 @@ export default function PotentialCustomersScreen() {
 
   // 从"更多"选择行业
   const handleIndustryFromMore = (industryName: string) => {
-    // 如果选中的行业不在当前示例列表中，替换最后一个示例
-    if (!industryExamples.includes(industryName)) {
-      const newExamples = [...industryExamples];
-      newExamples[newExamples.length - 1] = industryName;
-      setIndustryExamples(newExamples);
-    }
     setSelectedIndustry(industryName);
     setKeyword(industryName);
   };
@@ -467,7 +458,7 @@ export default function PotentialCustomersScreen() {
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
                 {/* 显示3个示例行业 */}
-                {industryExamples.map((name, index) => {
+                {DEFAULT_INDUSTRY_EXAMPLES.map((name, index) => {
                   const isSelected = selectedIndustry === name;
                   return (
                     <TouchableOpacity
@@ -481,6 +472,18 @@ export default function PotentialCustomersScreen() {
                     </TouchableOpacity>
                   );
                 })}
+                {/* 如果选中的行业不在示例中，额外显示 */}
+                {selectedIndustry && !DEFAULT_INDUSTRY_EXAMPLES.includes(selectedIndustry) && (
+                  <TouchableOpacity
+                    style={[styles.filterChip, styles.filterChipActive]}
+                    onPress={() => handleIndustryChipSelect(selectedIndustry)}
+                  >
+                    <Text style={[styles.filterChipText, styles.filterChipTextActive]}>
+                      {selectedIndustry}
+                    </Text>
+                    <FontAwesome6 name="xmark" size={10} color="#FFFFFF" style={{ marginLeft: 4 }} />
+                  </TouchableOpacity>
+                )}
                 {/* 更多按钮 */}
                 <TouchableOpacity
                   style={[styles.filterChip, styles.filterChipMore]}

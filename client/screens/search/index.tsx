@@ -71,10 +71,6 @@ export default function SearchScreen() {
   const [results, setResults] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  
-  // 动态筛选示例列表（当用户选择不在示例中的选项时，替换最后一个）
-  const [provinceExamples, setProvinceExamples] = useState<string[]>(DEFAULT_PROVINCE_EXAMPLES);
-  const [industryExamples, setIndustryExamples] = useState<string[]>(DEFAULT_INDUSTRY_EXAMPLES);
 
   // 初始化：获取筛选数据
   useEffect(() => {
@@ -193,12 +189,6 @@ export default function SearchScreen() {
 
   // 从"更多"选择省份
   const handleProvinceFromMore = (provinceName: string) => {
-    // 如果选中的省份不在当前示例列表中，替换最后一个示例
-    if (!provinceExamples.includes(provinceName)) {
-      const newExamples = [...provinceExamples];
-      newExamples[newExamples.length - 1] = provinceName;
-      setProvinceExamples(newExamples);
-    }
     setSelectedProvince(provinceName);
     // 选择省份后自动搜索
     setTimeout(() => {
@@ -221,12 +211,6 @@ export default function SearchScreen() {
 
   // 从"更多"选择行业
   const handleIndustryFromMore = (industryName: string) => {
-    // 如果选中的行业不在当前示例列表中，替换最后一个示例
-    if (!industryExamples.includes(industryName)) {
-      const newExamples = [...industryExamples];
-      newExamples[newExamples.length - 1] = industryName;
-      setIndustryExamples(newExamples);
-    }
     setSelectedIndustry(industryName);
     setKeyword(industryName);
     
@@ -449,11 +433,21 @@ export default function SearchScreen() {
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
                 {/* 显示3个示例省份 */}
-                {provinceExamples.map((name, index) =>
+                {DEFAULT_PROVINCE_EXAMPLES.map((name, index) =>
                   renderFilterChip(
                     { id: index, name },
                     selectedProvince === name,
                     () => handleProvinceSelect(name)
+                  )
+                )}
+                {/* 如果选中的省份不在示例中，额外显示 */}
+                {selectedProvince && !DEFAULT_PROVINCE_EXAMPLES.includes(selectedProvince) && (
+                  renderFilterChip(
+                    { id: -2, name: selectedProvince },
+                    true,
+                    () => handleProvinceSelect(''),
+                    false,
+                    true
                   )
                 )}
                 {/* 更多按钮 */}
@@ -473,11 +467,21 @@ export default function SearchScreen() {
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
                 {/* 显示3个示例行业 */}
-                {industryExamples.map((name, index) =>
+                {DEFAULT_INDUSTRY_EXAMPLES.map((name, index) =>
                   renderFilterChip(
                     { id: index, name },
                     selectedIndustry === name,
                     () => handleIndustrySelect(name)
+                  )
+                )}
+                {/* 如果选中的行业不在示例中，额外显示 */}
+                {selectedIndustry && !DEFAULT_INDUSTRY_EXAMPLES.includes(selectedIndustry) && (
+                  renderFilterChip(
+                    { id: -2, name: selectedIndustry },
+                    true,
+                    () => handleIndustrySelect(''),
+                    false,
+                    true
                   )
                 )}
                 {/* 更多按钮 */}
