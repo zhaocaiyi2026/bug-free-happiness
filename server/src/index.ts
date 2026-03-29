@@ -1,3 +1,4 @@
+import 'dotenv/config'; // 加载.env环境变量
 import express from "express";
 import cors from "cors";
 import bidsRouter from './routes/bids';
