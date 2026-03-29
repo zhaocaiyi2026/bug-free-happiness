@@ -35,12 +35,8 @@ interface Customer {
   source_date: string | null;
 }
 
-// 常用行业（不含全部，全部改为跳转到筛选页）
-const POPULAR_INDUSTRIES = [
-  { id: 1, name: '医疗设备', code: 'medical' },
-  { id: 2, name: '建筑工程', code: 'construction' },
-  { id: 3, name: '信息技术', code: 'it' },
-];
+// 默认行业示例（3个）
+const DEFAULT_INDUSTRY_EXAMPLES = ['医疗设备', '建筑工程', '信息技术'];
 
 export default function PotentialCustomersScreen() {
   const { theme } = useTheme();
@@ -64,15 +60,20 @@ export default function PotentialCustomersScreen() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  
+  // 动态筛选示例列表（当用户选择不在示例中的选项时，替换最后一个）
+  const [industryExamples, setIndustryExamples] = useState<string[]>(DEFAULT_INDUSTRY_EXAMPLES);
 
   // 监听参数变化，更新筛选状态
   useEffect(() => {
-    if (params?.industry) {
-      setSelectedIndustry(params.industry);
+    if (params?.industry && params.industry !== selectedIndustry) {
+      // 从行业筛选页面返回
+      handleIndustryFromMore(params.industry);
     }
     if (params?.customerType && ['all', 'bidder', 'winner'].includes(params.customerType)) {
       setCustomerType(params.customerType as 'all' | 'bidder' | 'winner');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
   // 初始加载或筛选变化时搜索
@@ -208,9 +209,28 @@ export default function PotentialCustomersScreen() {
     });
   };
 
+  // 点击示例行业
   const handleIndustryChipSelect = (industryName: string) => {
-    // 选择行业时，用行业名称作为关键词搜索，不叠加行业筛选
-    setSelectedIndustry('');
+    // 如果点击的是已选中的，则取消选中
+    if (selectedIndustry === industryName) {
+      setSelectedIndustry('');
+      setKeyword('');
+    } else {
+      // 选择行业时，用行业名称作为关键词搜索
+      setSelectedIndustry(industryName);
+      setKeyword(industryName);
+    }
+  };
+
+  // 从"更多"选择行业
+  const handleIndustryFromMore = (industryName: string) => {
+    // 如果选中的行业不在当前示例列表中，替换最后一个示例
+    if (!industryExamples.includes(industryName)) {
+      const newExamples = [...industryExamples];
+      newExamples[newExamples.length - 1] = industryName;
+      setIndustryExamples(newExamples);
+    }
+    setSelectedIndustry(industryName);
     setKeyword(industryName);
   };
 
@@ -221,11 +241,6 @@ export default function PotentialCustomersScreen() {
     if (text.length > 0 && selectedIndustry) {
       setSelectedIndustry('');
     }
-  };
-
-  const handleClearIndustry = () => {
-    // 清除行业筛选
-    setSelectedIndustry('');
   };
 
   const handleCustomerTypeChange = (newType: 'all' | 'bidder' | 'winner') => {
@@ -451,45 +466,29 @@ export default function PotentialCustomersScreen() {
             <Text style={styles.filterLabel}>行业筛选</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-                {/* 全部按钮 - 点击跳转到行业筛选页面 */}
-                <TouchableOpacity
-                  style={[styles.filterChip, !selectedIndustry && styles.filterChipActive]}
-                  onPress={handleIndustrySelect}
-                >
-                  <Text style={[styles.filterChipText, !selectedIndustry && styles.filterChipTextActive]}>
-                    全部
-                  </Text>
-                  <FontAwesome6 name="chevron-right" size={10} color={!selectedIndustry ? '#FFFFFF' : '#6B7280'} style={{ marginLeft: 4 }} />
-                </TouchableOpacity>
-                
-                {/* 快捷行业按钮 */}
-                {POPULAR_INDUSTRIES.map((item) => {
-                  const isSelected = selectedIndustry === item.name;
+                {/* 显示3个示例行业 */}
+                {industryExamples.map((name, index) => {
+                  const isSelected = selectedIndustry === name;
                   return (
                     <TouchableOpacity
-                      key={item.id}
+                      key={index}
                       style={[styles.filterChip, isSelected && styles.filterChipActive]}
-                      onPress={() => handleIndustryChipSelect(item.name)}
+                      onPress={() => handleIndustryChipSelect(name)}
                     >
                       <Text style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}>
-                        {item.name}
+                        {name}
                       </Text>
                     </TouchableOpacity>
                   );
                 })}
-                
-                {/* 已选行业标签（非快捷选项时显示） */}
-                {selectedIndustry && !POPULAR_INDUSTRIES.find(i => i.name === selectedIndustry) && (
-                  <TouchableOpacity
-                    style={[styles.filterChip, styles.filterChipActive]}
-                    onPress={handleClearIndustry}
-                  >
-                    <Text style={[styles.filterChipText, styles.filterChipTextActive]}>
-                      {selectedIndustry}
-                    </Text>
-                    <FontAwesome6 name="times" size={10} color="#FFFFFF" style={{ marginLeft: 4 }} />
-                  </TouchableOpacity>
-                )}
+                {/* 更多按钮 */}
+                <TouchableOpacity
+                  style={[styles.filterChip, styles.filterChipMore]}
+                  onPress={handleIndustrySelect}
+                >
+                  <Text style={styles.filterChipText}>更多</Text>
+                  <FontAwesome6 name="chevron-right" size={10} color="#6B7280" style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
               </ScrollView>
             </View>
           </View>
