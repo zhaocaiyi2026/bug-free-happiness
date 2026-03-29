@@ -11,6 +11,7 @@ import subscriptionsRouter from './routes/subscriptions';
 import dataSourcesRouter from './routes/data-sources';
 import potentialCustomersRouter from './routes/potential-customers';
 import aiExtractRouter from './routes/ai-extract';
+import collectorRouter from './routes/collector';
 import { startCrawler } from './crawler';
 import { startDataSyncScheduler } from './services/data-sources';
 
@@ -40,6 +41,7 @@ app.use('/api/v1/subscriptions', subscriptionsRouter);
 app.use('/api/v1/data-sources', dataSourcesRouter);
 app.use('/api/v1/potential-customers', potentialCustomersRouter);
 app.use('/api/v1/ai-extract', aiExtractRouter);
+app.use('/api/v1/collector', collectorRouter);
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}/`);
