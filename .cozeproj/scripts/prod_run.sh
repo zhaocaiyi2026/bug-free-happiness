@@ -18,17 +18,20 @@ error() {
   echo "[ERROR] $1"
   exit 1
 }
-check_command() {
-  if ! command -v "$1" &> /dev/null; then
-    error "命令 $1 未找到，请先安装"
-  fi
-}
 
 # ============== 启动服务 ======================
-# 检查核心命令
-check_command "pnpm"
-check_command "npm"
+info "开始启动服务..."
+info "ROOT_DIR: $ROOT_DIR"
+info "PORT: $PORT"
 
-info "开始执行：pnpm run start (server)"
-(pushd "$ROOT_DIR/server" > /dev/null && PORT="$PORT" pnpm run start; popd > /dev/null) || error "服务启动失败"
-info "服务启动完成！\n"
+# 设置环境变量
+export NODE_ENV=production
+export PORT="$PORT"
+
+# 检查 dist 目录是否存在
+if [ ! -f "$ROOT_DIR/server/dist/index.js" ]; then
+  error "server/dist/index.js 文件不存在，请先执行构建"
+fi
+
+info "启动 Express 服务器..."
+cd "$ROOT_DIR/server" && node dist/index.js

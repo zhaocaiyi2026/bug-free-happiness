@@ -1,6 +1,8 @@
 import 'dotenv/config'; // 加载.env环境变量
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import bidsRouter from './routes/bids';
 import winBidsRouter from './routes/win-bids';
 import commonRouter from './routes/common';
@@ -15,6 +17,9 @@ import aiExtractRouter from './routes/ai-extract';
 import collectorRouter from './routes/collector';
 import { startCrawler } from './crawler';
 import { startDataSyncScheduler } from './services/data-sources';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -43,6 +48,24 @@ app.use('/api/v1/data-sources', dataSourcesRouter);
 app.use('/api/v1/potential-customers', potentialCustomersRouter);
 app.use('/api/v1/ai-extract', aiExtractRouter);
 app.use('/api/v1/collector', collectorRouter);
+
+// 生产环境：提供前端静态文件
+if (process.env.NODE_ENV === 'production') {
+  // 前端构建文件的路径：../client/dist (相对于 server/dist/index.js)
+  const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+  
+  // 提供静态文件
+  app.use(express.static(clientDistPath));
+  
+  // 所有非 API 路由返回 index.html (SPA 支持)
+  app.get('*', (req, res, next) => {
+    // 跳过 API 路由
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}/`);
