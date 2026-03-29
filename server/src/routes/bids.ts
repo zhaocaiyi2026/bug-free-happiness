@@ -82,6 +82,12 @@ router.get('/', async (req, res) => {
       query = query.lte('publish_date', publishDateTo as string);
     }
 
+    // 必须包含：联系电话、项目详情、截止日期
+    query = query
+      .not('contact_phone', 'is', null)
+      .not('content', 'is', null)
+      .not('deadline', 'is', null);
+
     // 分页
     query = query.range(start, end);
 
@@ -143,23 +149,23 @@ router.get('/stats', async (req, res) => {
 
     // 并行查询三个统计数据
     const [todayBidsResult, urgentBidsResult, todayWinBidsResult] = await Promise.all([
-      // 今日新增招标数量
+      // 今日新增招标数量（必须包含联系电话、项目详情、截止日期）
       client
         .from('bids')
         .select('id', { count: 'exact', head: true })
-        .not('contact_person', 'is', null)
         .not('contact_phone', 'is', null)
-        .not('project_location', 'is', null)
+        .not('content', 'is', null)
+        .not('deadline', 'is', null)
         .gte('publish_date', todayStart)
         .lt('publish_date', todayEnd),
 
-      // 紧急招标数量（投标截止日期在4天内且未截止）
+      // 紧急招标数量（投标截止日期在4天内且未截止，必须包含联系电话、项目详情、截止日期）
       client
         .from('bids')
         .select('id', { count: 'exact', head: true })
-        .not('contact_person', 'is', null)
         .not('contact_phone', 'is', null)
-        .not('project_location', 'is', null)
+        .not('content', 'is', null)
+        .not('deadline', 'is', null)
         .gt('deadline', now.toISOString())
         .lte('deadline', fourDaysLater.toISOString()),
 
@@ -245,15 +251,15 @@ router.get('/urgent/list', async (req, res) => {
   try {
     const client = getSupabaseClient();
 
+    // 必须包含：联系电话、项目详情、截止日期
     const { data, error } = await client
       .from('bids')
       .select('id, title, budget, province, city, industry, deadline, publish_date')
       .eq('is_urgent', true)
       .eq('status', 'active')
-      // 只返回有完整联系人和项目信息的数据
-      .not('contact_person', 'is', null)
       .not('contact_phone', 'is', null)
-      .not('project_location', 'is', null)
+      .not('content', 'is', null)
+      .not('deadline', 'is', null)
       .order('deadline', { ascending: true })
       .limit(5);
 
