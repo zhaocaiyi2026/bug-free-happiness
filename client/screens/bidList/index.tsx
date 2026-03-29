@@ -95,12 +95,23 @@ export default function BidListScreen() {
       // 根据类型设置筛选条件
       switch (listType) {
         case 'today': {
-          // 今日新增：发布日期为今天（使用日期范围过滤）
+          // 今日新增：发布日期为今天（使用本地日期，避免时区问题）
           const today = new Date();
-          const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().split('T')[0];
-          const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString().split('T')[0];
-          queryParams.append('publishDateFrom', todayStart);
-          queryParams.append('publishDateTo', todayEnd);
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          const todayStr = `${year}-${month}-${day}`;
+          
+          // 明天的日期
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowYear = tomorrow.getFullYear();
+          const tomorrowMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+          const tomorrowDay = String(tomorrow.getDate()).padStart(2, '0');
+          const tomorrowStr = `${tomorrowYear}-${tomorrowMonth}-${tomorrowDay}`;
+          
+          queryParams.append('publishDateFrom', todayStr);
+          queryParams.append('publishDateTo', tomorrowStr);
           break;
         }
         case 'urgent':
