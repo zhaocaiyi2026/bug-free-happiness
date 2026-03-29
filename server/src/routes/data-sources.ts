@@ -25,6 +25,7 @@ import {
   resumeTask,
   cancelTask,
 } from '../services/data-sources/batch-sync';
+import { quickSyncRecent } from '../services/data-sources/date-range-sync';
 
 const router = Router();
 
@@ -632,6 +633,52 @@ router.post('/batch-sync/cancel/:taskId', async (req: Request, res: Response) =>
     res.status(500).json({
       success: false,
       error: 'Failed to cancel task',
+    });
+  }
+});
+
+// ==================== 日期分段同步接口 ====================
+
+/**
+ * 按日期分段同步数据（推荐）
+ * POST /api/v1/data-sources/sync/by-date
+ * Body参数：apiKey, days (可选，默认30天)
+ * 
+ * 说明：由于APISpace API分页有问题，此接口按日期分段获取数据，
+ * 每天调用一次招标API和一次中标API，确保获取不同的数据。
+ */
+router.post('/sync/by-date', async (req: Request, res: Response) => {
+  try {
+    const { apiKey, days = 30 } = req.body;
+    
+    if (!apiKey) {
+      res.json({
+        success: false,
+        message: '请提供apiKey',
+      });
+      return;
+    }
+    
+    console.log(`[DataSources] 开始按日期分段同步，共 ${days} 天`);
+    
+    const result = await quickSyncRecent(apiKey, days);
+    
+    res.json({
+      success: result.success,
+      message: result.message,
+      data: {
+        days: result.data.totalDays,
+        completedDays: result.data.completedDays,
+        totalSaved: result.data.totalSaved,
+        error: result.data.lastError,
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error in date-range sync:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync by date range',
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

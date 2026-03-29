@@ -44,13 +44,7 @@ router.get('/', async (req, res) => {
 
     let query = client
       .from('bids')
-      .select('id, title, budget, province, city, industry, bid_type, publish_date, deadline, source, is_urgent, status, view_count, created_at', { count: 'exact' })
-      // 只返回有完整联系人和项目信息的数据
-      .not('contact_person', 'is', null)
-      .not('contact_phone', 'is', null)
-      .not('project_location', 'is', null)
-      // 过滤已截止的招标（截止时间大于当前时间）
-      .gt('deadline', new Date().toISOString())
+      .select('id, title, budget, province, city, industry, bid_type, publish_date, deadline, source, source_platform, is_urgent, status, view_count, created_at', { count: 'exact' })
       .order('publish_date', { ascending: false });
 
     // 应用筛选条件
