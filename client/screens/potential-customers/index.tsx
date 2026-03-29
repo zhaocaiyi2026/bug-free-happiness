@@ -76,11 +76,11 @@ export default function PotentialCustomersScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  // 初始加载或筛选变化时搜索
+  // 客户类型变化时搜索
   useEffect(() => {
     handleSearch();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIndustry, customerType]);
+  }, [customerType]);
 
   const handleSearch = async () => {
     setPage(1);
@@ -215,10 +215,14 @@ export default function PotentialCustomersScreen() {
     if (selectedIndustry === industryName) {
       setSelectedIndustry('');
       setKeyword('');
+      // 取消选中后重新搜索
+      setTimeout(() => handleSearch(), 50);
     } else {
       // 选择行业时，用行业名称作为关键词搜索
       setSelectedIndustry(industryName);
       setKeyword(industryName);
+      // 选择后自动搜索
+      setTimeout(() => handleSearch(), 50);
     }
   };
 
@@ -232,15 +236,27 @@ export default function PotentialCustomersScreen() {
     }
     setSelectedIndustry(industryName);
     setKeyword(industryName);
+    // 选择后自动搜索
+    setTimeout(() => handleSearch(), 50);
   };
 
   // 用户输入关键词时的处理
   const handleKeywordChange = (text: string) => {
     setKeyword(text);
-    // 用户输入关键词时，自动取消行业筛选
+    // 用户输入关键词时，如果之前有选中行业，取消行业筛选
     if (text.length > 0 && selectedIndustry) {
       setSelectedIndustry('');
     }
+  };
+
+  // 清空搜索
+  const handleClearKeyword = () => {
+    setKeyword('');
+    setSelectedIndustry('');
+    setCustomers([]);
+    setHasSearched(false);
+    // 重置示例列表
+    setIndustryExamples(DEFAULT_INDUSTRY_EXAMPLES);
   };
 
   const handleCustomerTypeChange = (newType: 'all' | 'bidder' | 'winner') => {
@@ -397,11 +413,7 @@ export default function PotentialCustomersScreen() {
               underlineColorAndroid="transparent"
             />
             {keyword.length > 0 && (
-              <TouchableOpacity onPress={() => {
-                setKeyword('');
-                setCustomers([]);
-                setHasSearched(false);
-              }}>
+              <TouchableOpacity onPress={handleClearKeyword}>
                 <FontAwesome6 name="circle-xmark" size={14} color="#9CA3AF" />
               </TouchableOpacity>
             )}
