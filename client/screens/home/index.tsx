@@ -564,7 +564,16 @@ export default function HomeScreen() {
             {/* Search Bar */}
             <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
               <FontAwesome6 name="magnifying-glass" size={16} color="#64748B" style={styles.searchIcon} />
-              <Text style={styles.searchPlaceholder}>搜索招标信息、行业、地区...</Text>
+              {selectedProvince ? (
+                <View style={styles.selectedLocationTag}>
+                  <FontAwesome6 name="location-dot" size={12} color="#2563EB" />
+                  <Text style={styles.selectedLocationText}>
+                    {selectedProvince.name}{selectedCity ? ` · ${selectedCity.name}` : ''}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.searchPlaceholder}>搜索招标信息、行业、地区...</Text>
+              )}
               <View style={styles.searchButton}>
                 <Text style={styles.searchButtonText}>搜索</Text>
               </View>

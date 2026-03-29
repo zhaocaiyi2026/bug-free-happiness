@@ -87,6 +87,22 @@ export const createStyles = (theme: Theme) => {
       fontSize: 15,
       color: '#64748B',
     },
+    selectedLocationTag: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(37, 99, 235, 0.08)',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+      borderRadius: 6,
+      marginHorizontal: Spacing.xs,
+    },
+    selectedLocationText: {
+      fontSize: 14,
+      color: '#2563EB',
+      fontWeight: '500',
+      marginLeft: 4,
+    },
     searchButton: {
       backgroundColor: '#2563EB',
       paddingHorizontal: Spacing.md,
