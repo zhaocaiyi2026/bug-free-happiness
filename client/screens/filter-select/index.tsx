@@ -106,7 +106,7 @@ export default function FilterSelectScreen() {
       return;
     }
     
-    // 默认返回搜索页面
+    // 默认返回搜索页面 - 使用 replace 避免返回时回到 filter-select 页面
     const searchParams: {
       autoSearch: string;
       keyword?: string;
@@ -134,8 +134,9 @@ export default function FilterSelectScreen() {
       }
     }
     
-    router.push('/search', searchParams);
-  }, [filterType, router, existingKeyword, existingIndustry, existingProvince]);
+    // 使用 replace 替换当前页面，这样返回时会跳过 filter-select 页面
+    router.replace('/search', searchParams);
+  }, [filterType, router, existingKeyword, existingIndustry, existingProvince, returnTo, params?.customerType]);
 
   const renderItem = useCallback(({ item }: { item: Province | Industry }) => {
     const isSelected = selectedValue === item.name;
