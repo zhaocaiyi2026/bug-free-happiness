@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -75,6 +75,10 @@ export default function HomeScreen() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locating, setLocating] = useState(false);
+  
+  // 使用 ref 存储 userLocation 和 activeFilter，避免循环依赖
+  const userLocationRef = useRef<UserLocation | null>(null);
+  const activeFilterRef = useRef<string>('all');
 
   // 快捷筛选入口
   const filters = [
@@ -112,6 +116,9 @@ export default function HomeScreen() {
   const fetchData = useCallback(async (pageNum: number, filterKey: string) => {
     console.log('[Home] fetchData called, pageNum:', pageNum, 'filterKey:', filterKey);
     
+    // 使用 ref 获取最新的位置信息
+    const currentLocation = userLocationRef.current;
+    
     try {
       setLoading(true);
       const isWinBidFilter = filterKey === 'provinceWin' || filterKey === 'cityWin';
@@ -121,8 +128,8 @@ export default function HomeScreen() {
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
-        if (userLocation?.province) {
-          params.append('province', userLocation.province);
+        if (currentLocation?.province) {
+          params.append('province', currentLocation.province);
         }
 
         const res = await fetch(`${API_BASE_URL}/api/v1/bids?${params.toString()}`);
@@ -148,10 +155,10 @@ export default function HomeScreen() {
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
 
-        if (filterKey === 'provinceWin' && userLocation?.province) {
-          params.append('province', userLocation.province);
-        } else if (filterKey === 'cityWin' && userLocation?.city) {
-          params.append('city', userLocation.city);
+        if (filterKey === 'provinceWin' && currentLocation?.province) {
+          params.append('province', currentLocation.province);
+        } else if (filterKey === 'cityWin' && currentLocation?.city) {
+          params.append('city', currentLocation.city);
         }
 
         const res = await fetch(`${API_BASE_URL}/api/v1/win-bids?${params.toString()}`);
@@ -218,14 +225,15 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [userLocation]);
+  }, []); // 移除 userLocation 依赖，使用 ref 获取
 
   // 初始加载和页面聚焦时刷新
   useFocusEffect(
     useCallback(() => {
-      fetchData(1, activeFilter);
+      const currentFilter = activeFilterRef.current;
+      fetchData(1, currentFilter);
       fetchStats();
-    }, [activeFilter, userLocation?.province])
+    }, [fetchData])
   );
 
   // 打开系统定位设置
@@ -284,7 +292,10 @@ export default function HomeScreen() {
         const province = address.region || address.subregion || '';
         const city = address.city || address.subregion || '';
         
-        setUserLocation({ province, city });
+        // 同时更新 state 和 ref
+        const newLocation = { province, city };
+        setUserLocation(newLocation);
+        userLocationRef.current = newLocation;
         Alert.alert('定位成功', `已定位到：${province} ${city}`);
       }
     } catch (error) {
@@ -298,14 +309,14 @@ export default function HomeScreen() {
   const handleRefresh = () => {
     setRefreshing(true);
     setPage(1);
-    fetchData(1, activeFilter);
+    fetchData(1, activeFilterRef.current);
   };
 
   const handleLoadMore = () => {
     if (hasMore && !loading) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchData(nextPage, activeFilter);
+      fetchData(nextPage, activeFilterRef.current);
     }
   };
 
@@ -342,6 +353,9 @@ export default function HomeScreen() {
     setHasMore(true);
     setBids([]);
     setActiveFilter(filterKey);
+    activeFilterRef.current = filterKey;
+    // 手动触发数据获取
+    fetchData(1, filterKey);
   };
 
   const handleBidPress = (bidId: number) => {
