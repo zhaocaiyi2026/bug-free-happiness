@@ -118,6 +118,7 @@ export const createStyles = (theme: Theme) => {
       borderRadius: BorderRadius.full,
       backgroundColor: '#F5F5F5',
       marginRight: Spacing.xs,
+      maxWidth: 100,
     },
     filterChipActive: {
       backgroundColor: '#2563EB',

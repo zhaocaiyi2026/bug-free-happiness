@@ -274,7 +274,11 @@ export default function PotentialCustomersScreen() {
       style={[styles.filterChip, isSelected && styles.filterChipActive]}
       onPress={onPress}
     >
-      <Text style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}>
+      <Text 
+        style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}
+        numberOfLines={1}
+        adjustsFontSizeToFit={true}
+      >
         {item.name}
       </Text>
     </TouchableOpacity>
@@ -466,7 +470,11 @@ export default function PotentialCustomersScreen() {
                       style={[styles.filterChip, isSelected && styles.filterChipActive]}
                       onPress={() => handleIndustryChipSelect(name)}
                     >
-                      <Text style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}>
+                      <Text 
+                        style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit={true}
+                      >
                         {name}
                       </Text>
                     </TouchableOpacity>
@@ -478,7 +486,11 @@ export default function PotentialCustomersScreen() {
                     style={[styles.filterChip, styles.filterChipActive]}
                     onPress={() => handleIndustryChipSelect(selectedIndustry)}
                   >
-                    <Text style={[styles.filterChipText, styles.filterChipTextActive]}>
+                    <Text 
+                      style={[styles.filterChipText, styles.filterChipTextActive]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit={true}
+                    >
                       {selectedIndustry}
                     </Text>
                     <FontAwesome6 name="xmark" size={10} color="#FFFFFF" style={{ marginLeft: 4 }} />
@@ -489,7 +501,13 @@ export default function PotentialCustomersScreen() {
                   style={[styles.filterChip, styles.filterChipMore]}
                   onPress={handleIndustrySelect}
                 >
-                  <Text style={styles.filterChipText}>更多</Text>
+                  <Text 
+                    style={styles.filterChipText}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={true}
+                  >
+                    更多
+                  </Text>
                   <FontAwesome6 name="chevron-right" size={10} color="#6B7280" style={{ marginLeft: 4 }} />
                 </TouchableOpacity>
               </ScrollView>

@@ -280,7 +280,11 @@ export default function SearchScreen() {
       ]}
       onPress={onPress}
     >
-      <Text style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}>
+      <Text 
+        style={[styles.filterChipText, isSelected && styles.filterChipTextActive]}
+        numberOfLines={1}
+        adjustsFontSizeToFit={true}
+      >
         {isMore ? '更多' : item.name}
       </Text>
       {isMore && (

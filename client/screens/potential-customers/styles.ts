@@ -88,6 +88,7 @@ export const createStyles = (theme: Theme) => {
       marginRight: Spacing.xs,
       borderWidth: 1,
       borderColor: '#E5E7EB',
+      maxWidth: 100,
     },
     filterChipActive: {
       backgroundColor: '#2563EB',
