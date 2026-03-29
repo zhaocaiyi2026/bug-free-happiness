@@ -26,6 +26,22 @@ interface DataSourceStatus {
   apiType: string;
 }
 
+interface DataStatistics {
+  summary: {
+    totalBids: number;
+    totalWinBids: number;
+  };
+  recentSyncs: Array<{
+    id: number;
+    source_platform: string;
+    sync_type: string;
+    start_time: string;
+    status: string;
+    total_count: number;
+    success_count: number;
+  }>;
+}
+
 export default function SettingsScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -40,10 +56,13 @@ export default function SettingsScreen() {
     cacheClear: false,
   });
   const [dataSources, setDataSources] = useState<DataSourceStatus[]>([]);
+  const [statistics, setStatistics] = useState<DataStatistics | null>(null);
   const [loadingDataSources, setLoadingDataSources] = useState(false);
+  const [showProvincial, setShowProvincial] = useState(false);
 
   useEffect(() => {
     fetchDataSources();
+    fetchStatistics();
   }, []);
 
   const fetchDataSources = async () => {
@@ -60,6 +79,20 @@ export default function SettingsScreen() {
       console.error('获取数据源状态失败:', error);
     } finally {
       setLoadingDataSources(false);
+    }
+  };
+
+  const fetchStatistics = async () => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/data-sources/statistics`
+      );
+      const data = await res.json();
+      if (data.success) {
+        setStatistics(data.data);
+      }
+    } catch (error) {
+      console.error('获取数据统计失败:', error);
     }
   };
 
@@ -92,6 +125,40 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const handleSyncData = (platform: string) => {
+    Alert.alert(
+      '同步数据',
+      `确定要从 ${dataSources.find(s => s.platform === platform)?.name} 同步数据吗？`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '确定',
+          onPress: async () => {
+            try {
+              const res = await fetch(
+                `${API_BASE_URL}/api/v1/data-sources/sync/${platform}`,
+                { method: 'POST', headers: { 'Content-Type': 'application/json' } }
+              );
+              const data = await res.json();
+              if (data.success) {
+                Alert.alert('同步成功', `成功同步 ${data.data?.saved || 0} 条数据`);
+                fetchStatistics();
+              } else {
+                Alert.alert('同步失败', data.message || '请稍后重试');
+              }
+            } catch (error) {
+              Alert.alert('同步失败', '网络错误，请稍后重试');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // 分组数据源
+  const nationalSources = dataSources.filter(s => s.priority >= 100 && !s.platform.startsWith('province_'));
+  const provincialSources = dataSources.filter(s => s.platform.startsWith('province_'));
+
   const renderSwitchItem = (
     icon: string,
     iconColor: string,
@@ -116,6 +183,33 @@ export default function SettingsScreen() {
     </View>
   );
 
+  const renderDataSourceItem = (source: DataSourceStatus, showSync?: boolean) => (
+    <TouchableOpacity 
+      key={source.platform} 
+      style={styles.settingItem}
+      onPress={showSync && source.isAvailable ? () => handleSyncData(source.platform) : undefined}
+    >
+      <View style={[styles.settingIcon, { backgroundColor: source.isAvailable ? 'rgba(5, 150, 105, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
+        <FontAwesome6 
+          name={source.isAvailable ? 'check-circle' : 'times-circle'} 
+          size={18} 
+          color={source.isAvailable ? '#059669' : '#EF4444'} 
+        />
+      </View>
+      <View style={styles.settingContent}>
+        <Text style={styles.settingTitle}>{source.name}</Text>
+        <Text style={styles.settingDesc}>
+          {source.isAvailable ? '已连接 · 点击同步数据' : '未配置'}
+        </Text>
+      </View>
+      <View style={[styles.statusBadge, { backgroundColor: source.isAvailable ? '#ECFDF5' : '#FEF2F2' }]}>
+        <Text style={[styles.statusText, { color: source.isAvailable ? '#059669' : '#EF4444' }]}>
+          {source.isAvailable ? '可用' : '不可用'}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
       <View style={{ flex: 1 }}>
@@ -131,6 +225,24 @@ export default function SettingsScreen() {
         </View>
 
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+          {/* 数据统计 */}
+          {statistics && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>数据统计</Text>
+              <View style={[styles.settingItem, { justifyContent: 'space-around' }]}>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={[styles.statValue, { color: '#2563EB' }]}>{statistics.summary.totalBids}</Text>
+                  <Text style={styles.statLabel}>招标信息</Text>
+                </View>
+                <View style={{ width: 1, height: 40, backgroundColor: '#E5E7EB' }} />
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={[styles.statValue, { color: '#059669' }]}>{statistics.summary.totalWinBids}</Text>
+                  <Text style={styles.statLabel}>中标信息</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
           {/* 通知设置 */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>通知设置</Text>
@@ -155,13 +267,29 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* 数据源状态 */}
+          {/* 国家级数据源状态 */}
           <View style={styles.section}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm }}>
-              <Text style={styles.sectionTitle}>数据源状态</Text>
+              <Text style={styles.sectionTitle}>国家级数据源</Text>
               {loadingDataSources && <ActivityIndicator size="small" color="#2563EB" />}
             </View>
-            {dataSources.filter(s => s.priority >= 100).map((source) => (
+            {nationalSources.map((source) => renderDataSourceItem(source, true))}
+          </View>
+
+          {/* 省级数据源状态 */}
+          <View style={styles.section}>
+            <TouchableOpacity 
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm }}
+              onPress={() => setShowProvincial(!showProvincial)}
+            >
+              <Text style={styles.sectionTitle}>省级数据源 ({provincialSources.length}个)</Text>
+              <FontAwesome6 
+                name={showProvincial ? 'chevron-up' : 'chevron-down'} 
+                size={12} 
+                color="#6B7280" 
+              />
+            </TouchableOpacity>
+            {showProvincial && provincialSources.map((source) => (
               <View key={source.platform} style={styles.settingItem}>
                 <View style={[styles.settingIcon, { backgroundColor: source.isAvailable ? 'rgba(5, 150, 105, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
                   <FontAwesome6 
@@ -183,12 +311,22 @@ export default function SettingsScreen() {
                 </View>
               </View>
             ))}
+            {!showProvincial && (
+              <Text style={{ fontSize: 12, color: '#9CA3AF', paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm }}>
+                点击展开查看全部省级数据源
+              </Text>
+            )}
+          </View>
+
+          {/* 数据源配置帮助 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>数据源配置</Text>
             <TouchableOpacity 
-              style={[styles.settingItem, { marginTop: Spacing.xs }]} 
+              style={styles.settingItem}
               onPress={() => {
                 Alert.alert(
                   '配置数据源',
-                  '请关注微信公众号"思通数据"获取免费API密钥，然后在服务器环境变量中配置 STONEDT_APP_ID 和 STONEDT_APP_SECRET',
+                  '官方数据源（全国公共资源交易平台、中国招标投标公共服务平台）免费开放，无需配置即可使用。\n\n如需使用思通数据API，请关注微信公众号"思通数据"获取免费API密钥。',
                   [{ text: '知道了' }]
                 );
               }}
@@ -198,7 +336,37 @@ export default function SettingsScreen() {
               </View>
               <View style={styles.settingContent}>
                 <Text style={styles.settingTitle}>如何配置数据源？</Text>
-                <Text style={styles.settingDesc}>获取免费API密钥的方法</Text>
+                <Text style={styles.settingDesc}>官方数据源免费开放使用</Text>
+              </View>
+              <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.settingItem, { borderTopWidth: 1, borderTopColor: '#F3F4F6' }]}
+              onPress={async () => {
+                try {
+                  Alert.alert('同步中', '正在从全国公共资源交易平台同步数据...');
+                  const res = await fetch(
+                    `${API_BASE_URL}/api/v1/data-sources/sync/ggzy`,
+                    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ maxCount: 20 }) }
+                  );
+                  const data = await res.json();
+                  if (data.success) {
+                    Alert.alert('同步成功', `成功获取 ${data.data?.fetched || 0} 条数据，保存 ${data.data?.saved || 0} 条`);
+                    fetchStatistics();
+                  } else {
+                    Alert.alert('同步提示', data.message || '暂无新数据');
+                  }
+                } catch (error) {
+                  Alert.alert('同步失败', '网络错误，请稍后重试');
+                }
+              }}
+            >
+              <View style={[styles.settingIcon, { backgroundColor: 'rgba(5, 150, 105, 0.1)' }]}>
+                <FontAwesome6 name="cloud-arrow-down" size={18} color="#059669" />
+              </View>
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>立即同步数据</Text>
+                <Text style={styles.settingDesc}>从官方平台获取最新招标信息</Text>
               </View>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
             </TouchableOpacity>
@@ -217,7 +385,7 @@ export default function SettingsScreen() {
               </View>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('关于', '招标通 v1.0.0')}>
+            <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('关于', '招标通 v1.0.0\n\n专业招标信息聚合平台\n整合全国公共资源交易平台等官方数据源\n提供实时招标、中标信息\n助力企业把握商机')}>
               <View style={[styles.settingIcon, { backgroundColor: 'rgba(107, 114, 128, 0.1)' }]}>
                 <FontAwesome6 name="circle-info" size={18} color="#6B7280" />
               </View>

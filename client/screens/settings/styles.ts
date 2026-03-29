@@ -104,5 +104,15 @@ export const createStyles = (theme: Theme) => {
       fontSize: 12,
       fontWeight: '500',
     },
+    // Statistics
+    statValue: {
+      fontSize: 24,
+      fontWeight: '700',
+    },
+    statLabel: {
+      fontSize: 12,
+      color: '#6B7280',
+      marginTop: 4,
+    },
   });
 };
