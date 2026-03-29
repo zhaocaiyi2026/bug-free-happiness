@@ -19,6 +19,8 @@ export type OfficialDataSource =
   | 'province_hubei'      // 湖北省公共资源交易平台
   | 'province_henan'      // 河南省公共资源交易平台
   | 'province_fujian'     // 福建省公共资源交易平台
+  | 'province_jilin'      // 吉林省公共资源交易平台
+  | 'jilin_ccgp'          // 吉林省政府采购网
   | 'apispace'       // APISpace 商业数据源（备用）
   | 'stonedt';       // 思通数据免费API（推荐）
 
