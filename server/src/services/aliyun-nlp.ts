@@ -275,12 +275,14 @@ export async function extractBidInfo(content: string): Promise<ParsedBidInfo | n
 
     const response = await nlpClient.runPreTrainService(request);
     
-    if (!response.predictResult) {
+    // 获取预测结果 - 支持两种响应格式
+    const predictResult = response.predictResult || response.body?.predictResult;
+    if (!predictResult) {
       console.warn('[AliyunNLP] 未返回预测结果');
       return null;
     }
 
-    const result: { records: BidExtractResult } = JSON.parse(response.predictResult);
+    const result: { records: BidExtractResult } = JSON.parse(predictResult);
     const records = result.records;
 
     console.log('[AliyunNLP] 抽取结果:', JSON.stringify(records, null, 2));
@@ -352,12 +354,14 @@ export async function extractWinBidInfo(content: string): Promise<ParsedWinBidIn
 
     const response = await nlpClient.runPreTrainService(request);
     
-    if (!response.predictResult) {
+    // 获取预测结果 - 支持两种响应格式
+    const predictResult = response.predictResult || response.body?.predictResult;
+    if (!predictResult) {
       console.warn('[AliyunNLP] 未返回预测结果');
       return null;
     }
 
-    const result: { records: WinBidExtractResult } = JSON.parse(response.predictResult);
+    const result: { records: WinBidExtractResult } = JSON.parse(predictResult);
     const records = result.records;
 
     console.log('[AliyunNLP] 中标抽取结果:', JSON.stringify(records, null, 2));
