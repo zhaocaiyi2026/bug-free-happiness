@@ -76,9 +76,10 @@ export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locating, setLocating] = useState(false);
   
-  // 使用 ref 存储 userLocation 和 activeFilter，避免循环依赖
+  // 使用 ref 存储 userLocation、activeFilter 和 loading，避免循环依赖
   const userLocationRef = useRef<UserLocation | null>(null);
   const activeFilterRef = useRef<string>('all');
+  const loadingRef = useRef(false);
 
   // 快捷筛选入口
   const filters = [
@@ -113,13 +114,20 @@ export default function HomeScreen() {
   };
 
   // 获取招标数据（核心函数）
-  const fetchData = useCallback(async (pageNum: number, filterKey: string) => {
+  const fetchData = async (pageNum: number, filterKey: string) => {
+    // 防止重复请求
+    if (loadingRef.current) {
+      console.log('[Home] fetchData blocked, already loading');
+      return;
+    }
+    
     console.log('[Home] fetchData called, pageNum:', pageNum, 'filterKey:', filterKey);
     
     // 使用 ref 获取最新的位置信息
     const currentLocation = userLocationRef.current;
     
     try {
+      loadingRef.current = true;
       setLoading(true);
       const isWinBidFilter = filterKey === 'provinceWin' || filterKey === 'cityWin';
       
@@ -148,6 +156,12 @@ export default function HomeScreen() {
             setBids((prev) => [...prev, ...bidItems]);
           }
           setHasMore(data.data.page < data.data.totalPages);
+        } else {
+          // API 返回失败，停止加载更多
+          if (pageNum === 1) {
+            setBids([]);
+          }
+          setHasMore(false);
         }
       } else if (isWinBidFilter) {
         // 中标数据
@@ -188,6 +202,11 @@ export default function HomeScreen() {
             setBids((prev) => [...prev, ...winBidItems]);
           }
           setHasMore(data.data.page < data.data.totalPages);
+        } else {
+          if (pageNum === 1) {
+            setBids([]);
+          }
+          setHasMore(false);
         }
       } else {
         // 招标数据（按地区筛选）
@@ -195,10 +214,10 @@ export default function HomeScreen() {
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
 
-        if (filterKey === 'province' && userLocation?.province) {
-          params.append('province', userLocation.province);
-        } else if (filterKey === 'city' && userLocation?.city) {
-          params.append('city', userLocation.city);
+        if (filterKey === 'province' && currentLocation?.province) {
+          params.append('province', currentLocation.province);
+        } else if (filterKey === 'city' && currentLocation?.city) {
+          params.append('city', currentLocation.city);
         }
 
         const res = await fetch(`${API_BASE_URL}/api/v1/bids?${params.toString()}`);
@@ -217,23 +236,35 @@ export default function HomeScreen() {
             setBids((prev) => [...prev, ...bidItems]);
           }
           setHasMore(data.data.page < data.data.totalPages);
+        } else {
+          if (pageNum === 1) {
+            setBids([]);
+          }
+          setHasMore(false);
         }
       }
     } catch (error) {
       console.error('获取数据失败:', error);
+      // 请求失败时停止加载更多
+      setHasMore(false);
+      if (pageNum === 1) {
+        setBids([]);
+      }
     } finally {
+      loadingRef.current = false;
       setLoading(false);
       setRefreshing(false);
     }
-  }, []); // 移除 userLocation 依赖，使用 ref 获取
+  };
 
   // 初始加载和页面聚焦时刷新
   useFocusEffect(
     useCallback(() => {
-      const currentFilter = activeFilterRef.current;
-      fetchData(1, currentFilter);
+      // 页面聚焦时加载数据，loadingRef 会防止重复请求
+      fetchData(1, activeFilterRef.current);
       fetchStats();
-    }, [fetchData])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
   );
 
   // 打开系统定位设置
@@ -307,13 +338,15 @@ export default function HomeScreen() {
   };
 
   const handleRefresh = () => {
+    if (loadingRef.current) return;
     setRefreshing(true);
     setPage(1);
+    setHasMore(true);
     fetchData(1, activeFilterRef.current);
   };
 
   const handleLoadMore = () => {
-    if (hasMore && !loading) {
+    if (hasMore && !loadingRef.current) {
       const nextPage = page + 1;
       setPage(nextPage);
       fetchData(nextPage, activeFilterRef.current);
