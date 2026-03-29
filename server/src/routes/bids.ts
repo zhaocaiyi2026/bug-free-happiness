@@ -68,11 +68,17 @@ router.get('/', async (req, res) => {
     if (bidType) {
       query = query.eq('bid_type', bidType as string);
     }
-    // 紧急招标筛选：投标截止日期在4天内且未过期
+    // 紧急招标筛选：发布日期为今天 + 投标截止日期在4天内且未过期
     if (isUrgent === 'true') {
       const fourDaysLater = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
       query = query.gt('deadline', now.toISOString()); // 未过期
       query = query.lte('deadline', fourDaysLater.toISOString()); // 4天内
+      
+      // 发布日期为今天
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+      query = query.gte('publish_date', todayStart);
+      query = query.lt('publish_date', todayEnd);
     }
     if (minBudget) {
       query = query.gte('budget', Number(minBudget));
@@ -244,7 +250,7 @@ router.get('/stats', async (req, res) => {
         .gte('publish_date', todayStart)
         .lt('publish_date', todayEnd),
 
-      // 紧急招标数量（投标截止日期在4天内且未截止，必须包含联系电话、项目详情、截止日期）
+      // 紧急招标数量（发布日期为今天 + 投标截止日期在4天内且未截止，必须包含联系电话、项目详情、截止日期）
       client
         .from('bids')
         .select('id', { count: 'exact', head: true })
@@ -254,7 +260,9 @@ router.get('/stats', async (req, res) => {
         .neq('content', '')
         .not('deadline', 'is', null)
         .gt('deadline', now.toISOString())
-        .lte('deadline', fourDaysLater.toISOString()),
+        .lte('deadline', fourDaysLater.toISOString())
+        .gte('publish_date', todayStart)
+        .lt('publish_date', todayEnd),
 
       // 今日中标数量（必须有中标单位和中标金额）
       client
