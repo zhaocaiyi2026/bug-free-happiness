@@ -500,7 +500,7 @@ export default function HomeScreen() {
               activeOpacity={0.7}
             >
               <View style={[styles.statIconWrapper, styles.statIconToday]}>
-                <FontAwesome6 name="file-circle-plus" size={18} color="#2563EB" />
+                <FontAwesome6 name="file-circle-plus" size={14} color="#2563EB" />
               </View>
               <Text style={[styles.statValue, styles.statValueBlue]}>{stats.todayCount}</Text>
               <Text style={styles.statLabel}>今日新增</Text>
@@ -514,7 +514,7 @@ export default function HomeScreen() {
               activeOpacity={0.7}
             >
               <View style={[styles.statIconWrapper, styles.statIconUrgent]}>
-                <FontAwesome6 name="fire" size={18} color="#DC2626" />
+                <FontAwesome6 name="fire" size={14} color="#DC2626" />
               </View>
               <Text style={[styles.statValue, styles.statValueRed]}>{stats.urgentCount}</Text>
               <Text style={styles.statLabel}>紧急招标</Text>
@@ -528,7 +528,7 @@ export default function HomeScreen() {
               activeOpacity={0.7}
             >
               <View style={[styles.statIconWrapper, styles.statIconWin]}>
-                <FontAwesome6 name="trophy" size={18} color="#059669" />
+                <FontAwesome6 name="trophy" size={14} color="#059669" />
               </View>
               <Text style={[styles.statValue, styles.statValueGreen]}>{stats.winBidCount}</Text>
               <Text style={styles.statLabel}>今日中标</Text>

@@ -101,14 +101,14 @@ export const createStyles = (theme: Theme) => {
     
     // ==================== Stats Section ====================
     statsSection: {
-      marginTop: -Spacing.lg,
+      marginTop: -Spacing.md,
       marginHorizontal: Spacing.lg,
       marginBottom: Spacing.sm,
     },
     statsCard: {
       backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      paddingVertical: Spacing.md,
+      borderRadius: 12,
+      paddingVertical: Spacing.sm + 2,
       paddingHorizontal: Spacing.md,
       flexDirection: 'row',
       justifyContent: 'space-around',
@@ -116,26 +116,28 @@ export const createStyles = (theme: Theme) => {
       ...Platform.select({
         ios: {
           shadowColor: '#1E40AF',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
         },
         android: {
-          elevation: 4,
+          elevation: 2,
         },
       }),
     },
     statItem: {
+      flexDirection: 'row',
       alignItems: 'center',
       flex: 1,
+      justifyContent: 'center',
+      gap: 6,
     },
     statIconWrapper: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+      width: 28,
+      height: 28,
+      borderRadius: 8,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 4,
     },
     statIconToday: {
       backgroundColor: 'rgba(37, 99, 235, 0.1)',
@@ -147,8 +149,8 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: 'rgba(5, 150, 105, 0.1)',
     },
     statValue: {
-      fontSize: 22,
-      fontWeight: '800',
+      fontSize: 18,
+      fontWeight: '700',
       color: '#1E293B',
     },
     statValueBlue: {
@@ -163,12 +165,11 @@ export const createStyles = (theme: Theme) => {
     statLabel: {
       fontSize: 11,
       color: '#64748B',
-      marginTop: 2,
       fontWeight: '500',
     },
     statDivider: {
       width: 1,
-      height: 36,
+      height: 24,
       backgroundColor: '#E2E8F0',
     },
     
