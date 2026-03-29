@@ -3,7 +3,8 @@
  * 文档：https://help.aliyun.com/document_detail/256460.html
  */
 
-import NlpAutoml20191111, * as $NlpAutoml20191111 from '@alicloud/nlp-automl20191111';
+// 静态导入模块 - 必须放在文件顶部
+import * as NlpAutoml20191111 from '@alicloud/nlp-automl20191111';
 import * as $OpenApi from '@alicloud/openapi-client';
 
 // 服务名称常量
@@ -19,49 +20,49 @@ interface AliyunNlpConfig {
 
 // 招标信息抽取结果
 export interface BidExtractResult {
-  招标单位名称?: string[];
-  招标单位联系人?: string[];
-  招标单位联系电话?: string[];
-  招标单位地址?: string[];
-  招标代理机构单位名称?: string[];
-  招标代理机构联系电话?: string[];
-  招标代理机构联系人?: string[];
-  项目预算?: string[];
-  项目所在地?: string[];
-  项目名称?: string[];
-  项目编号?: string[];
-  投标截止时间?: string[];
-  开标日期?: string[];
-  公告发布时间?: string[];
-  公告类别?: string[];
-  资格要求?: string[];
-  招标范围?: string[];
-  工期?: string[];
-  标的物名称?: string[];
-  建设规模?: string[];
-  资金来源?: string[];
-  业务类型?: string[];
+  招标单位名称?: { span: string }[];
+  招标单位联系人?: { span: string }[];
+  招标单位联系电话?: { span: string }[];
+  招标单位地址?: { span: string }[];
+  招标代理机构单位名称?: { span: string }[];
+  招标代理机构联系电话?: { span: string }[];
+  招标代理机构联系人?: { span: string }[];
+  项目预算?: { span: string }[];
+  项目所在地?: { span: string }[];
+  项目名称?: { span: string }[];
+  项目编号?: { span: string }[];
+  投标截止时间?: { span: string }[];
+  开标日期?: { span: string }[];
+  公告发布时间?: { span: string }[];
+  公告类别?: { span: string }[];
+  资格要求?: { span: string }[];
+  招标范围?: { span: string }[];
+  工期?: { span: string }[];
+  标的物名称?: { span: string }[];
+  建设规模?: { span: string }[];
+  资金来源?: { span: string }[];
+  业务类型?: { span: string }[];
 }
 
 // 中标信息抽取结果
 export interface WinBidExtractResult {
-  项目名称?: string[];
-  项目编号?: string[];
-  招标单位名称?: string[];
-  招标单位联系人?: string[];
-  招标单位联系电话?: string[];
-  招标单位地址?: string[];
-  招标代理机构单位名称?: string[];
-  招标代理机构联系电话?: string[];
-  招标代理机构联系人?: string[];
-  第一中标供应商单位名称?: string[];
-  第二中标供应商单位名称?: string[];
-  第三中标供应商单位名称?: string[];
-  中标金额?: string[];
-  公告类别?: string[];
-  公告发布时间?: string[];
-  开标日期?: string[];
-  项目负责人名称?: string[];
+  项目名称?: { span: string }[];
+  项目编号?: { span: string }[];
+  招标单位名称?: { span: string }[];
+  招标单位联系人?: { span: string }[];
+  招标单位联系电话?: { span: string }[];
+  招标单位地址?: { span: string }[];
+  招标代理机构单位名称?: { span: string }[];
+  招标代理机构联系电话?: { span: string }[];
+  招标代理机构联系人?: { span: string }[];
+  第一中标供应商单位名称?: { span: string }[];
+  第二中标供应商单位名称?: { span: string }[];
+  第三中标供应商单位名称?: { span: string }[];
+  中标金额?: { span: string }[];
+  公告类别?: { span: string }[];
+  公告发布时间?: { span: string }[];
+  开标日期?: { span: string }[];
+  项目负责人名称?: { span: string }[];
 }
 
 // 解析后的招标信息
@@ -80,7 +81,6 @@ export interface ParsedBidInfo {
   requirements?: string[];
   bidScope?: string;
   constructionPeriod?: string;
-  qualificationRequirements?: string[];
 }
 
 // 解析后的中标信息
@@ -97,12 +97,54 @@ export interface ParsedWinBidInfo {
   projectManager?: string;
 }
 
-let client: NlpAutoml20191111 | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let client: any = null;
+
+/**
+ * 获取SDK的客户端类
+ * 在ESM模式下，正确的路径是 NlpAutoml20191111.default.default
+ */
+function getNlpClientClass() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const module = NlpAutoml20191111 as any;
+  
+  // ESM模式：module.default.default
+  if (module.default && typeof module.default.default === 'function') {
+    return module.default.default;
+  }
+  
+  // CommonJS模式：module.default
+  if (typeof module.default === 'function') {
+    return module.default;
+  }
+  
+  return null;
+}
+
+/**
+ * 获取SDK的Request类
+ */
+function getRunPreTrainServiceRequestClass() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const module = NlpAutoml20191111 as any;
+  
+  // ESM模式：module.default.RunPreTrainServiceRequest
+  if (module.default && module.default.RunPreTrainServiceRequest) {
+    return module.default.RunPreTrainServiceRequest;
+  }
+  
+  // 直接访问
+  if (module.RunPreTrainServiceRequest) {
+    return module.RunPreTrainServiceRequest;
+  }
+  
+  return null;
+}
 
 /**
  * 初始化阿里云NLP客户端
  */
-function initClient(config?: AliyunNlpConfig): NlpAutoml20191111 | null {
+function initClient(config?: AliyunNlpConfig) {
   const accessKeyId = config?.accessKeyId || process.env.ALIYUN_ACCESS_KEY_ID;
   const accessKeySecret = config?.accessKeySecret || process.env.ALIYUN_ACCESS_KEY_SECRET;
   
@@ -112,19 +154,25 @@ function initClient(config?: AliyunNlpConfig): NlpAutoml20191111 | null {
     return null;
   }
 
+  const NlpClient = getNlpClientClass();
+  if (!NlpClient) {
+    console.error('[AliyunNLP] 无法获取SDK客户端类');
+    return null;
+  }
+
   const openApiConfig = new $OpenApi.Config({
     accessKeyId,
     accessKeySecret,
     endpoint: config?.endpoint || 'nlp-automl.cn-hangzhou.aliyuncs.com',
   });
 
-  return new NlpAutoml20191111(openApiConfig);
+  return new NlpClient(openApiConfig);
 }
 
 /**
  * 获取客户端实例（懒加载）
  */
-function getClient(): NlpAutoml20191111 | null {
+function getClient() {
   if (!client) {
     client = initClient();
   }
@@ -154,19 +202,25 @@ function extractAllValues(arr?: { span: string }[]): string[] {
 function parseBudget(budgetStr?: string): number | undefined {
   if (!budgetStr) return undefined;
   
-  // 移除"元"和其他非数字字符
-  const cleaned = budgetStr.replace(/[^\d.]/g, '');
-  const num = parseFloat(cleaned);
-  
   // 如果是"万"为单位
-  if (budgetStr.includes('万') && !isNaN(num)) {
-    return num * 10000;
+  if (budgetStr.includes('万')) {
+    const match = budgetStr.match(/[\d.]+/);
+    if (match) {
+      return parseFloat(match[0]) * 10000;
+    }
   }
   
   // 如果是"亿"为单位
-  if (budgetStr.includes('亿') && !isNaN(num)) {
-    return num * 100000000;
+  if (budgetStr.includes('亿')) {
+    const match = budgetStr.match(/[\d.]+/);
+    if (match) {
+      return parseFloat(match[0]) * 100000000;
+    }
   }
+  
+  // 提取数字
+  const cleaned = budgetStr.replace(/[^\d.]/g, '');
+  const num = parseFloat(cleaned);
   
   return isNaN(num) ? undefined : num;
 }
@@ -208,7 +262,13 @@ export async function extractBidInfo(content: string): Promise<ParsedBidInfo | n
   try {
     console.log('[AliyunNLP] 开始抽取招标信息，内容长度:', content.length);
     
-    const request = new $NlpAutoml20191111.RunPreTrainServiceRequest({
+    const RequestClass = getRunPreTrainServiceRequestClass();
+    if (!RequestClass) {
+      console.error('[AliyunNLP] 无法获取RunPreTrainServiceRequest类');
+      return null;
+    }
+
+    const request = new RequestClass({
       serviceName: SERVICE_NAME_ZHAOBIAO,
       predictContent: content,
     });
@@ -227,20 +287,20 @@ export async function extractBidInfo(content: string): Promise<ParsedBidInfo | n
 
     // 解析为结构化数据
     const parsedInfo: ParsedBidInfo = {
-      contactPerson: extractFirstValue(records.招标单位联系人 as any),
-      contactPhone: extractFirstValue(records.招标单位联系电话 as any),
-      contactAddress: extractFirstValue(records.招标单位地址 as any),
-      budget: parseBudget(extractFirstValue(records.项目预算 as any)),
-      projectLocation: extractFirstValue(records.项目所在地 as any),
-      projectName: extractFirstValue(records.项目名称 as any),
-      projectCode: extractFirstValue(records.项目编号 as any),
-      deadline: parseDate(extractFirstValue(records.投标截止时间 as any)),
-      openBidDate: parseDate(extractFirstValue(records.开标日期 as any)),
-      publishDate: parseDate(extractFirstValue(records.公告发布时间 as any)),
-      bidType: extractFirstValue(records.公告类别 as any),
-      requirements: extractAllValues(records.资格要求 as any),
-      bidScope: extractFirstValue(records.招标范围 as any),
-      constructionPeriod: extractFirstValue(records.工期 as any),
+      contactPerson: extractFirstValue(records.招标单位联系人),
+      contactPhone: extractFirstValue(records.招标单位联系电话),
+      contactAddress: extractFirstValue(records.招标单位地址),
+      budget: parseBudget(extractFirstValue(records.项目预算)),
+      projectLocation: extractFirstValue(records.项目所在地),
+      projectName: extractFirstValue(records.项目名称),
+      projectCode: extractFirstValue(records.项目编号),
+      deadline: parseDate(extractFirstValue(records.投标截止时间)),
+      openBidDate: parseDate(extractFirstValue(records.开标日期)),
+      publishDate: parseDate(extractFirstValue(records.公告发布时间)),
+      bidType: extractFirstValue(records.公告类别),
+      requirements: extractAllValues(records.资格要求),
+      bidScope: extractFirstValue(records.招标范围),
+      constructionPeriod: extractFirstValue(records.工期),
     };
 
     // 过滤掉空值
@@ -279,7 +339,13 @@ export async function extractWinBidInfo(content: string): Promise<ParsedWinBidIn
   try {
     console.log('[AliyunNLP] 开始抽取中标信息，内容长度:', content.length);
     
-    const request = new $NlpAutoml20191111.RunPreTrainServiceRequest({
+    const RequestClass = getRunPreTrainServiceRequestClass();
+    if (!RequestClass) {
+      console.error('[AliyunNLP] 无法获取RunPreTrainServiceRequest类');
+      return null;
+    }
+
+    const request = new RequestClass({
       serviceName: SERVICE_NAME_ZHONGBIAO,
       predictContent: content,
     });
@@ -298,16 +364,16 @@ export async function extractWinBidInfo(content: string): Promise<ParsedWinBidIn
 
     // 解析为结构化数据
     const parsedInfo: ParsedWinBidInfo = {
-      projectName: extractFirstValue(records.项目名称 as any),
-      projectCode: extractFirstValue(records.项目编号 as any),
-      bidUnit: extractFirstValue(records.招标单位名称 as any),
-      bidUnitContact: extractFirstValue(records.招标单位联系人 as any),
-      bidUnitPhone: extractFirstValue(records.招标单位联系电话 as any),
-      winCompany: extractFirstValue(records.第一中标供应商单位名称 as any),
-      winAmount: parseBudget(extractFirstValue(records.中标金额 as any)),
-      publishDate: parseDate(extractFirstValue(records.公告发布时间 as any)),
-      openBidDate: parseDate(extractFirstValue(records.开标日期 as any)),
-      projectManager: extractFirstValue(records.项目负责人名称 as any),
+      projectName: extractFirstValue(records.项目名称),
+      projectCode: extractFirstValue(records.项目编号),
+      bidUnit: extractFirstValue(records.招标单位名称),
+      bidUnitContact: extractFirstValue(records.招标单位联系人),
+      bidUnitPhone: extractFirstValue(records.招标单位联系电话),
+      winCompany: extractFirstValue(records.第一中标供应商单位名称),
+      winAmount: parseBudget(extractFirstValue(records.中标金额)),
+      publishDate: parseDate(extractFirstValue(records.公告发布时间)),
+      openBidDate: parseDate(extractFirstValue(records.开标日期)),
+      projectManager: extractFirstValue(records.项目负责人名称),
     };
 
     // 过滤掉空值
@@ -329,7 +395,7 @@ export async function extractWinBidInfo(content: string): Promise<ParsedWinBidIn
  * 补全招标信息
  * 将抽取的信息合并到现有招标数据中
  */
-export function mergeBidInfo(existing: any, extracted: ParsedBidInfo): any {
+export function mergeBidInfo(existing: Record<string, unknown>, extracted: ParsedBidInfo): Record<string, unknown> {
   return {
     ...existing,
     // 只在原数据缺失时使用抽取的数据
@@ -347,7 +413,7 @@ export function mergeBidInfo(existing: any, extracted: ParsedBidInfo): any {
 /**
  * 补全中标信息
  */
-export function mergeWinBidInfo(existing: any, extracted: ParsedWinBidInfo): any {
+export function mergeWinBidInfo(existing: Record<string, unknown>, extracted: ParsedWinBidInfo): Record<string, unknown> {
   return {
     ...existing,
     win_company: existing.win_company || extracted.winCompany,
