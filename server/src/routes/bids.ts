@@ -133,11 +133,14 @@ router.get('/', async (req, res) => {
     }
 
     // 核心过滤条件：
-    // 主页模式（isSearch=false）：必须包含联系电话、项目详情、截止日期
-    // 搜索模式（isSearch=true）：放宽过滤条件，只要有项目详情即可
+    // 所有模式：必须包含完整联系信息（联系电话、联系人、项目详情）
     if (isSearch === 'true') {
-      // 搜索模式：只需要有项目详情
+      // 搜索模式：必须有完整的联系信息
       query = query
+        .not('contact_phone', 'is', null)
+        .neq('contact_phone', '')
+        .not('contact_person', 'is', null)
+        .neq('contact_person', '')
         .not('content', 'is', null)
         .neq('content', '');
       
@@ -150,6 +153,8 @@ router.get('/', async (req, res) => {
       query = query
         .not('contact_phone', 'is', null)
         .neq('contact_phone', '')
+        .not('contact_person', 'is', null)
+        .neq('contact_person', '')
         .not('content', 'is', null)
         .neq('content', '')
         .not('deadline', 'is', null);

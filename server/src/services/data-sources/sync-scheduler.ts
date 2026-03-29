@@ -279,15 +279,25 @@ export async function syncFromSource(
 
 /**
  * 保存招标数据
+ * 注意：只保存包含完整联系信息的数据（联系电话、联系人、项目详情）
  */
 export async function saveBidsData(data: UnifiedBidData[], platform: OfficialDataSource): Promise<number> {
   if (data.length === 0) return 0;
   
   const supabase = getSupabaseClient();
   let savedCount = 0;
+  let filteredCount = 0;
   
   for (const item of data) {
     try {
+      // 数据完整性验证：必须有联系电话、联系人、项目详情
+      if (!item.contactPhone || item.contactPhone.trim() === '' ||
+          !item.contactPerson || item.contactPerson.trim() === '' ||
+          !item.content || item.content.trim() === '') {
+        filteredCount++;
+        continue; // 跳过不完整的数据
+      }
+      
       // 检查是否已存在（去重）
       const { data: existing } = await supabase
         .from('bids')
@@ -334,20 +344,34 @@ export async function saveBidsData(data: UnifiedBidData[], platform: OfficialDat
     }
   }
   
+  if (filteredCount > 0) {
+    console.log(`[DataSync] Filtered ${filteredCount} incomplete bid records`);
+  }
+  
   return savedCount;
 }
 
 /**
  * 保存中标数据
+ * 注意：只保存包含完整信息的数据（中标单位电话、中标单位、项目详情）
  */
 export async function saveWinBidsData(data: UnifiedWinBidData[], platform: OfficialDataSource): Promise<number> {
   if (data.length === 0) return 0;
   
   const supabase = getSupabaseClient();
   let savedCount = 0;
+  let filteredCount = 0;
   
   for (const item of data) {
     try {
+      // 数据完整性验证：必须有中标单位电话、中标单位、项目详情
+      if (!item.winCompanyPhone || item.winCompanyPhone.trim() === '' ||
+          !item.winCompany || item.winCompany.trim() === '' ||
+          !item.content || item.content.trim() === '') {
+        filteredCount++;
+        continue; // 跳过不完整的数据
+      }
+      
       // 检查是否已存在
       const { data: existing } = await supabase
         .from('win_bids')
@@ -388,6 +412,10 @@ export async function saveWinBidsData(data: UnifiedWinBidData[], platform: Offic
     } catch (error) {
       console.error('[DataSync] Failed to save win bid:', item.title, error);
     }
+  }
+  
+  if (filteredCount > 0) {
+    console.log(`[DataSync] Filtered ${filteredCount} incomplete win bid records`);
   }
   
   return savedCount;

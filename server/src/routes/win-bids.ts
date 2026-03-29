@@ -110,18 +110,25 @@ router.get('/', async (req, res) => {
     }
 
     // 核心过滤条件：
-    // 主页模式：必须有中标单位和中标金额
-    // 搜索模式：放宽过滤条件
+    // 所有模式：必须包含完整信息（中标单位电话、中标单位、项目详情）
     if (isSearch === 'true') {
-      // 搜索模式：只要有内容即可
+      // 搜索模式：必须有完整的信息
       query = query
+        .not('win_company_phone', 'is', null)
+        .neq('win_company_phone', '')
+        .not('win_company', 'is', null)
+        .neq('win_company', '')
         .not('content', 'is', null)
         .neq('content', '');
     } else {
       // 主页模式：必须有中标单位和中标金额
       query = query
+        .not('win_company_phone', 'is', null)
+        .neq('win_company_phone', '')
         .not('win_company', 'is', null)
         .neq('win_company', '')
+        .not('content', 'is', null)
+        .neq('content', '')
         .not('win_amount', 'is', null)
         .gt('win_amount', 0);
     }
