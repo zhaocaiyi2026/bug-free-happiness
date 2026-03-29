@@ -201,14 +201,11 @@ router.get('/:id', async (req, res) => {
     const client = getSupabaseClient();
     const { id } = req.params;
 
-    // 获取招标详情（必须有完整联系人和项目信息）
+    // 获取招标详情
     const { data: bid, error } = await client
       .from('bids')
       .select('*')
       .eq('id', Number(id))
-      .not('contact_person', 'is', null)
-      .not('contact_phone', 'is', null)
-      .not('project_location', 'is', null)
       .maybeSingle();
 
     if (error) {
@@ -218,7 +215,7 @@ router.get('/:id', async (req, res) => {
     if (!bid) {
       return res.status(404).json({
         success: false,
-        message: '招标信息不存在或信息不完整'
+        message: '招标信息不存在'
       });
     }
 
