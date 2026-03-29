@@ -8,6 +8,8 @@ import { getEnabledSources, SYNC_BATCH_CONFIG } from '../services/data-sources/c
 import { apiSpaceService } from '../services/data-sources/apispace-service';
 import { ccgpService } from '../services/data-sources/ccgp-service';
 import { stoneDTService } from '../services/data-sources/stonedt-service';
+import { ggzyService, PROVINCIAL_PLATFORMS } from '../services/data-sources/ggzy-service';
+import { cebpubService } from '../services/data-sources/cebpub-service';
 import {
   startSyncScheduler,
   stopSyncScheduler,
@@ -16,6 +18,7 @@ import {
   getActiveSyncTasks,
   saveBidsData,
   saveWinBidsData,
+  syncFromSource,
 } from '../services/data-sources/sync-scheduler';
 import {
   startBatchSync,
@@ -26,6 +29,7 @@ import {
   cancelTask,
 } from '../services/data-sources/batch-sync';
 import { quickSyncRecent } from '../services/data-sources/date-range-sync';
+import { getSupabaseClient } from '../storage/database/supabase-client';
 
 const router = Router();
 
@@ -50,6 +54,27 @@ router.get('/status', async (req: Request, res: Response) => {
         case 'stonedt':
           isAvailable = stoneDTService.isAvailable();
           break;
+        case 'ggzy':
+          isAvailable = ggzyService.isAvailable();
+          break;
+        case 'cebpub':
+          isAvailable = cebpubService.isAvailable();
+          break;
+        case 'province_beijing':
+        case 'province_guangdong':
+        case 'province_zhejiang':
+        case 'province_jiangsu':
+        case 'province_shandong':
+        case 'province_shanghai':
+        case 'province_sichuan':
+        case 'province_hubei':
+        case 'province_henan':
+        case 'province_fujian':
+          // 省级平台始终可用（公开网页）
+          isAvailable = true;
+          break;
+        default:
+          isAvailable = false;
       }
       
       return {
@@ -93,7 +118,11 @@ router.post('/sync/incremental', async (req: Request, res: Response) => {
     
     if (platform) {
       // 同步指定平台
-      const result = await runIncrementalSync(platform);
+      const result = await syncFromSource(platform, {
+        startDate: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        endDate: new Date(),
+        type: 'incremental',
+      });
       res.json({
         success: true,
         data: result,
@@ -539,7 +568,7 @@ router.get('/batch-sync/tasks', async (req: Request, res: Response) => {
  */
 router.get('/batch-sync/status/:taskId', async (req: Request, res: Response) => {
   try {
-    const { taskId } = req.params;
+    const taskId = String(req.params.taskId);
     const task = getTaskStatus(taskId);
     
     if (!task) {
@@ -577,7 +606,7 @@ router.get('/batch-sync/status/:taskId', async (req: Request, res: Response) => 
  */
 router.post('/batch-sync/pause/:taskId', async (req: Request, res: Response) => {
   try {
-    const { taskId } = req.params;
+    const taskId = String(req.params.taskId);
     const success = pauseTask(taskId);
     
     res.json({
@@ -599,7 +628,7 @@ router.post('/batch-sync/pause/:taskId', async (req: Request, res: Response) => 
  */
 router.post('/batch-sync/resume/:taskId', async (req: Request, res: Response) => {
   try {
-    const { taskId } = req.params;
+    const taskId = String(req.params.taskId);
     const success = resumeTask(taskId);
     
     res.json({
@@ -621,7 +650,7 @@ router.post('/batch-sync/resume/:taskId', async (req: Request, res: Response) =>
  */
 router.post('/batch-sync/cancel/:taskId', async (req: Request, res: Response) => {
   try {
-    const { taskId } = req.params;
+    const taskId = String(req.params.taskId);
     const success = cancelTask(taskId);
     
     res.json({
@@ -678,6 +707,286 @@ router.post('/sync/by-date', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to sync by date range',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// ==================== 官方数据源同步接口 ====================
+
+/**
+ * 获取官方数据源列表
+ * GET /api/v1/data-sources/official/list
+ */
+router.get('/official/list', async (req: Request, res: Response) => {
+  try {
+    res.json({
+      success: true,
+      data: {
+        national: [
+          {
+            platform: 'ggzy',
+            name: '全国公共资源交易平台',
+            url: 'http://www.ggzy.gov.cn',
+            description: '国家发改委牵头建设，覆盖工程建设、政府采购、土地矿产、国有产权等交易信息',
+            isAvailable: ggzyService.isAvailable(),
+          },
+          {
+            platform: 'cebpub',
+            name: '中国招标投标公共服务平台',
+            url: 'http://www.cebpubservice.com',
+            description: '国务院批准、国家发改委主导建设的国家级招投标枢纽平台',
+            isAvailable: cebpubService.isAvailable(),
+          },
+          {
+            platform: 'ccgp',
+            name: '中国政府采购网',
+            url: 'http://www.ccgp.gov.cn',
+            description: '财政部主办，全国政府采购信息官方发布平台',
+            isAvailable: ccgpService.isAvailable(),
+          },
+        ],
+        provincial: PROVINCIAL_PLATFORMS.map(p => ({
+          platform: `province_${p.code}`,
+          name: p.name,
+          url: p.url,
+          isAvailable: true,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error getting official list:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get official data sources list',
+    });
+  }
+});
+
+/**
+ * 从全国公共资源交易平台同步数据
+ * POST /api/v1/data-sources/sync/ggzy
+ * Body参数：maxCount (可选), province (可选，指定省份)
+ */
+router.post('/sync/ggzy', async (req: Request, res: Response) => {
+  try {
+    const { maxCount = 100, province } = req.body;
+    
+    console.log(`[DataSources] 开始从全国公共资源交易平台同步，最大条数: ${maxCount}`);
+    
+    const bidsData = await ggzyService.fetchBidsBatch({ maxCount, province });
+    console.log(`[DataSources] 获取到 ${bidsData.length} 条招标数据`);
+    
+    const savedBids = await saveBidsData(bidsData, 'ggzy');
+    
+    res.json({
+      success: true,
+      message: '数据同步完成',
+      data: {
+        source: '全国公共资源交易平台',
+        fetched: bidsData.length,
+        saved: savedBids,
+        note: '数据来源于官方公开平台，合法合规',
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error syncing from GGZY:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync from GGZY',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 从中国招标投标公共服务平台同步数据
+ * POST /api/v1/data-sources/sync/cebpub
+ * Body参数：maxCount (可选)
+ */
+router.post('/sync/cebpub', async (req: Request, res: Response) => {
+  try {
+    const { maxCount = 100 } = req.body;
+    
+    console.log(`[DataSources] 开始从中国招标投标公共服务平台同步`);
+    
+    const bidsData = await cebpubService.fetchBidsBatch({ maxCount });
+    const winBidsData = await cebpubService.fetchWinBidsBatch({ maxCount: Math.floor(maxCount / 2) });
+    
+    const savedBids = await saveBidsData(bidsData, 'cebpub');
+    const savedWinBids = await saveWinBidsData(winBidsData, 'cebpub');
+    
+    res.json({
+      success: true,
+      message: '数据同步完成',
+      data: {
+        source: '中国招标投标公共服务平台',
+        bids: { fetched: bidsData.length, saved: savedBids },
+        winBids: { fetched: winBidsData.length, saved: savedWinBids },
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error syncing from CEBPub:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync from CEBPub',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 从省级公共资源交易平台同步数据
+ * POST /api/v1/data-sources/sync/provincial
+ * Body参数：provinceCode (省份代码), maxCount (可选)
+ */
+router.post('/sync/provincial', async (req: Request, res: Response) => {
+  try {
+    const { provinceCode, maxCount = 50 } = req.body;
+    
+    if (!provinceCode) {
+      res.json({
+        success: false,
+        message: '请提供省份代码',
+        availableProvinces: PROVINCIAL_PLATFORMS.map(p => ({ code: p.code, name: p.name })),
+      });
+      return;
+    }
+    
+    console.log(`[DataSources] 开始从省级平台 ${provinceCode} 同步`);
+    
+    const bidsData = await ggzyService.fetchFromProvincial(provinceCode, { maxCount });
+    const platform = `province_${provinceCode}` as any;
+    const savedBids = await saveBidsData(bidsData, platform);
+    
+    res.json({
+      success: true,
+      message: '省级平台数据同步完成',
+      data: {
+        province: provinceCode,
+        fetched: bidsData.length,
+        saved: savedBids,
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error syncing from provincial:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync from provincial platform',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 从所有省级平台同步数据
+ * POST /api/v1/data-sources/sync/all-provincial
+ * Body参数：maxCountPerProvince (可选，每省最大条数)
+ */
+router.post('/sync/all-provincial', async (req: Request, res: Response) => {
+  try {
+    const { maxCountPerProvince = 20 } = req.body;
+    
+    console.log(`[DataSources] 开始从所有省级平台同步`);
+    
+    const allData = await ggzyService.fetchAllProvincial({ maxCountPerProvince });
+    let totalSaved = 0;
+    
+    // 按省份分组保存
+    const provinceGroups = new Map<string, any[]>();
+    for (const item of allData) {
+      const province = (item.extraData?.provinceCode as string) || 'unknown';
+      if (!provinceGroups.has(province)) {
+        provinceGroups.set(province, []);
+      }
+      provinceGroups.get(province)!.push(item);
+    }
+    
+    for (const [province, items] of provinceGroups) {
+      const saved = await saveBidsData(items, `province_${province}` as any);
+      totalSaved += saved;
+    }
+    
+    res.json({
+      success: true,
+      message: '所有省级平台数据同步完成',
+      data: {
+        totalFetched: allData.length,
+        totalSaved,
+        provincesCount: provinceGroups.size,
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error syncing all provincial:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync from all provincial platforms',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 获取数据来源统计
+ * GET /api/v1/data-sources/statistics
+ */
+router.get('/statistics', async (req: Request, res: Response) => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    // 按数据源统计招标数据
+    const { data: bidsBySource } = await supabase
+      .from('bids')
+      .select('source_platform, count')
+      .order('count', { ascending: false });
+    
+    // 按数据源统计中标数据
+    const { data: winBidsBySource } = await supabase
+      .from('win_bids')
+      .select('source_platform, count')
+      .order('count', { ascending: false });
+    
+    // 按省份统计
+    const { data: bidsByProvince } = await supabase
+      .from('bids')
+      .select('province, count')
+      .order('count', { ascending: false })
+      .limit(10);
+    
+    // 获取最近同步记录
+    const { data: recentSyncs } = await supabase
+      .from('sync_logs')
+      .select('*')
+      .order('start_time', { ascending: false })
+      .limit(10);
+    
+    // 统计总数
+    const { count: totalBids } = await supabase
+      .from('bids')
+      .select('*', { count: 'exact', head: true });
+    
+    const { count: totalWinBids } = await supabase
+      .from('win_bids')
+      .select('*', { count: 'exact', head: true });
+    
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalBids: totalBids || 0,
+          totalWinBids: totalWinBids || 0,
+        },
+        bidsBySource: bidsBySource || [],
+        winBidsBySource: winBidsBySource || [],
+        bidsByProvince: bidsByProvince || [],
+        recentSyncs: recentSyncs || [],
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error getting statistics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get statistics',
       details: error instanceof Error ? error.message : 'Unknown error',
     });
   }

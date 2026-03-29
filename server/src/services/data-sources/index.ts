@@ -20,6 +20,8 @@ export {
 export { ApiSpaceService, apiSpaceService } from './apispace-service';
 export { CCGPService, ccgpService } from './ccgp-service';
 export { StoneDTService, stoneDTService } from './stonedt-service';
+export { GGZYService, ggzyService, PROVINCIAL_PLATFORMS } from './ggzy-service';
+export { CEBPubService, cebpubService } from './cebpub-service';
 
 // 同步调度器
 export {

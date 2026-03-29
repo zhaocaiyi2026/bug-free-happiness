@@ -170,9 +170,11 @@ export async function runTask(taskId: string): Promise<void> {
   
   try {
     while (hasMore) {
-      // 检查任务状态
-      if (task.status === 'paused' || task.status === 'failed') {
-        console.log(`[BatchSync] Task ${taskId} stopped: ${task.status}`);
+      // 检查任务状态（可能在循环中被其他地方修改，如暂停/取消）
+      // 使用类型断言绕过TypeScript的控制流分析
+      const taskStatus = task.status as 'pending' | 'running' | 'paused' | 'completed' | 'failed';
+      if (taskStatus === 'paused' || taskStatus === 'failed') {
+        console.log(`[BatchSync] Task ${taskId} stopped: ${taskStatus}`);
         return;
       }
       

@@ -9,8 +9,16 @@ export type OfficialDataSource =
   | 'ccgp'           // 中国政府采购网
   | 'cebpub'         // 中国招标投标公共服务平台
   | 'ggzy'           // 全国公共资源交易平台
-  | 'province_gd'    // 广东省政府采购网
-  | 'province_zj'    // 浙江省政府采购网
+  | 'province_beijing'    // 北京市公共资源交易平台
+  | 'province_guangdong'  // 广东省公共资源交易平台
+  | 'province_zhejiang'   // 浙江省公共资源交易平台
+  | 'province_jiangsu'    // 江苏省公共资源交易平台
+  | 'province_shandong'   // 山东省公共资源交易平台
+  | 'province_shanghai'   // 上海市公共资源交易平台
+  | 'province_sichuan'    // 四川省公共资源交易平台
+  | 'province_hubei'      // 湖北省公共资源交易平台
+  | 'province_henan'      // 河南省公共资源交易平台
+  | 'province_fujian'     // 福建省公共资源交易平台
   | 'apispace'       // APISpace 商业数据源（备用）
   | 'stonedt';       // 思通数据免费API（推荐）
 

@@ -15,6 +15,8 @@ import type { UnifiedBidData, UnifiedWinBidData, OfficialDataSource } from './ty
 import { apiSpaceService } from './apispace-service';
 import { ccgpService } from './ccgp-service';
 import { stoneDTService } from './stonedt-service';
+import { ggzyService } from './ggzy-service';
+import { cebpubService } from './cebpub-service';
 import { SYNC_SCHEDULES, SYNC_BATCH_CONFIG, getEnabledSources } from './config';
 
 // 同步任务状态
@@ -211,6 +213,51 @@ export async function syncFromSource(
         winBidsData = await stoneDTService.fetchWinBidsBatch({
           startDate: options.startDate,
           endDate: options.endDate,
+          maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
+        });
+        break;
+        
+      case 'ggzy':
+        // 全国公共资源交易平台
+        bidsData = await ggzyService.fetchBidsBatch({
+          startDate: options.startDate,
+          endDate: options.endDate,
+          maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
+        });
+        winBidsData = await ggzyService.fetchWinBidsBatch({
+          startDate: options.startDate,
+          endDate: options.endDate,
+          maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
+        });
+        break;
+        
+      case 'cebpub':
+        // 中国招标投标公共服务平台
+        bidsData = await cebpubService.fetchBidsBatch({
+          startDate: options.startDate,
+          endDate: options.endDate,
+          maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
+        });
+        winBidsData = await cebpubService.fetchWinBidsBatch({
+          startDate: options.startDate,
+          endDate: options.endDate,
+          maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
+        });
+        break;
+        
+      case 'province_beijing':
+      case 'province_guangdong':
+      case 'province_zhejiang':
+      case 'province_jiangsu':
+      case 'province_shandong':
+      case 'province_shanghai':
+      case 'province_sichuan':
+      case 'province_hubei':
+      case 'province_henan':
+      case 'province_fujian':
+        // 省级公共资源交易平台
+        const provinceCode = platform.replace('province_', '');
+        bidsData = await ggzyService.fetchFromProvincial(provinceCode, {
           maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
         });
         break;
