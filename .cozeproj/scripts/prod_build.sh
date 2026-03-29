@@ -32,16 +32,23 @@ info "==================== 安装 Node 依赖 ===================="
 info "开始安装 Node 依赖"
 if [ -f "$ROOT_DIR/package.json" ]; then
   info "进入目录：$ROOT_DIR"
-  info "正在执行：pnpm install"
+  info "正在执行：pnpm install --registry=https://registry.npmmirror.com"
   (cd "$ROOT_DIR" && pnpm install --registry=https://registry.npmmirror.com) || error "Node 依赖安装失败"
 else
   warn "未找到 $ROOT_DIR/package.json 文件，请检查路径是否正确"
 fi
 info "==================== 依赖安装完成！====================\n"
 
-info "==================== dist打包 ===================="
+# ==================== Server dist打包 ====================
+info "==================== Server dist打包 ===================="
 info "开始执行：pnpm run build (server)"
-(pushd "$ROOT_DIR/server" > /dev/null && pnpm run build; popd > /dev/null) || error "dist打包失败"
-info "==================== dist打包完成！====================\n"
+(pushd "$ROOT_DIR/server" > /dev/null && pnpm run build; popd > /dev/null) || error "Server dist打包失败"
+info "==================== Server dist打包完成！====================\n"
+
+# ==================== Client Web打包 ====================
+info "==================== Client Web打包 ===================="
+info "开始执行：npx expo export --platform web (client)"
+(pushd "$ROOT_DIR/client" > /dev/null && npx expo export --platform web; popd > /dev/null) || error "Client Web打包失败"
+info "==================== Client Web打包完成！====================\n"
 
 info "下一步：执行 ./prod_run.sh 启动服务"
