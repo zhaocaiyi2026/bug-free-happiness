@@ -17,6 +17,14 @@ import {
   saveBidsData,
   saveWinBidsData,
 } from '../services/data-sources/sync-scheduler';
+import {
+  startBatchSync,
+  getTaskStatus,
+  getAllTasks,
+  pauseTask,
+  resumeTask,
+  cancelTask,
+} from '../services/data-sources/batch-sync';
 
 const router = Router();
 
@@ -446,6 +454,184 @@ router.post('/sync/stonedt', async (req: Request, res: Response) => {
       success: false,
       error: 'Failed to sync from StoneDT',
       details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// ==================== 批量同步接口 ====================
+
+/**
+ * 启动批量同步任务
+ * POST /api/v1/data-sources/batch-sync/start
+ * Body参数：apiKey, maxPages (可选，0表示不限制), syncBids (可选), syncWinBids (可选)
+ */
+router.post('/batch-sync/start', async (req: Request, res: Response) => {
+  try {
+    const { apiKey, maxPages = 0, syncBids = true, syncWinBids = true } = req.body;
+    
+    if (!apiKey) {
+      res.json({
+        success: false,
+        message: '请提供apiKey',
+      });
+      return;
+    }
+    
+    const taskIds = await startBatchSync({
+      apiKey,
+      maxPages,
+      syncBids,
+      syncWinBids,
+    });
+    
+    res.json({
+      success: true,
+      message: '批量同步任务已启动',
+      data: {
+        bidTaskId: taskIds.bidTaskId,
+        winBidTaskId: taskIds.winBidTaskId,
+        hint: '使用 GET /api/v1/data-sources/batch-sync/status/:taskId 查询进度',
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error starting batch sync:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to start batch sync',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 获取所有批量同步任务状态
+ * GET /api/v1/data-sources/batch-sync/tasks
+ */
+router.get('/batch-sync/tasks', async (req: Request, res: Response) => {
+  try {
+    const tasks = getAllTasks();
+    
+    res.json({
+      success: true,
+      data: tasks.map(task => ({
+        id: task.id,
+        type: task.type,
+        status: task.status,
+        progress: task.progress,
+        error: task.error,
+        startedAt: task.startedAt,
+        completedAt: task.completedAt,
+      })),
+    });
+  } catch (error) {
+    console.error('[DataSources] Error getting batch sync tasks:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get batch sync tasks',
+    });
+  }
+});
+
+/**
+ * 获取指定任务状态
+ * GET /api/v1/data-sources/batch-sync/status/:taskId
+ */
+router.get('/batch-sync/status/:taskId', async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const task = getTaskStatus(taskId);
+    
+    if (!task) {
+      res.json({
+        success: false,
+        message: '任务不存在',
+      });
+      return;
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        id: task.id,
+        type: task.type,
+        status: task.status,
+        progress: task.progress,
+        error: task.error,
+        startedAt: task.startedAt,
+        completedAt: task.completedAt,
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error getting task status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get task status',
+    });
+  }
+});
+
+/**
+ * 暂停批量同步任务
+ * POST /api/v1/data-sources/batch-sync/pause/:taskId
+ */
+router.post('/batch-sync/pause/:taskId', async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const success = pauseTask(taskId);
+    
+    res.json({
+      success,
+      message: success ? '任务已暂停' : '暂停失败（任务可能不在运行状态）',
+    });
+  } catch (error) {
+    console.error('[DataSources] Error pausing task:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to pause task',
+    });
+  }
+});
+
+/**
+ * 恢复批量同步任务
+ * POST /api/v1/data-sources/batch-sync/resume/:taskId
+ */
+router.post('/batch-sync/resume/:taskId', async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const success = resumeTask(taskId);
+    
+    res.json({
+      success,
+      message: success ? '任务已恢复' : '恢复失败（任务可能不在暂停状态）',
+    });
+  } catch (error) {
+    console.error('[DataSources] Error resuming task:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to resume task',
+    });
+  }
+});
+
+/**
+ * 取消批量同步任务
+ * POST /api/v1/data-sources/batch-sync/cancel/:taskId
+ */
+router.post('/batch-sync/cancel/:taskId', async (req: Request, res: Response) => {
+  try {
+    const { taskId } = req.params;
+    const success = cancelTask(taskId);
+    
+    res.json({
+      success,
+      message: success ? '任务已取消' : '取消失败',
+    });
+  } catch (error) {
+    console.error('[DataSources] Error canceling task:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to cancel task',
     });
   }
 });
