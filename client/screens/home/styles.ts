@@ -58,16 +58,6 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       gap: Spacing.sm,
     },
-    iconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: 'rgba(255,255,255,0.15)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.2)',
-    },
     
     // ==================== Search Bar ====================
     searchContainer: {
@@ -113,7 +103,7 @@ export const createStyles = (theme: Theme) => {
     statsSection: {
       marginTop: -Spacing.xl,
       marginHorizontal: Spacing.lg,
-      marginBottom: Spacing.lg,
+      marginBottom: Spacing.md,
     },
     statsCard: {
       backgroundColor: '#FFFFFF',
@@ -181,47 +171,56 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#E2E8F0',
     },
     
-    // ==================== Filter Tags ====================
-    filterSection: {
-      flexDirection: 'row',
+    // ==================== Quick Actions ====================
+    quickActionsSection: {
       paddingHorizontal: Spacing.lg,
       marginBottom: Spacing.md,
-      gap: Spacing.sm,
     },
-    filterChip: {
-      flex: 1,
+    quickActionsGrid: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginHorizontal: -4,
+    },
+    quickActionCard: {
+      width: '25%',
+      paddingHorizontal: 4,
       alignItems: 'center',
+    },
+    quickActionCardActive: {
+      // Active state styling handled in children
+    },
+    quickActionIconWrapper: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
       justifyContent: 'center',
-      paddingVertical: Spacing.sm + 2,
-      borderRadius: BorderRadius.lg,
+      alignItems: 'center',
+      marginBottom: Spacing.xs + 2,
       backgroundColor: '#FFFFFF',
-      gap: Spacing.xs,
-      borderWidth: 1,
-      borderColor: '#E2E8F0',
       ...Platform.select({
         ios: {
           shadowColor: '#1E40AF',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
         },
         android: {
-          elevation: 1,
+          elevation: 2,
         },
       }),
     },
-    filterChipActive: {
-      backgroundColor: '#2563EB',
-      borderColor: '#2563EB',
+    quickActionCardActive: {
+      // Handled inline
     },
-    filterChipText: {
-      fontSize: 12,
+    quickActionLabel: {
+      fontSize: 11,
       fontWeight: '600',
       color: '#475569',
+      textAlign: 'center',
     },
-    filterChipTextActive: {
-      color: '#FFFFFF',
+    quickActionLabelActive: {
+      color: '#2563EB',
+      fontWeight: '700',
     },
     
     // ==================== Bid List ====================

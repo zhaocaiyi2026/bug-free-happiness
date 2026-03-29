@@ -79,12 +79,12 @@ export default function HomeScreen() {
   const activeFilterRef = useRef<string>('all');
   const loadingRef = useRef(false);
 
-  // 筛选标签 - 简化为4个
-  const filterTags = [
-    { key: 'all', label: '全部', icon: 'layer-group' },
-    { key: 'province', label: '全省招标', icon: 'map' },
-    { key: 'city', label: '全市招标', icon: 'location-dot' },
-    { key: 'provinceWin', label: '本省中标', icon: 'trophy' },
+  // 快捷入口 - 固定4个
+  const quickActions = [
+    { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB', bgColor: 'rgba(37, 99, 235, 0.1)' },
+    { key: 'province', label: '本省招标', icon: 'map-location-dot', color: '#7C3AED', bgColor: 'rgba(124, 58, 237, 0.1)' },
+    { key: 'city', label: '本市招标', icon: 'city', color: '#EA580C', bgColor: 'rgba(234, 88, 12, 0.1)' },
+    { key: 'provinceWin', label: '本省中标', icon: 'trophy', color: '#059669', bgColor: 'rgba(5, 150, 105, 0.1)' },
   ];
 
   const fetchStats = async () => {
@@ -536,35 +536,38 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Filter Tags - 简化为固定4个 */}
-        <View style={styles.filterSection}>
-          {filterTags.map((filter) => {
-            const isActive = activeFilter === filter.key;
-            
-            return (
-              <TouchableOpacity
-                key={filter.key}
-                style={[
-                  styles.filterChip, 
-                  isActive && styles.filterChipActive,
-                ]}
-                onPress={() => handleFilterPress(filter.key)}
-                activeOpacity={0.7}
-              >
-                <FontAwesome6 
-                  name={filter.icon as any} 
-                  size={12} 
-                  color={isActive ? '#FFFFFF' : '#475569'} 
-                />
-                <Text style={[
-                  styles.filterChipText, 
-                  isActive && styles.filterChipTextActive
-                ]}>
-                  {filter.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+        {/* Quick Actions - 四宫格卡片 */}
+        <View style={styles.quickActionsSection}>
+          <View style={styles.quickActionsGrid}>
+            {quickActions.map((action) => {
+              const isActive = activeFilter === action.key;
+              return (
+                <TouchableOpacity
+                  key={action.key}
+                  style={[styles.quickActionCard, isActive && styles.quickActionCardActive]}
+                  onPress={() => handleFilterPress(action.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[
+                    styles.quickActionIconWrapper,
+                    { backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : action.bgColor }
+                  ]}>
+                    <FontAwesome6 
+                      name={action.icon as any} 
+                      size={20} 
+                      color={isActive ? '#FFFFFF' : action.color} 
+                    />
+                  </View>
+                  <Text style={[
+                    styles.quickActionLabel,
+                    isActive && styles.quickActionLabelActive
+                  ]}>
+                    {action.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         {/* Bid List */}
