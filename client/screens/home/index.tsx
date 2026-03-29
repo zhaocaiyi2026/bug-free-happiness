@@ -488,6 +488,7 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View style={styles.headerActions}>
+                <Text style={styles.locationButtonText}>选择地区</Text>
                 <TouchableOpacity 
                   style={[styles.locationButton, selectedProvince && styles.locationButtonActive]} 
                   onPress={() => {
@@ -501,7 +502,6 @@ export default function HomeScreen() {
                     color="#FFFFFF" 
                   />
                 </TouchableOpacity>
-                <Text style={styles.locationButtonText}>地区</Text>
               </View>
             </View>
             
