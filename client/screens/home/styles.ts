@@ -382,7 +382,28 @@ export const createStyles = (theme: Theme) => {
       borderColor: 'rgba(255,255,255,0.4)',
     },
     
-    // ==================== Province Modal ====================
+    // ==================== Location Info ====================
+    locationInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      backgroundColor: 'rgba(255,255,255,0.1)',
+      borderRadius: 20,
+      marginTop: Spacing.sm,
+      alignSelf: 'flex-start',
+    },
+    locationInfoText: {
+      fontSize: 12,
+      color: 'rgba(255,255,255,0.9)',
+      marginLeft: Spacing.xs,
+      marginRight: Spacing.xs,
+    },
+    clearLocationButton: {
+      padding: 2,
+    },
+    
+    // ==================== Location Modal ====================
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -404,6 +425,12 @@ export const createStyles = (theme: Theme) => {
       borderBottomWidth: 1,
       borderBottomColor: '#E2E8F0',
     },
+    modalBackButton: {
+      width: 32,
+      height: 32,
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+    },
     modalTitle: {
       fontSize: 18,
       fontWeight: '700',
@@ -418,13 +445,12 @@ export const createStyles = (theme: Theme) => {
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: '#F1F5F9',
     },
     provinceItemActive: {
       backgroundColor: 'rgba(37, 99, 235, 0.05)',
-      marginHorizontal: -Spacing.md,
-      paddingHorizontal: Spacing.md,
       borderRadius: 8,
     },
     provinceText: {
@@ -434,6 +460,24 @@ export const createStyles = (theme: Theme) => {
     provinceTextActive: {
       color: theme.primary,
       fontWeight: '600',
+    },
+    allProvinceItem: {
+      backgroundColor: 'rgba(37, 99, 235, 0.08)',
+      borderRadius: 12,
+      marginHorizontal: Spacing.lg,
+      marginBottom: Spacing.md,
+      borderBottomWidth: 0,
+    },
+    allProvinceContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    cityListHeader: {
+      fontSize: 13,
+      color: '#94A3B8',
+      fontWeight: '600',
+      marginBottom: Spacing.sm,
+      marginTop: Spacing.md,
     },
   });
 };

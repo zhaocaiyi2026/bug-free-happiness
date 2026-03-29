@@ -9,7 +9,6 @@ import {
   Dimensions,
   Alert,
   Platform,
-  Linking,
   Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +20,6 @@ import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
 import { API_BASE_URL } from '@/constants/api';
-import * as Location from 'expo-location';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_GAP = Spacing.sm;
@@ -61,6 +59,13 @@ interface Province {
   code: string;
 }
 
+interface City {
+  id: number;
+  province_id: number;
+  name: string;
+  code: string;
+}
+
 export default function HomeScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -79,15 +84,16 @@ export default function HomeScreen() {
   const [hasMore, setHasMore] = useState(true);
 
   const [activeFilter, setActiveFilter] = useState('all');
-  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const [locating, setLocating] = useState(false);
   
-  // 省份选择相关
+  // 地区选择相关
   const [provinces, setProvinces] = useState<Province[]>([]);
-  const [selectedProvince, setSelectedProvince] = useState<string>('');
-  const [provinceModalVisible, setProvinceModalVisible] = useState(false);
+  const [cities, setCities] = useState<City[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<Province | null>(null);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  const [locationStep, setLocationStep] = useState<'province' | 'city'>('province');
+  const [loadingCities, setLoadingCities] = useState(false);
   
-  const userLocationRef = useRef<UserLocation | null>(null);
   const activeFilterRef = useRef<string>('all');
   const loadingRef = useRef(false);
 
@@ -115,11 +121,8 @@ export default function HomeScreen() {
     }
   };
 
-  const fetchData = async (pageNum: number, filterKey: string, selectedProvinceParam?: string) => {
+  const fetchData = async (pageNum: number, filterKey: string, province?: string, city?: string) => {
     if (loadingRef.current) return;
-    
-    const currentLocation = userLocationRef.current;
-    const provinceToUse = selectedProvinceParam || currentLocation?.province;
     
     try {
       loadingRef.current = true;
@@ -130,8 +133,11 @@ export default function HomeScreen() {
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
-        if (provinceToUse) {
-          params.append('province', provinceToUse);
+        if (province) {
+          params.append('province', province);
+        }
+        if (city) {
+          params.append('city', city);
         }
 
         const res = await fetch(`${API_BASE_URL}/api/v1/bids?${params.toString()}`);
@@ -159,10 +165,11 @@ export default function HomeScreen() {
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
 
-        if (filterKey === 'provinceWin' && provinceToUse) {
-          params.append('province', provinceToUse);
-        } else if (filterKey === 'cityWin' && currentLocation?.city) {
-          params.append('city', currentLocation.city);
+        if (province) {
+          params.append('province', province);
+        }
+        if (city) {
+          params.append('city', city);
         }
 
         const res = await fetch(`${API_BASE_URL}/api/v1/win-bids?${params.toString()}`);
@@ -201,10 +208,11 @@ export default function HomeScreen() {
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
 
-        if (filterKey === 'province' && provinceToUse) {
-          params.append('province', provinceToUse);
-        } else if (filterKey === 'city' && currentLocation?.city) {
-          params.append('city', currentLocation.city);
+        if (province) {
+          params.append('province', province);
+        }
+        if (city) {
+          params.append('city', city);
         }
 
         const res = await fetch(`${API_BASE_URL}/api/v1/bids?${params.toString()}`);
@@ -252,6 +260,23 @@ export default function HomeScreen() {
     }
   };
 
+  // 获取城市列表
+  const fetchCities = async (provinceId: number) => {
+    try {
+      setLoadingCities(true);
+      const res = await fetch(`${API_BASE_URL}/api/v1/common/cities?provinceId=${provinceId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setCities(data.data);
+      }
+    } catch (error) {
+      console.error('获取城市列表失败:', error);
+      setCities([]);
+    } finally {
+      setLoadingCities(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchData(1, activeFilterRef.current);
@@ -260,106 +285,80 @@ export default function HomeScreen() {
     }, [])
   );
 
-  const openLocationSettings = async () => {
-    try {
-      await Linking.openSettings();
-    } catch (error) {
-      Alert.alert('提示', '无法自动打开设置，请手动前往系统设置开启定位服务');
-    }
-  };
-
-  const requestLocation = async () => {
-    try {
-      setLocating(true);
-      
-      // Step 1: 先请求权限
-      const { status } = await Location.getForegroundPermissionsAsync();
-      let finalStatus = status;
-      
-      if (status !== 'granted') {
-        const requestResult = await Location.requestForegroundPermissionsAsync();
-        finalStatus = requestResult.status;
-      }
-      
-      if (finalStatus !== 'granted') {
-        Alert.alert(
-          '定位权限被拒绝', 
-          '需要定位权限才能使用此功能，请在手机设置中为应用开启定位权限',
-          [
-            { text: '取消', style: 'cancel' },
-            { text: '去设置', onPress: openLocationSettings }
-          ]
-        );
-        setLocating(false);
+  const handleFilterPress = async (filterKey: string) => {
+    // 本省招标、本省中标、本市招标需要先选择地区
+    if (filterKey !== 'all') {
+      if (provinces.length === 0) {
+        Alert.alert('提示', '正在加载地区数据，请稍候');
         return;
       }
-
-      // Step 2: 获取位置 - 使用最低精度以确保能获取到
-      let location = null;
-      
-      // 尝试获取位置，最多重试2次
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          location = await Location.getCurrentPositionAsync({
-            accuracy: attempt === 0 ? Location.Accuracy.Balanced : Location.Accuracy.Low,
-            timeout: 20000, // 20秒超时
-          });
-          if (location) break;
-        } catch (e) {
-          console.log(`定位尝试 ${attempt + 1} 失败:`, e);
-          if (attempt === 1) {
-            throw e; // 最后一次尝试失败则抛出错误
-          }
-        }
-      }
-
-      if (!location) {
-        throw new Error('无法获取位置信息');
-      }
-
-      // Step 3: 逆地理编码
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      if (reverseGeocode.length > 0) {
-        const address = reverseGeocode[0];
-        
-        // 处理直辖市
-        const municipalities = ['北京市', '上海市', '天津市', '重庆市', '北京', '上海', '天津', '重庆'];
-        const province = address.region || address.subregion || address.country || '';
-        let city = address.city || address.subregion || address.district || '';
-        const isMunicipality = municipalities.some(m => province.includes(m));
-        if (isMunicipality && !city) {
-          city = province;
-        }
-        
-        if (province || city) {
-          const newLocation = { province, city };
-          setUserLocation(newLocation);
-          userLocationRef.current = newLocation;
-          Alert.alert('定位成功', `已定位到：${province} ${city}`);
-        } else {
-          Alert.alert('定位成功', '已获取您的位置，但无法解析详细地址');
-        }
-      } else {
-        Alert.alert('定位成功', '已获取您的位置，但无法解析详细地址');
-      }
-    } catch (error) {
-      console.error('定位失败:', error);
-      const errorMsg = error instanceof Error ? error.message : '未知错误';
-      Alert.alert(
-        '定位失败', 
-        `无法获取您的位置\n原因: ${errorMsg}\n\n请检查：\n1. 手机GPS是否开启\n2. App是否有定位权限\n3. 是否在室内（GPS信号弱）`,
-        [
-          { text: '取消', style: 'cancel' },
-          { text: '重试', onPress: requestLocation }
-        ]
-      );
-    } finally {
-      setLocating(false);
+      setLocationStep('province');
+      setLocationModalVisible(true);
+      return;
     }
+    
+    setPage(1);
+    setHasMore(true);
+    setBids([]);
+    setActiveFilter(filterKey);
+    activeFilterRef.current = filterKey;
+    fetchData(1, filterKey);
+  };
+
+  // 选择省份后的处理
+  const handleProvinceSelect = async (province: Province) => {
+    setSelectedProvince(province);
+    setSelectedCity(null);
+    
+    // 加载该省份的城市列表
+    await fetchCities(province.id);
+    setLocationStep('city');
+  };
+
+  // 选择城市后的处理
+  const handleCitySelect = (city: City) => {
+    setSelectedCity(city);
+    setLocationModalVisible(false);
+    
+    setPage(1);
+    setHasMore(true);
+    setBids([]);
+    setActiveFilter('city');
+    activeFilterRef.current = 'city';
+    
+    // 按选择的省、市筛选数据
+    fetchData(1, 'city', selectedProvince?.name, city.name);
+  };
+
+  // 不选择城市，只按省份筛选
+  const handleConfirmProvince = () => {
+    if (!selectedProvince) return;
+    
+    setLocationModalVisible(false);
+    
+    setPage(1);
+    setHasMore(true);
+    setBids([]);
+    const filterKey = activeFilter === 'provinceWin' ? 'provinceWin' : 'province';
+    setActiveFilter(filterKey);
+    activeFilterRef.current = filterKey;
+    
+    fetchData(1, filterKey, selectedProvince.name);
+  };
+
+  // 清除地区选择
+  const handleClearLocation = () => {
+    setSelectedProvince(null);
+    setSelectedCity(null);
+    setCities([]);
+    
+    setPage(1);
+    setHasMore(true);
+    setBids([]);
+    setActiveFilter('all');
+    activeFilterRef.current = 'all';
+    
+    fetchData(1, 'all');
   };
 
   const handleRefresh = () => {
@@ -376,55 +375,6 @@ export default function HomeScreen() {
       setPage(nextPage);
       fetchData(nextPage, activeFilterRef.current);
     }
-  };
-
-  const handleFilterPress = async (filterKey: string) => {
-    // 本省招标和本省中标需要先选择省份
-    if (filterKey === 'province' || filterKey === 'provinceWin') {
-      if (provinces.length === 0) {
-        Alert.alert('提示', '正在加载省份列表，请稍候');
-        return;
-      }
-      setProvinceModalVisible(true);
-      return;
-    }
-    
-    // 本市招标需要定位
-    if (filterKey === 'city' && !userLocation) {
-      Alert.alert(
-        '需要定位', 
-        '使用此功能需要先获取您的位置，是否现在定位？',
-        [
-          { text: '取消', style: 'cancel' },
-          { text: '定位', onPress: requestLocation }
-        ]
-      );
-      return;
-    }
-    
-    setPage(1);
-    setHasMore(true);
-    setBids([]);
-    setActiveFilter(filterKey);
-    activeFilterRef.current = filterKey;
-    fetchData(1, filterKey);
-  };
-
-  // 选择省份后的处理
-  const handleProvinceSelect = (provinceName: string) => {
-    setSelectedProvince(provinceName);
-    setProvinceModalVisible(false);
-    
-    const filterKey = activeFilter === 'provinceWin' ? 'provinceWin' : 'province';
-    
-    setPage(1);
-    setHasMore(true);
-    setBids([]);
-    setActiveFilter(filterKey);
-    activeFilterRef.current = filterKey;
-    
-    // 根据选择的省份筛选数据
-    fetchData(1, filterKey, provinceName);
   };
 
   const handleBidPress = useCallback((bidId: number) => {
@@ -539,22 +489,33 @@ export default function HomeScreen() {
               </View>
               <View style={styles.headerActions}>
                 <TouchableOpacity 
-                  style={[styles.locationButton, userLocation && styles.locationButtonActive]} 
-                  onPress={requestLocation}
-                  disabled={locating}
+                  style={[styles.locationButton, selectedProvince && styles.locationButtonActive]} 
+                  onPress={() => {
+                    setLocationStep('province');
+                    setLocationModalVisible(true);
+                  }}
                 >
-                  {locating ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <FontAwesome6 
-                      name="location-crosshairs" 
-                      size={16} 
-                      color="#FFFFFF" 
-                    />
-                  )}
+                  <FontAwesome6 
+                    name="map-location-dot" 
+                    size={16} 
+                    color="#FFFFFF" 
+                  />
                 </TouchableOpacity>
               </View>
             </View>
+            
+            {/* 地区选择提示 */}
+            {selectedProvince && (
+              <View style={styles.locationInfo}>
+                <FontAwesome6 name="location-dot" size={12} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.locationInfoText}>
+                  {selectedProvince.name}{selectedCity ? ` · ${selectedCity.name}` : ''}
+                </Text>
+                <TouchableOpacity onPress={handleClearLocation} style={styles.clearLocationButton}>
+                  <FontAwesome6 name="circle-xmark" size={14} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+              </View>
+            )}
             
             {/* Search Bar */}
             <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
@@ -683,48 +644,126 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* 省份选择弹窗 */}
+      {/* 地区选择弹窗 */}
       <Modal
-        visible={provinceModalVisible}
+        visible={locationModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setProvinceModalVisible(false)}
+        onRequestClose={() => setLocationModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>选择省份</Text>
-              <TouchableOpacity onPress={() => setProvinceModalVisible(false)}>
+              <TouchableOpacity 
+                onPress={() => {
+                  if (locationStep === 'city') {
+                    setLocationStep('province');
+                    setSelectedCity(null);
+                  } else {
+                    setLocationModalVisible(false);
+                  }
+                }}
+                style={styles.modalBackButton}
+              >
+                {locationStep === 'city' && (
+                  <FontAwesome6 name="chevron-left" size={18} color={theme.textSecondary} />
+                )}
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>
+                {locationStep === 'province' ? '选择省份' : '选择城市'}
+              </Text>
+              <TouchableOpacity onPress={() => setLocationModalVisible(false)}>
                 <FontAwesome6 name="xmark" size={20} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
-            <FlatList
-              data={provinces}
-              keyExtractor={(item) => item.id.toString()}
-              showsVerticalScrollIndicator
-              contentContainerStyle={styles.provinceList}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.provinceItem,
-                    selectedProvince === item.name && styles.provinceItemActive,
-                  ]}
-                  onPress={() => handleProvinceSelect(item.name)}
-                >
-                  <Text
+            
+            {/* 省份列表 */}
+            {locationStep === 'province' && (
+              <FlatList
+                data={provinces}
+                keyExtractor={(item) => item.id.toString()}
+                showsVerticalScrollIndicator
+                contentContainerStyle={styles.provinceList}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
                     style={[
-                      styles.provinceText,
-                      selectedProvince === item.name && styles.provinceTextActive,
+                      styles.provinceItem,
+                      selectedProvince?.id === item.id && styles.provinceItemActive,
                     ]}
+                    onPress={() => handleProvinceSelect(item)}
                   >
-                    {item.name}
-                  </Text>
-                  {selectedProvince === item.name && (
-                    <FontAwesome6 name="check" size={16} color={theme.primary} />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
+                    <Text
+                      style={[
+                        styles.provinceText,
+                        selectedProvince?.id === item.id && styles.provinceTextActive,
+                      ]}
+                    >
+                      {item.name}
+                    </Text>
+                    <FontAwesome6 name="chevron-right" size={14} color={theme.textMuted} />
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            
+            {/* 城市列表 */}
+            {locationStep === 'city' && (
+              <>
+                {loadingCities ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={theme.primary} />
+                    <Text style={styles.loadingText}>加载城市...</Text>
+                  </View>
+                ) : (
+                  <>
+                    {/* 全省选项 */}
+                    <TouchableOpacity
+                      style={[styles.provinceItem, styles.allProvinceItem]}
+                      onPress={handleConfirmProvince}
+                    >
+                      <View style={styles.allProvinceContent}>
+                        <FontAwesome6 name="map" size={16} color={theme.primary} />
+                        <Text style={[styles.provinceText, { color: theme.primary, marginLeft: 8 }]}>
+                          全部 {selectedProvince?.name}
+                        </Text>
+                      </View>
+                      <FontAwesome6 name="check" size={16} color={theme.primary} />
+                    </TouchableOpacity>
+                    
+                    <FlatList
+                      data={cities}
+                      keyExtractor={(item) => item.id.toString()}
+                      showsVerticalScrollIndicator
+                      contentContainerStyle={styles.provinceList}
+                      ListHeaderComponent={
+                        <Text style={styles.cityListHeader}>选择城市</Text>
+                      }
+                      renderItem={({ item }) => (
+                        <TouchableOpacity
+                          style={[
+                            styles.provinceItem,
+                            selectedCity?.id === item.id && styles.provinceItemActive,
+                          ]}
+                          onPress={() => handleCitySelect(item)}
+                        >
+                          <Text
+                            style={[
+                              styles.provinceText,
+                              selectedCity?.id === item.id && styles.provinceTextActive,
+                            ]}
+                          >
+                            {item.name}
+                          </Text>
+                          {selectedCity?.id === item.id && (
+                            <FontAwesome6 name="check" size={16} color={theme.primary} />
+                          )}
+                        </TouchableOpacity>
+                      )}
+                    />
+                  </>
+                )}
+              </>
+            )}
           </View>
         </View>
       </Modal>
