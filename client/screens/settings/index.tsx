@@ -1,5 +1,4 @@
-import { API_BASE_URL } from '@/constants/api';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,40 +6,14 @@ import {
   ScrollView,
   Switch,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
-import { Spacing, BorderRadius } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { createStyles } from './styles';
-
-interface DataSourceStatus {
-  platform: string;
-  name: string;
-  priority: number;
-  isAvailable: boolean;
-  isEnabled: boolean;
-  apiType: string;
-}
-
-interface DataStatistics {
-  summary: {
-    totalBids: number;
-    totalWinBids: number;
-  };
-  recentSyncs: Array<{
-    id: number;
-    source_platform: string;
-    sync_type: string;
-    start_time: string;
-    status: string;
-    total_count: number;
-    success_count: number;
-  }>;
-}
 
 export default function SettingsScreen() {
   const { theme } = useTheme();
@@ -55,46 +28,6 @@ export default function SettingsScreen() {
     autoRefresh: true,
     cacheClear: false,
   });
-  const [dataSources, setDataSources] = useState<DataSourceStatus[]>([]);
-  const [statistics, setStatistics] = useState<DataStatistics | null>(null);
-  const [loadingDataSources, setLoadingDataSources] = useState(false);
-  const [showProvincial, setShowProvincial] = useState(false);
-
-  useEffect(() => {
-    fetchDataSources();
-    fetchStatistics();
-  }, []);
-
-  const fetchDataSources = async () => {
-    try {
-      setLoadingDataSources(true);
-      const res = await fetch(
-        `${API_BASE_URL}/api/v1/data-sources/status`
-      );
-      const data = await res.json();
-      if (data.success) {
-        setDataSources(data.data.sources);
-      }
-    } catch (error) {
-      console.error('获取数据源状态失败:', error);
-    } finally {
-      setLoadingDataSources(false);
-    }
-  };
-
-  const fetchStatistics = async () => {
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/v1/data-sources/statistics`
-      );
-      const data = await res.json();
-      if (data.success) {
-        setStatistics(data.data);
-      }
-    } catch (error) {
-      console.error('获取数据统计失败:', error);
-    }
-  };
 
   const handleToggle = (key: keyof typeof settings) => {
     setSettings({ ...settings, [key]: !settings[key] });
@@ -125,10 +58,6 @@ export default function SettingsScreen() {
     ]);
   };
 
-  // 分组数据源
-  const nationalSources = dataSources.filter(s => s.priority >= 100 && !s.platform.startsWith('province_'));
-  const provincialSources = dataSources.filter(s => s.platform.startsWith('province_'));
-
   const renderSwitchItem = (
     icon: string,
     iconColor: string,
@@ -153,29 +82,6 @@ export default function SettingsScreen() {
     </View>
   );
 
-  const renderDataSourceItem = (source: DataSourceStatus) => (
-    <View key={source.platform} style={styles.settingItem}>
-      <View style={[styles.settingIcon, { backgroundColor: source.isAvailable ? 'rgba(5, 150, 105, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
-        <FontAwesome6 
-          name={source.isAvailable ? 'check-circle' : 'times-circle'} 
-          size={18} 
-          color={source.isAvailable ? '#059669' : '#EF4444'} 
-        />
-      </View>
-      <View style={styles.settingContent}>
-        <Text style={styles.settingTitle}>{source.name}</Text>
-        <Text style={styles.settingDesc}>
-          {source.isAvailable ? '已连接' : '未配置'}
-        </Text>
-      </View>
-      <View style={[styles.statusBadge, { backgroundColor: source.isAvailable ? '#ECFDF5' : '#FEF2F2' }]}>
-        <Text style={[styles.statusText, { color: source.isAvailable ? '#059669' : '#EF4444' }]}>
-          {source.isAvailable ? '可用' : '不可用'}
-        </Text>
-      </View>
-    </View>
-  );
-
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
       <View style={{ flex: 1 }}>
@@ -191,24 +97,6 @@ export default function SettingsScreen() {
         </View>
 
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-          {/* 数据统计 */}
-          {statistics && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>数据统计</Text>
-              <View style={[styles.settingItem, { justifyContent: 'space-around' }]}>
-                <View style={{ alignItems: 'center' }}>
-                  <Text style={[styles.statValue, { color: '#2563EB' }]}>{statistics.summary.totalBids}</Text>
-                  <Text style={styles.statLabel}>招标信息</Text>
-                </View>
-                <View style={{ width: 1, height: 40, backgroundColor: '#E5E7EB' }} />
-                <View style={{ alignItems: 'center' }}>
-                  <Text style={[styles.statValue, { color: '#059669' }]}>{statistics.summary.totalWinBids}</Text>
-                  <Text style={styles.statLabel}>中标信息</Text>
-                </View>
-              </View>
-            </View>
-          )}
-
           {/* 通知设置 */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>通知设置</Text>
@@ -231,36 +119,6 @@ export default function SettingsScreen() {
               </View>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
             </TouchableOpacity>
-          </View>
-
-          {/* 国家级数据源状态 */}
-          <View style={styles.section}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.sm }}>
-              <Text style={styles.sectionTitle}>国家级数据源</Text>
-              {loadingDataSources && <ActivityIndicator size="small" color="#2563EB" />}
-            </View>
-            {nationalSources.map((source) => renderDataSourceItem(source))}
-          </View>
-
-          {/* 省级数据源状态 */}
-          <View style={styles.section}>
-            <TouchableOpacity 
-              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.lg, paddingTop: Spacing.md, paddingBottom: Spacing.sm }}
-              onPress={() => setShowProvincial(!showProvincial)}
-            >
-              <Text style={styles.sectionTitle}>省级数据源 ({provincialSources.length}个)</Text>
-              <FontAwesome6 
-                name={showProvincial ? 'chevron-up' : 'chevron-down'} 
-                size={12} 
-                color="#6B7280" 
-              />
-            </TouchableOpacity>
-            {showProvincial && provincialSources.map((source) => renderDataSourceItem(source))}
-            {!showProvincial && (
-              <Text style={{ fontSize: 12, color: '#9CA3AF', paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm }}>
-                点击展开查看全部省级数据源
-              </Text>
-            )}
           </View>
 
           {/* 其他设置 */}

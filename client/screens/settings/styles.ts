@@ -94,25 +94,5 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '500',
       color: '#C8102E',
     },
-    // Status Badge
-    statusBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: BorderRadius.sm,
-    },
-    statusText: {
-      fontSize: 12,
-      fontWeight: '500',
-    },
-    // Statistics
-    statValue: {
-      fontSize: 24,
-      fontWeight: '700',
-    },
-    statLabel: {
-      fontSize: 12,
-      color: '#6B7280',
-      marginTop: 4,
-    },
   });
 };
