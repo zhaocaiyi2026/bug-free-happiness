@@ -578,7 +578,7 @@ export default function HomeScreen() {
                   ]}>
                     <FontAwesome6 
                       name={action.icon as any} 
-                      size={20} 
+                      size={16} 
                       color={isActive ? '#FFFFFF' : action.color} 
                     />
                   </View>
