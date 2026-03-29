@@ -272,6 +272,10 @@ export function getSourceConfig(platform: string): DataSourceConfig | undefined 
 
 // 数据源同步时间配置
 export const SYNC_SCHEDULES = {
+  // 午夜同步：每天0点05分执行，抓取前一天和当天最新数据
+  // 确保每日统计数据在24点后准时更新
+  midnightSync: '5 0 * * *',
+  
   // 全量同步：每天凌晨2点
   fullSync: '0 2 * * *',
   

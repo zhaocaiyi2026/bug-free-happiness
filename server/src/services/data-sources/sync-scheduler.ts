@@ -53,10 +53,19 @@ export function startDataSyncScheduler(): void {
   console.log('数据同步调度器启动');
   console.log('=================================');
   console.log('同步配置:');
+  console.log('- 午夜同步: 每天00:05（抓取前一天和当天最新数据）');
   console.log('- 增量同步: 每2小时');
   console.log('- 全量同步: 每天凌晨2点');
   console.log('- 数据清理: 每周日凌晨4点');
   console.log('=================================');
+  
+  // 午夜同步任务：每天0点05分执行
+  // 目的：确保每天24点后数据准时更新，抓取前一天遗漏的数据和当天最新数据
+  const midnightSyncJob = cron.schedule(SYNC_SCHEDULES.midnightSync, async () => {
+    console.log('[DataSync] Starting midnight sync...');
+    await runMidnightSync();
+  });
+  scheduledJobs.push(midnightSyncJob);
   
   // 增量同步任务：每2小时
   const incrementalJob = cron.schedule(SYNC_SCHEDULES.incrementalSync, async () => {
@@ -111,6 +120,61 @@ export async function runIncrementalSync(): Promise<void> {
       console.error(`[DataSync] Incremental sync failed for ${source.platform}:`, error);
     }
   }
+}
+
+/**
+ * 午夜同步：每天0点05分执行
+ * 目的：确保每天24点后数据准时更新
+ * - 抓取前一天的遗漏数据（确保"今日新增"统计完整）
+ * - 抓取当天最新发布的数据
+ */
+export async function runMidnightSync(): Promise<void> {
+  console.log('[DataSync] ========== 午夜同步开始 ==========');
+  
+  const sources = getEnabledSources();
+  const now = new Date();
+  
+  // 计算前一天的时间范围
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStart = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+  const yesterdayEnd = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate() + 1);
+  
+  // 计算当天的时间范围
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  console.log(`[DataSync] 同步时间范围：`);
+  console.log(`[DataSync] - 前一天: ${yesterdayStart.toISOString()} ~ ${yesterdayEnd.toISOString()}`);
+  console.log(`[DataSync] - 当天: ${todayStart.toISOString()} ~ ${now.toISOString()}`);
+  
+  let totalSynced = 0;
+  
+  for (const source of sources) {
+    try {
+      console.log(`[DataSync] 同步数据源: ${source.name}`);
+      
+      // 先同步前一天的数据（确保统计完整）
+      const result1 = await syncFromSource(source.platform, {
+        startDate: yesterdayStart,
+        endDate: yesterdayEnd,
+        type: 'incremental',
+      });
+      totalSynced += result1.successCount;
+      
+      // 再同步当天的最新数据
+      const result2 = await syncFromSource(source.platform, {
+        startDate: todayStart,
+        endDate: now,
+        type: 'incremental',
+      });
+      totalSynced += result2.successCount;
+      
+    } catch (error) {
+      console.error(`[DataSync] 午夜同步失败: ${source.platform}:`, error);
+    }
+  }
+  
+  console.log(`[DataSync] ========== 午夜同步完成，共同步 ${totalSynced} 条数据 ==========`);
 }
 
 /**
