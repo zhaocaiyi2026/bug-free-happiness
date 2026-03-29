@@ -15,6 +15,10 @@ import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// 用于传递筛选选择结果的 AsyncStorage key
+const FILTER_SELECT_RESULT_KEY = '@filter_select_result';
 
 interface Province {
   id: number;
@@ -96,7 +100,7 @@ export default function FilterSelectScreen() {
     );
   }, [allItems, searchKeyword]);
 
-  const handleSelect = useCallback((itemName: string) => {
+  const handleSelect = useCallback(async (itemName: string) => {
     // 防止重复导航
     if (isNavigatingRef.current) return;
     isNavigatingRef.current = true;
@@ -110,40 +114,29 @@ export default function FilterSelectScreen() {
       return;
     }
     
-    // 默认返回搜索页面 - 使用 replace 避免返回时回到 filter-select 页面
-    const searchParams: {
-      autoSearch: string;
-      keyword?: string;
-      industry?: string;
-      province?: string;
-    } = { autoSearch: 'true' };
+    // 默认返回搜索页面
+    // 将选择结果存储到 AsyncStorage，然后使用 back() 返回
+    // 这样可以避免导航栈中累积多个搜索页实例
+    const result = {
+      type: filterType,
+      value: itemName,
+      timestamp: Date.now(),
+    };
     
-    // 保留原有的关键词
-    if (existingKeyword) {
-      searchParams.keyword = existingKeyword;
+    try {
+      await AsyncStorage.setItem(FILTER_SELECT_RESULT_KEY, JSON.stringify(result));
+    } catch (error) {
+      console.error('保存选择结果失败:', error);
     }
     
-    // 根据筛选类型设置对应参数
-    if (filterType === 'province') {
-      searchParams.province = itemName;
-      if (existingIndustry) {
-        searchParams.industry = existingIndustry;
-      }
-    } else {
-      searchParams.industry = itemName;
-      if (existingProvince) {
-        searchParams.province = existingProvince;
-      }
-    }
-    
-    // 关键：使用 replace 替换当前页面，返回时会跳过此页面
-    router.replace('/search', searchParams);
+    // 使用 back() 返回搜索页，避免导航栈累积
+    router.back();
     
     // 延迟重置导航状态
     setTimeout(() => {
       isNavigatingRef.current = false;
     }, 500);
-  }, [filterType, router, existingKeyword, existingIndustry, existingProvince, returnTo, params?.customerType]);
+  }, [filterType, router, returnTo, params?.customerType]);
 
   const renderItem = useCallback(({ item }: { item: Province | Industry }) => {
     const isSelected = selectedValue === item.name;

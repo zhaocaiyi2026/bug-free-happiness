@@ -12,6 +12,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
@@ -22,6 +23,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SEARCH_HISTORY_KEY = '@search_history';
 const MAX_HISTORY_COUNT = 10;
+// 用于接收筛选选择结果的 AsyncStorage key
+const FILTER_SELECT_RESULT_KEY = '@filter_select_result';
 
 interface Province {
   id: number;
@@ -94,7 +97,7 @@ export default function SearchScreen() {
     loadSearchHistory();
   }, []);
   
-  // 监听参数变化并更新状态
+  // 监听参数变化并更新状态（用于从首页或其他页面直接跳转时）
   useEffect(() => {
     if (searchParams) {
       if (searchParams.keyword !== undefined) {
@@ -229,6 +232,55 @@ export default function SearchScreen() {
     }
   };
 
+  // 使用 useFocusEffect 检查筛选选择结果
+  // 这样可以在从筛选页返回时获取选择结果，同时避免导航栈累积
+  useFocusEffect(
+    useCallback(() => {
+      const checkFilterResult = async () => {
+        try {
+          const resultStr = await AsyncStorage.getItem(FILTER_SELECT_RESULT_KEY);
+          if (resultStr) {
+            const result = JSON.parse(resultStr);
+            // 清除已读取的结果
+            await AsyncStorage.removeItem(FILTER_SELECT_RESULT_KEY);
+            
+            // 根据选择类型更新状态并执行搜索
+            if (result.type === 'province') {
+              setSelectedProvince(result.value);
+              // 更新示例列表
+              if (!provinceExamples.includes(result.value)) {
+                const newExamples = [...provinceExamples];
+                newExamples[newExamples.length - 1] = result.value;
+                setProvinceExamples(newExamples);
+              }
+              // 执行搜索
+              setTimeout(() => {
+                handleSearchWithParams(keyword, selectedIndustry, result.value);
+              }, 50);
+            } else if (result.type === 'industry') {
+              setSelectedIndustry(result.value);
+              setKeyword(result.value); // 行业选择时更新关键词
+              // 更新示例列表
+              if (!industryExamples.includes(result.value)) {
+                const newExamples = [...industryExamples];
+                newExamples[newExamples.length - 1] = result.value;
+                setIndustryExamples(newExamples);
+              }
+              // 执行搜索（行业选择时清空省份筛选）
+              setTimeout(() => {
+                handleSearchWithParams(result.value, '', '');
+              }, 50);
+            }
+          }
+        } catch (error) {
+          console.error('检查筛选结果失败:', error);
+        }
+      };
+      
+      checkFilterResult();
+    }, [keyword, selectedIndustry, provinceExamples, industryExamples])
+  );
+
   const formatBudget = (budget: number | null) => {
     if (!budget) return '预算面议';
     if (budget >= 100000000) {
@@ -277,37 +329,12 @@ export default function SearchScreen() {
     }, 50);
   };
 
-  const handleProvinceFromMore = (provinceName: string) => {
-    if (!provinceExamples.includes(provinceName)) {
-      const newExamples = [...provinceExamples];
-      newExamples[newExamples.length - 1] = provinceName;
-      setProvinceExamples(newExamples);
-    }
-    setSelectedProvince(provinceName);
-    setTimeout(() => {
-      handleSearchWithParams(keyword, selectedIndustry, provinceName);
-    }, 50);
-  };
-
   const handleIndustrySelect = (industryName: string) => {
     const newIndustry = industryName === selectedIndustry ? '' : industryName;
     setSelectedIndustry(newIndustry);
     setKeyword(newIndustry);
     setTimeout(() => {
       handleSearchWithParams(newIndustry, '', '');
-    }, 50);
-  };
-
-  const handleIndustryFromMore = (industryName: string) => {
-    if (!industryExamples.includes(industryName)) {
-      const newExamples = [...industryExamples];
-      newExamples[newExamples.length - 1] = industryName;
-      setIndustryExamples(newExamples);
-    }
-    setSelectedIndustry(industryName);
-    setKeyword(industryName);
-    setTimeout(() => {
-      handleSearchWithParams(industryName, '', '');
     }, 50);
   };
 
@@ -354,17 +381,6 @@ export default function SearchScreen() {
       isNavigatingRef.current = false;
     }, 500);
   };
-
-  // 监听从筛选页面返回的参数
-  useEffect(() => {
-    if (searchParams?.province && searchParams.province !== selectedProvince) {
-      handleProvinceFromMore(searchParams.province);
-    }
-    if (searchParams?.industry && searchParams.industry !== selectedIndustry) {
-      handleIndustryFromMore(searchParams.industry);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams?.province, searchParams?.industry]);
 
   // 清空筛选条件
   const handleClearFilters = () => {
