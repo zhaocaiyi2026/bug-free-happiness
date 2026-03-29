@@ -181,89 +181,21 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#E2E8F0',
     },
     
-    // ==================== Quick Actions ====================
-    quickActionsSection: {
-      paddingHorizontal: Spacing.lg,
-      marginBottom: Spacing.lg,
-    },
-    sectionTitle: {
-      fontSize: 17,
-      fontWeight: '700',
-      color: '#1E293B',
-      marginBottom: Spacing.md,
-    },
-    quickActionsRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    },
-    quickActionCard: {
-      flex: 1,
-      backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      padding: Spacing.md,
-      marginHorizontal: 4,
-      alignItems: 'center',
-      ...Platform.select({
-        ios: {
-          shadowColor: '#1E40AF',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 2,
-        },
-      }),
-    },
-    quickActionIconWrapper: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: Spacing.sm,
-    },
-    quickActionIconAll: {
-      backgroundColor: 'rgba(37, 99, 235, 0.1)',
-    },
-    quickActionIconProvince: {
-      backgroundColor: 'rgba(124, 58, 237, 0.1)',
-    },
-    quickActionIconCity: {
-      backgroundColor: 'rgba(234, 88, 12, 0.1)',
-    },
-    quickActionIconWin: {
-      backgroundColor: 'rgba(5, 150, 105, 0.1)',
-    },
-    quickActionLabel: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: '#334155',
-    },
-    quickActionActive: {
-      backgroundColor: '#2563EB',
-    },
-    quickActionLabelActive: {
-      color: '#FFFFFF',
-    },
-    
-    // ==================== Filter Tabs ====================
+    // ==================== Filter Tags ====================
     filterSection: {
+      flexDirection: 'row',
       paddingHorizontal: Spacing.lg,
       marginBottom: Spacing.md,
-    },
-    filterScrollView: {
-      marginHorizontal: -Spacing.lg,
-      paddingHorizontal: Spacing.lg,
+      gap: Spacing.sm,
     },
     filterChip: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: Spacing.md,
+      justifyContent: 'center',
       paddingVertical: Spacing.sm + 2,
-      borderRadius: BorderRadius.full,
+      borderRadius: BorderRadius.lg,
       backgroundColor: '#FFFFFF',
-      marginRight: Spacing.sm,
       gap: Spacing.xs,
       borderWidth: 1,
       borderColor: '#E2E8F0',
@@ -284,7 +216,7 @@ export const createStyles = (theme: Theme) => {
       borderColor: '#2563EB',
     },
     filterChipText: {
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: '600',
       color: '#475569',
     },

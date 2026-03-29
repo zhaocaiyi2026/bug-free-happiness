@@ -10,7 +10,6 @@ import {
   Alert,
   Platform,
   Linking,
-  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
@@ -80,21 +79,12 @@ export default function HomeScreen() {
   const activeFilterRef = useRef<string>('all');
   const loadingRef = useRef(false);
 
-  // 快捷入口
-  const quickActions = [
-    { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB' },
-    { key: 'province', label: '本省招标', icon: 'map-location-dot', color: '#7C3AED' },
-    { key: 'city', label: '本市招标', icon: 'city', color: '#EA580C' },
-    { key: 'provinceWin', label: '本省中标', icon: 'trophy', color: '#059669' },
-  ];
-
-  // 筛选标签
+  // 筛选标签 - 简化为4个
   const filterTags = [
-    { key: 'all', label: '全部', icon: 'border-all' },
-    { key: 'province', label: '全省', icon: 'map' },
-    { key: 'city', label: '全市', icon: 'location-dot' },
-    { key: 'provinceWin', label: '省中标', icon: 'medal' },
-    { key: 'cityWin', label: '市中标', icon: 'award' },
+    { key: 'all', label: '全部', icon: 'layer-group' },
+    { key: 'province', label: '全省招标', icon: 'map' },
+    { key: 'city', label: '全市招标', icon: 'location-dot' },
+    { key: 'provinceWin', label: '本省中标', icon: 'trophy' },
   ];
 
   const fetchStats = async () => {
@@ -449,7 +439,7 @@ export default function HomeScreen() {
   return (
     <Screen backgroundColor="#F5F7FA" statusBarStyle="light">
       <View style={{ flex: 1 }}>
-        {/* Header with Gradient */}
+        {/* Header */}
         <View 
           style={[
             styles.headerGradient, 
@@ -546,80 +536,35 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActionsSection}>
-          <Text style={styles.sectionTitle}>快捷入口</Text>
-          <View style={styles.quickActionsRow}>
-            {quickActions.map((action) => {
-              const isActive = activeFilter === action.key;
-              return (
-                <TouchableOpacity
-                  key={action.key}
-                  style={[styles.quickActionCard, isActive && styles.quickActionActive]}
-                  onPress={() => handleFilterPress(action.key)}
-                  activeOpacity={0.7}
-                >
-                  <View style={[
-                    styles.quickActionIconWrapper,
-                    action.key === 'all' && styles.quickActionIconAll,
-                    action.key === 'province' && styles.quickActionIconProvince,
-                    action.key === 'city' && styles.quickActionIconCity,
-                    action.key === 'provinceWin' && styles.quickActionIconWin,
-                    isActive && { backgroundColor: 'rgba(255,255,255,0.2)' },
-                  ]}>
-                    <FontAwesome6 
-                      name={action.icon as any} 
-                      size={20} 
-                      color={isActive ? '#FFFFFF' : action.color} 
-                    />
-                  </View>
-                  <Text style={[
-                    styles.quickActionLabel,
-                    isActive && styles.quickActionLabelActive
-                  ]}>
-                    {action.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Filter Tags */}
+        {/* Filter Tags - 简化为固定4个 */}
         <View style={styles.filterSection}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterScrollView}
-          >
-            {filterTags.map((filter) => {
-              const isActive = activeFilter === filter.key;
-              const isLocationFilter = filter.key !== 'all';
-              
-              return (
-                <TouchableOpacity
-                  key={filter.key}
-                  style={[
-                    styles.filterChip, 
-                    isActive && styles.filterChipActive,
-                  ]}
-                  onPress={() => handleFilterPress(filter.key)}
-                >
-                  <FontAwesome6 
-                    name={filter.icon as any} 
-                    size={11} 
-                    color={isActive ? '#FFFFFF' : '#475569'} 
-                  />
-                  <Text style={[
-                    styles.filterChipText, 
-                    isActive && styles.filterChipTextActive
-                  ]}>
-                    {filter.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {filterTags.map((filter) => {
+            const isActive = activeFilter === filter.key;
+            
+            return (
+              <TouchableOpacity
+                key={filter.key}
+                style={[
+                  styles.filterChip, 
+                  isActive && styles.filterChipActive,
+                ]}
+                onPress={() => handleFilterPress(filter.key)}
+                activeOpacity={0.7}
+              >
+                <FontAwesome6 
+                  name={filter.icon as any} 
+                  size={12} 
+                  color={isActive ? '#FFFFFF' : '#475569'} 
+                />
+                <Text style={[
+                  styles.filterChipText, 
+                  isActive && styles.filterChipTextActive
+                ]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Bid List */}
