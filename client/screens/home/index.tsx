@@ -245,12 +245,10 @@ export default function HomeScreen() {
     try {
       setLocating(true);
       
-      // 先请求权限，再检查服务状态（体验版上顺序很重要）
+      // Step 1: 先请求权限
       const { status } = await Location.getForegroundPermissionsAsync();
-      
       let finalStatus = status;
       
-      // 如果还没有权限，尝试请求
       if (status !== 'granted') {
         const requestResult = await Location.requestForegroundPermissionsAsync();
         finalStatus = requestResult.status;
@@ -269,40 +267,41 @@ export default function HomeScreen() {
         return;
       }
 
-      // 获取位置（体验版上可能需要更长时间）
-      let location;
-      try {
-        // 使用 Promise.race 实现超时
-        location = await Promise.race([
-          Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          }),
-          new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('定位超时')), 15000)
-          ),
-        ]);
-      } catch (timeoutError) {
-        // 超时后尝试使用低精度定位
-        console.log('高精度定位超时，尝试低精度定位');
-        location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Low,
-        });
+      // Step 2: 获取位置 - 使用最低精度以确保能获取到
+      let location = null;
+      
+      // 尝试获取位置，最多重试2次
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          location = await Location.getCurrentPositionAsync({
+            accuracy: attempt === 0 ? Location.Accuracy.Balanced : Location.Accuracy.Low,
+            timeout: 20000, // 20秒超时
+          });
+          if (location) break;
+        } catch (e) {
+          console.log(`定位尝试 ${attempt + 1} 失败:`, e);
+          if (attempt === 1) {
+            throw e; // 最后一次尝试失败则抛出错误
+          }
+        }
       }
 
-      // 逆地理编码
+      if (!location) {
+        throw new Error('无法获取位置信息');
+      }
+
+      // Step 3: 逆地理编码
       const reverseGeocode = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       });
 
-      // 解析地址信息
       if (reverseGeocode.length > 0) {
         const address = reverseGeocode[0];
-        // 优先使用 region，其次 subregion，再次使用其他字段
         let province = address.region || address.subregion || address.country || '';
         let city = address.city || address.subregion || address.district || '';
         
-        // 处理直辖市情况（北京、上海、天津、重庆）
+        // 处理直辖市
         const municipalities = ['北京市', '上海市', '天津市', '重庆市', '北京', '上海', '天津', '重庆'];
         const isMunicipality = municipalities.some(m => province.includes(m));
         if (isMunicipality && !city) {
@@ -315,7 +314,6 @@ export default function HomeScreen() {
           userLocationRef.current = newLocation;
           Alert.alert('定位成功', `已定位到：${province} ${city}`);
         } else {
-          // 即使没有详细地址，也记录坐标
           Alert.alert('定位成功', '已获取您的位置，但无法解析详细地址');
         }
       } else {
@@ -323,7 +321,15 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('定位失败:', error);
-      Alert.alert('定位失败', '无法获取您的位置，请检查定位服务是否开启后重试');
+      const errorMsg = error instanceof Error ? error.message : '未知错误';
+      Alert.alert(
+        '定位失败', 
+        `无法获取您的位置\n原因: ${errorMsg}\n\n请检查：\n1. 手机GPS是否开启\n2. App是否有定位权限\n3. 是否在室内（GPS信号弱）`,
+        [
+          { text: '取消', style: 'cancel' },
+          { text: '重试', onPress: requestLocation }
+        ]
+      );
     } finally {
       setLocating(false);
     }
@@ -443,7 +449,7 @@ export default function HomeScreen() {
 
   if (loading && page === 1 && bids.length === 0) {
     return (
-      <Screen backgroundColor="#F5F7FA" statusBarStyle="light">
+      <Screen backgroundColor="#F5F7FA" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>加载中...</Text>
@@ -453,9 +459,9 @@ export default function HomeScreen() {
   }
 
   return (
-    <Screen backgroundColor="#F5F7FA" statusBarStyle="light">
+    <Screen backgroundColor="#F5F7FA" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
       <View style={{ flex: 1 }}>
-        {/* Header */}
+        {/* Header - 延伸到状态栏下方 */}
         <View 
           style={[
             styles.headerGradient, 
