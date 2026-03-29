@@ -10,6 +10,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@alicloud/nlp-automl20191111": "1.0.4",
+    "@alicloud/openapi-client": "^0.4.15",
     "@supabase/supabase-js": "2.95.3",
     "axios": "^1.13.6",
     "cheerio": "^1.2.0",
