@@ -51,8 +51,8 @@ app.use('/api/v1/collector', collectorRouter);
 
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {
-  // 前端构建文件的路径：../client/dist (相对于 server/dist/index.js)
-  const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+  // 前端构建文件的路径：../../client/dist (相对于 server/dist/index.js)
+  const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
   
   // 提供静态文件
   app.use(express.static(clientDistPath));
