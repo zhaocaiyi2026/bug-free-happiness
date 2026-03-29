@@ -136,7 +136,10 @@ export default function SearchScreen() {
       if (minBudget) params.append('minBudget', minBudget);
       if (maxBudget) params.append('maxBudget', maxBudget);
       
-      // 搜索页面包含过期招标（主页不显示过期招标）
+      // 搜索模式：放宽过滤条件，搜索项目名称和项目详情
+      params.append('isSearch', 'true');
+      
+      // 招标搜索：包含过期招标
       if (searchType === 'bid') {
         params.append('includeExpired', 'true');
       }

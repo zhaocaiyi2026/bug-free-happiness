@@ -15,8 +15,9 @@ const router = Router();
  * - province: string (省份筛选)
  * - city: string (城市筛选)
  * - industry: string (行业筛选)
- * - keyword: string (关键词搜索)
+ * - keyword: string (关键词搜索，搜索项目名称和中标单位)
  * - today: boolean (仅返回今日中标)
+ * - isSearch: boolean (是否为搜索模式，搜索模式下放宽过滤条件)
  */
 router.get('/', async (req, res) => {
   try {
@@ -29,6 +30,7 @@ router.get('/', async (req, res) => {
       industry,
       keyword,
       today,
+      isSearch = 'false'
     } = req.query;
 
     const pageNum = Number(page);
@@ -61,18 +63,28 @@ router.get('/', async (req, res) => {
     if (industry) {
       query = query.eq('industry', industry as string);
     }
+    
+    // 关键词搜索：搜索项目名称(title)和中标单位(win_company)
     if (keyword) {
-      query = query.or(`title.ilike.%${keyword}%,win_company.ilike.%${keyword}%`);
+      query = query.or(`title.ilike.%${keyword}%,win_company.ilike.%${keyword}%,content.ilike.%${keyword}%`);
     }
 
     // 核心过滤条件：
-    // 1. 必须有中标单位
-    // 2. 必须有中标金额
-    query = query
-      .not('win_company', 'is', null)
-      .neq('win_company', '')
-      .not('win_amount', 'is', null)
-      .gt('win_amount', 0);
+    // 主页模式：必须有中标单位和中标金额
+    // 搜索模式：放宽过滤条件
+    if (isSearch === 'true') {
+      // 搜索模式：只要有内容即可
+      query = query
+        .not('content', 'is', null)
+        .neq('content', '');
+    } else {
+      // 主页模式：必须有中标单位和中标金额
+      query = query
+        .not('win_company', 'is', null)
+        .neq('win_company', '')
+        .not('win_amount', 'is', null)
+        .gt('win_amount', 0);
+    }
 
     // 分页
     query = query.range(start, end);

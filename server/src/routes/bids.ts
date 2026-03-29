@@ -13,12 +13,13 @@ const router = Router();
  * - industry: string (行业筛选)
  * - minBudget: number (最小预算)
  * - maxBudget: number (最大预算)
- * - keyword: string (关键词搜索)
+ * - keyword: string (关键词搜索，搜索项目名称和项目详情)
  * - isUrgent: boolean (是否紧急)
  * - bidType: string (招标类型)
  * - publishDateFrom: string (发布日期起始，格式：YYYY-MM-DD)
  * - publishDateTo: string (发布日期结束)
  * - includeExpired: boolean (是否包含已过期招标，默认false。搜索页面可设为true)
+ * - isSearch: boolean (是否为搜索模式，搜索模式下放宽过滤条件)
  */
 router.get('/', async (req, res) => {
   try {
@@ -36,7 +37,8 @@ router.get('/', async (req, res) => {
       bidType,
       publishDateFrom,
       publishDateTo,
-      includeExpired = 'false'
+      includeExpired = 'false',
+      isSearch = 'false'
     } = req.query;
 
     const pageNum = Number(page);
@@ -77,9 +79,12 @@ router.get('/', async (req, res) => {
     if (maxBudget) {
       query = query.lte('budget', Number(maxBudget));
     }
+    
+    // 关键词搜索：搜索项目名称(title)和项目详情(content)
     if (keyword) {
       query = query.or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`);
     }
+    
     if (publishDateFrom) {
       query = query.gte('publish_date', publishDateFrom as string);
     }
@@ -88,18 +93,28 @@ router.get('/', async (req, res) => {
     }
 
     // 核心过滤条件：
-    // 1. 必须包含联系电话（完整联系信息）
-    // 2. 必须包含项目详情
-    // 3. 必须包含截止日期
-    query = query
-      .not('contact_phone', 'is', null)
-      .neq('contact_phone', '')
-      .not('content', 'is', null)
-      .neq('content', '')
-      .not('deadline', 'is', null);
+    // 主页模式（isSearch=false）：必须包含联系电话、项目详情、截止日期
+    // 搜索模式（isSearch=true）：放宽过滤条件，只要有项目详情即可
+    if (isSearch === 'true') {
+      // 搜索模式：只需要有项目详情
+      query = query
+        .not('content', 'is', null)
+        .neq('content', '');
+      
+      // 过滤过期招标（搜索时也可以选择是否包含）
+      if (includeExpired !== 'true') {
+        query = query.gt('deadline', now.toISOString());
+      }
+    } else {
+      // 主页模式：必须包含完整联系信息
+      query = query
+        .not('contact_phone', 'is', null)
+        .neq('contact_phone', '')
+        .not('content', 'is', null)
+        .neq('content', '')
+        .not('deadline', 'is', null);
 
-    // 过滤过期招标（默认不包含，搜索页面可设置includeExpired=true）
-    if (includeExpired !== 'true') {
+      // 主页不显示过期招标
       query = query.gt('deadline', now.toISOString());
     }
 
