@@ -716,52 +716,63 @@ export default function HomeScreen() {
                     <Text style={styles.loadingText}>加载城市...</Text>
                   </View>
                 ) : (
-                  <>
-                    {/* 全省选项 */}
-                    <TouchableOpacity
-                      style={[styles.provinceItem, styles.allProvinceItem]}
-                      onPress={handleConfirmProvince}
-                    >
-                      <View style={styles.allProvinceContent}>
-                        <FontAwesome6 name="map" size={16} color={theme.primary} />
-                        <Text style={[styles.provinceText, { color: theme.primary, marginLeft: 8 }]}>
-                          全部 {selectedProvince?.name}
+                  <FlatList
+                    data={cities}
+                    keyExtractor={(item) => item.id.toString()}
+                    showsVerticalScrollIndicator
+                    contentContainerStyle={styles.provinceList}
+                    ListHeaderComponent={
+                      <View>
+                        {/* 全省选项 */}
+                        <TouchableOpacity
+                          style={[styles.provinceItem, styles.allProvinceItem]}
+                          onPress={handleConfirmProvince}
+                        >
+                          <View style={styles.allProvinceContent}>
+                            <FontAwesome6 name="map" size={16} color={theme.primary} />
+                            <Text style={[styles.provinceText, { color: theme.primary, marginLeft: 8 }]}>
+                              全部 {selectedProvince?.name}
+                            </Text>
+                          </View>
+                          <FontAwesome6 name="check" size={16} color={theme.primary} />
+                        </TouchableOpacity>
+                        
+                        {cities.length > 0 && (
+                          <Text style={styles.cityListHeader}>或选择城市</Text>
+                        )}
+                      </View>
+                    }
+                    ListEmptyComponent={
+                      <View style={styles.emptyCityContainer}>
+                        <FontAwesome6 name="city" size={40} color="#CBD5E1" />
+                        <Text style={styles.emptyCityText}>该省份暂无城市数据</Text>
+                        <Text style={styles.emptyCityHint}>
+                          {`请直接选择"全部${selectedProvince?.name}"`}
                         </Text>
                       </View>
-                      <FontAwesome6 name="check" size={16} color={theme.primary} />
-                    </TouchableOpacity>
-                    
-                    <FlatList
-                      data={cities}
-                      keyExtractor={(item) => item.id.toString()}
-                      showsVerticalScrollIndicator
-                      contentContainerStyle={styles.provinceList}
-                      ListHeaderComponent={
-                        <Text style={styles.cityListHeader}>选择城市</Text>
-                      }
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
+                    }
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.provinceItem,
+                          selectedCity?.id === item.id && styles.provinceItemActive,
+                        ]}
+                        onPress={() => handleCitySelect(item)}
+                      >
+                        <Text
                           style={[
-                            styles.provinceItem,
-                            selectedCity?.id === item.id && styles.provinceItemActive,
+                            styles.provinceText,
+                            selectedCity?.id === item.id && styles.provinceTextActive,
                           ]}
-                          onPress={() => handleCitySelect(item)}
                         >
-                          <Text
-                            style={[
-                              styles.provinceText,
-                              selectedCity?.id === item.id && styles.provinceTextActive,
-                            ]}
-                          >
-                            {item.name}
-                          </Text>
-                          {selectedCity?.id === item.id && (
-                            <FontAwesome6 name="check" size={16} color={theme.primary} />
-                          )}
-                        </TouchableOpacity>
-                      )}
-                    />
-                  </>
+                          {item.name}
+                        </Text>
+                        {selectedCity?.id === item.id && (
+                          <FontAwesome6 name="check" size={16} color={theme.primary} />
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  />
                 )}
               </>
             )}

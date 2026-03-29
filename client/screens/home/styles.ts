@@ -484,5 +484,20 @@ export const createStyles = (theme: Theme) => {
       marginBottom: Spacing.sm,
       marginTop: Spacing.md,
     },
+    emptyCityContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing['3xl'],
+    },
+    emptyCityText: {
+      fontSize: 14,
+      color: '#94A3B8',
+      marginTop: Spacing.md,
+    },
+    emptyCityHint: {
+      fontSize: 12,
+      color: '#CBD5E1',
+      marginTop: Spacing.xs,
+    },
   });
 };
