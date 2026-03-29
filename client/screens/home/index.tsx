@@ -531,7 +531,9 @@ export default function HomeScreen() {
                 </View>
               </View>
               <View style={styles.headerActions}>
-                <Text style={styles.locationButtonText}>选择地区</Text>
+                <Text style={styles.locationButtonText}>
+                  {selectedCity ? selectedCity.name : (selectedProvince ? selectedProvince.name : '选择地区')}
+                </Text>
                 <TouchableOpacity 
                   style={[styles.locationButton, selectedProvince && styles.locationButtonActive]} 
                   onPress={() => {
