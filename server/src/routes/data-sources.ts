@@ -188,6 +188,127 @@ router.post('/scheduler/stop', async (req: Request, res: Response) => {
 });
 
 /**
+ * 测试 APISpace API 连接
+ * POST /api/v1/data-sources/test/apispace
+ * Body参数：apiKey (可选，不传则使用环境变量)
+ */
+router.post('/test/apispace', async (req: Request, res: Response) => {
+  try {
+    const { apiKey } = req.body;
+    
+    // 如果传入了密钥，临时设置
+    if (apiKey) {
+      apiSpaceService.setApiKey(apiKey);
+    }
+    
+    if (!apiSpaceService.isAvailable()) {
+      res.json({
+        success: false,
+        message: 'APISpace API未配置',
+        hint: '请提供 X-APISpace-Token',
+      });
+      return;
+    }
+    
+    // 测试获取少量数据
+    const testData = await apiSpaceService.searchBids({
+      page: 1,
+      pageSize: 5,
+    });
+    
+    if (testData.success) {
+      res.json({
+        success: true,
+        message: 'APISpace API连接成功',
+        data: {
+          totalRecords: testData.pagination?.total || 0,
+          testRecordCount: testData.data?.length || 0,
+          sampleData: testData.data?.slice(0, 3),
+        },
+      });
+    } else {
+      res.json({
+        success: false,
+        message: 'APISpace API连接失败',
+        error: testData.error?.message || '未知错误',
+      });
+    }
+  } catch (error) {
+    console.error('[DataSources] Error testing APISpace:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to test APISpace API',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * 从 APISpace 同步数据
+ * POST /api/v1/data-sources/sync/apispace
+ * Body参数：apiKey, maxCount (可选), syncWinBids (可选，是否同步中标)
+ */
+router.post('/sync/apispace', async (req: Request, res: Response) => {
+  try {
+    const { apiKey, maxCount = 100, syncWinBids = true } = req.body;
+    
+    // 如果传入了密钥，临时设置
+    if (apiKey) {
+      apiSpaceService.setApiKey(apiKey);
+    }
+    
+    if (!apiSpaceService.isAvailable()) {
+      res.json({
+        success: false,
+        message: 'APISpace API未配置，请提供apiKey',
+      });
+      return;
+    }
+    
+    console.log(`[DataSources] 开始从APISpace同步，最大条数: ${maxCount}`);
+    
+    // 获取招标数据
+    const bidsData = await apiSpaceService.fetchBidsBatch({ maxCount });
+    console.log(`[DataSources] 获取到 ${bidsData.length} 条招标数据`);
+    
+    // 保存招标数据
+    const savedBids = await saveBidsData(bidsData, 'apispace');
+    
+    let savedWinBids = 0;
+    let winBidsData: any[] = [];
+    
+    // 同步中标数据
+    if (syncWinBids) {
+      winBidsData = await apiSpaceService.fetchWinBidsBatch({ maxCount: Math.floor(maxCount / 2) });
+      console.log(`[DataSources] 获取到 ${winBidsData.length} 条中标数据`);
+      savedWinBids = await saveWinBidsData(winBidsData, 'apispace');
+    }
+    
+    res.json({
+      success: true,
+      message: '数据同步完成',
+      data: {
+        bids: {
+          fetched: bidsData.length,
+          saved: savedBids,
+        },
+        winBids: {
+          fetched: winBidsData.length,
+          saved: savedWinBids,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('[DataSources] Error syncing from APISpace:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync from APISpace',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
  * 测试思通数据API连接（支持动态传入凭证）
  * POST /api/v1/data-sources/test/stonedt
  * Body参数：appId, appSecret (可选，不传则使用环境变量)
