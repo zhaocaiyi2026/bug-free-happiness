@@ -1,48 +1,57 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F5F5F5',
+      backgroundColor: '#F5F7FA',
     },
-    header: {
-      backgroundColor: '#FFFFFF',
+    
+    // ==================== Header ====================
+    headerGradient: {
+      paddingTop: 0,
+      paddingBottom: Spacing['2xl'],
+      borderBottomLeftRadius: 32,
+      borderBottomRightRadius: 32,
+    },
+    headerContent: {
       paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.md,
-      paddingBottom: Spacing.sm,
     },
     headerTop: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      marginBottom: Spacing.lg,
     },
-    appTitleWrapper: {
+    appBrand: {
       flexDirection: 'row',
       alignItems: 'center',
     },
     appLogo: {
-      width: 36,
-      height: 36,
-      borderRadius: BorderRadius.lg,
-      backgroundColor: '#2563EB',
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: 'rgba(255,255,255,0.2)',
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: Spacing.sm,
+      marginRight: Spacing.md,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.3)',
     },
-    appTitleContainer: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
+    appTitleRow: {
+      flexDirection: 'column',
     },
     appTitle: {
-      fontSize: 28,
+      fontSize: 22,
       fontWeight: '800',
-      color: '#1C1917',
-      letterSpacing: 1,
+      color: '#FFFFFF',
+      letterSpacing: 0.5,
     },
-    appTitleAccent: {
-      color: '#2563EB',
+    appSubtitle: {
+      fontSize: 12,
+      color: 'rgba(255,255,255,0.8)',
+      marginTop: 2,
     },
     headerActions: {
       flexDirection: 'row',
@@ -52,222 +61,307 @@ export const createStyles = (theme: Theme) => {
     iconButton: {
       width: 40,
       height: 40,
-      borderRadius: BorderRadius.md,
-      backgroundColor: '#F5F5F5',
+      borderRadius: 12,
+      backgroundColor: 'rgba(255,255,255,0.15)',
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.2)',
     },
+    
+    // ==================== Search Bar ====================
     searchContainer: {
-      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F5F5F5',
-      borderRadius: BorderRadius.md,
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      borderRadius: 16,
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm + 2,
+      paddingVertical: Spacing.md,
+      ...Platform.select({
+        ios: {
+          shadowColor: '#1E40AF',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+        },
+        android: {
+          elevation: 4,
+        },
+      }),
+    },
+    searchIcon: {
+      marginRight: Spacing.sm,
     },
     searchPlaceholder: {
-      fontSize: 13,
-      color: '#9CA3AF',
-      marginLeft: Spacing.sm,
+      flex: 1,
+      fontSize: 15,
+      color: '#64748B',
     },
-    // 搜索行（包含搜索框和定位按钮）
-    searchRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.sm,
-      marginTop: Spacing.md,
-    },
-    locationButton: {
-      width: 44,
-      height: 44,
-      borderRadius: BorderRadius.md,
-      backgroundColor: '#F5F5F5',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    locationButtonActive: {
-      backgroundColor: 'rgba(37, 99, 235, 0.1)',
-      borderWidth: 1,
-      borderColor: '#2563EB',
-    },
-    // 位置筛选条
-    locationFilterSection: {
-      flexDirection: 'row',
-      backgroundColor: '#FFFFFF',
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      gap: Spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: '#F0F0F0',
-    },
-    locationChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
+    searchButton: {
+      backgroundColor: '#2563EB',
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.xs + 2,
-      borderRadius: BorderRadius.full,
-      backgroundColor: '#F5F5F5',
-      gap: Spacing.xs,
+      borderRadius: 10,
     },
-    locationChipActive: {
-      backgroundColor: '#2563EB',
-    },
-    locationChipText: {
-      fontSize: 12,
-      color: '#2563EB',
-      fontWeight: '500',
-    },
-    locationChipTextActive: {
+    searchButtonText: {
+      fontSize: 13,
+      fontWeight: '700',
       color: '#FFFFFF',
-      fontWeight: '600',
     },
-    // 统计卡片 - 紧凑型
+    
+    // ==================== Stats Section ====================
+    statsSection: {
+      marginTop: -Spacing.xl,
+      marginHorizontal: Spacing.lg,
+      marginBottom: Spacing.lg,
+    },
     statsCard: {
-      flexDirection: 'row',
       backgroundColor: '#FFFFFF',
-      marginHorizontal: Spacing.md,
-      marginTop: Spacing.sm,
-      marginBottom: Spacing.xs,
-      borderRadius: BorderRadius.lg,
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.sm,
+      borderRadius: 20,
+      padding: Spacing.lg,
+      flexDirection: 'row',
       justifyContent: 'space-around',
       alignItems: 'center',
-      shadowColor: '#2563EB',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 1,
+      ...Platform.select({
+        ios: {
+          shadowColor: '#1E40AF',
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.12,
+          shadowRadius: 24,
+        },
+        android: {
+          elevation: 6,
+        },
+      }),
     },
     statItem: {
       alignItems: 'center',
       flex: 1,
     },
-    statDivider: {
-      width: 1,
-      height: 32,
-      backgroundColor: '#E5E7EB',
+    statIconWrapper: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: Spacing.sm,
+    },
+    statIconToday: {
+      backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    },
+    statIconUrgent: {
+      backgroundColor: 'rgba(220, 38, 38, 0.1)',
+    },
+    statIconWin: {
+      backgroundColor: 'rgba(5, 150, 105, 0.1)',
     },
     statValue: {
-      fontSize: 20,
+      fontSize: 28,
       fontWeight: '800',
+      color: '#1E293B',
+    },
+    statValueBlue: {
       color: '#2563EB',
     },
     statValueRed: {
-      color: '#C8102E',
+      color: '#DC2626',
     },
     statValueGreen: {
       color: '#059669',
     },
     statLabel: {
-      fontSize: 11,
-      color: '#6B7280',
-      marginTop: 2,
+      fontSize: 12,
+      color: '#64748B',
+      marginTop: 4,
+      fontWeight: '500',
     },
-    // 筛选条
-    filterSection: {
-      backgroundColor: '#FFFFFF',
-      marginTop: Spacing.xs,
-      paddingVertical: Spacing.xs + 2,
-      borderBottomWidth: 1,
-      borderBottomColor: '#F0F0F0',
+    statDivider: {
+      width: 1,
+      height: 48,
+      backgroundColor: '#E2E8F0',
     },
-    filterContainer: {
+    
+    // ==================== Quick Actions ====================
+    quickActionsSection: {
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.lg,
+    },
+    sectionTitle: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: '#1E293B',
+      marginBottom: Spacing.md,
+    },
+    quickActionsRow: {
       flexDirection: 'row',
-      paddingHorizontal: Spacing.sm,
-      gap: Spacing.xs,
+      justifyContent: 'space-between',
+    },
+    quickActionCard: {
+      flex: 1,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      padding: Spacing.md,
+      marginHorizontal: 4,
+      alignItems: 'center',
+      ...Platform.select({
+        ios: {
+          shadowColor: '#1E40AF',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+        },
+        android: {
+          elevation: 2,
+        },
+      }),
+    },
+    quickActionIconWrapper: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: Spacing.sm,
+    },
+    quickActionIconAll: {
+      backgroundColor: 'rgba(37, 99, 235, 0.1)',
+    },
+    quickActionIconProvince: {
+      backgroundColor: 'rgba(124, 58, 237, 0.1)',
+    },
+    quickActionIconCity: {
+      backgroundColor: 'rgba(234, 88, 12, 0.1)',
+    },
+    quickActionIconWin: {
+      backgroundColor: 'rgba(5, 150, 105, 0.1)',
+    },
+    quickActionLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#334155',
+    },
+    quickActionActive: {
+      backgroundColor: '#2563EB',
+    },
+    quickActionLabelActive: {
+      color: '#FFFFFF',
+    },
+    
+    // ==================== Filter Tabs ====================
+    filterSection: {
+      paddingHorizontal: Spacing.lg,
+      marginBottom: Spacing.md,
+    },
+    filterScrollView: {
+      marginHorizontal: -Spacing.lg,
+      paddingHorizontal: Spacing.lg,
     },
     filterChip: {
-      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: Spacing.xs + 1,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm + 2,
       borderRadius: BorderRadius.full,
-      backgroundColor: '#F5F5F5',
-      gap: 3,
+      backgroundColor: '#FFFFFF',
+      marginRight: Spacing.sm,
+      gap: Spacing.xs,
+      borderWidth: 1,
+      borderColor: '#E2E8F0',
+      ...Platform.select({
+        ios: {
+          shadowColor: '#1E40AF',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 1,
+        },
+      }),
     },
     filterChipActive: {
       backgroundColor: '#2563EB',
-    },
-    filterChipDisabled: {
-      opacity: 0.5,
-    },
-    filterIcon: {
-      marginRight: 0,
+      borderColor: '#2563EB',
     },
     filterChipText: {
-      fontSize: 11,
-      color: '#1D4ED8',
+      fontSize: 13,
       fontWeight: '600',
+      color: '#475569',
     },
     filterChipTextActive: {
       color: '#FFFFFF',
-      fontWeight: '700',
     },
-    // 列表
+    
+    // ==================== Bid List ====================
     listContainer: {
-      padding: Spacing.sm,
+      paddingHorizontal: Spacing.lg,
       paddingBottom: Spacing['5xl'],
     },
     columnWrapper: {
       justifyContent: 'space-between',
     },
-    // 紧凑型卡片样式
+    
+    // ==================== Bid Card ====================
     bidCard: {
       flex: 1,
       backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.md,
-      padding: Spacing.sm + 2,
-      margin: 2,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
+      borderRadius: 16,
+      padding: Spacing.md,
+      margin: 3,
+      ...Platform.select({
+        ios: {
+          shadowColor: '#1E40AF',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 8,
+        },
+        android: {
+          elevation: 2,
+        },
+      }),
     },
     bidCardUrgent: {
-      borderColor: '#FCA5A5',
-      backgroundColor: '#FFFBFC',
+      borderLeftWidth: 3,
+      borderLeftColor: '#DC2626',
     },
     bidCardWin: {
-      borderColor: '#86EFAC',
-      backgroundColor: '#F0FDF4',
-      borderWidth: 1.5,
+      borderLeftWidth: 3,
+      borderLeftColor: '#059669',
+      backgroundColor: '#FAFEFC',
     },
     cardHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: Spacing.xs,
+      alignItems: 'flex-start',
+      marginBottom: Spacing.sm,
     },
     categoryTag: {
-      backgroundColor: 'rgba(37, 99, 235, 0.1)',
-      paddingHorizontal: Spacing.xs + 2,
-      paddingVertical: 1,
-      borderRadius: 3,
+      backgroundColor: 'rgba(37, 99, 235, 0.08)',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      borderRadius: 6,
     },
     categoryTagText: {
-      fontSize: 10,
+      fontSize: 11,
       color: '#2563EB',
       fontWeight: '600',
     },
-    // 标签行（紧急+类型）
     tagRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 3,
+      gap: 4,
     },
-    // 类型标签（招标/中标）
     typeTag: {
-      backgroundColor: 'rgba(37, 99, 235, 0.15)',
-      paddingHorizontal: Spacing.xs + 2,
-      paddingVertical: 1,
-      borderRadius: 3,
+      backgroundColor: 'rgba(37, 99, 235, 0.12)',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      borderRadius: 6,
     },
     typeTagWin: {
-      backgroundColor: 'rgba(5, 150, 105, 0.2)',
+      backgroundColor: 'rgba(5, 150, 105, 0.15)',
     },
     typeTagText: {
-      fontSize: 10,
+      fontSize: 11,
       color: '#2563EB',
       fontWeight: '700',
     },
@@ -275,73 +369,65 @@ export const createStyles = (theme: Theme) => {
       color: '#059669',
     },
     urgentTag: {
-      backgroundColor: '#C8102E',
-      paddingHorizontal: Spacing.xs + 2,
-      paddingVertical: 1,
-      borderRadius: 3,
+      backgroundColor: '#DC2626',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      borderRadius: 6,
     },
     urgentTagText: {
-      fontSize: 9,
-      color: '#FFFFFF',
-      fontWeight: '700',
-    },
-    winTag: {
-      backgroundColor: '#059669',
-      paddingHorizontal: Spacing.xs + 2,
-      paddingVertical: 1,
-      borderRadius: 3,
-    },
-    winTagText: {
-      fontSize: 9,
+      fontSize: 10,
       color: '#FFFFFF',
       fontWeight: '700',
     },
     bidTitle: {
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: '600',
-      color: '#1C1917',
-      lineHeight: 18,
-      marginBottom: Spacing.xs,
+      color: '#1E293B',
+      lineHeight: 20,
+      marginBottom: Spacing.sm,
     },
     bidBudget: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: '800',
       color: '#2563EB',
-      marginBottom: 2,
+      marginBottom: 4,
     },
     bidBudgetWin: {
       color: '#059669',
     },
     bidWinCompany: {
-      fontSize: 10,
+      fontSize: 11,
       color: '#059669',
       fontWeight: '500',
-      marginBottom: 1,
+      marginBottom: 4,
     },
     bidMeta: {
-      fontSize: 10,
-      color: '#9CA3AF',
-      marginBottom: 1,
+      fontSize: 11,
+      color: '#94A3B8',
+      marginBottom: 2,
     },
     bidDeadline: {
-      fontSize: 10,
-      color: '#C8102E',
-      fontWeight: '500',
+      fontSize: 11,
+      color: '#DC2626',
+      fontWeight: '600',
     },
     bidPublishDate: {
-      fontSize: 10,
+      fontSize: 11,
       color: '#059669',
-      fontWeight: '500',
+      fontWeight: '600',
     },
+    
+    // ==================== States ====================
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
       paddingVertical: Spacing['3xl'],
+      backgroundColor: '#F5F7FA',
     },
     loadingText: {
       fontSize: 14,
-      color: '#9CA3AF',
+      color: '#64748B',
       marginTop: Spacing.md,
     },
     emptyContainer: {
@@ -355,7 +441,23 @@ export const createStyles = (theme: Theme) => {
     },
     emptyText: {
       fontSize: 14,
-      color: '#9CA3AF',
+      color: '#94A3B8',
+    },
+    
+    // ==================== Location Button ====================
+    locationButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.2)',
+    },
+    locationButtonActive: {
+      backgroundColor: 'rgba(255,255,255,0.25)',
+      borderColor: 'rgba(255,255,255,0.4)',
     },
   });
 };

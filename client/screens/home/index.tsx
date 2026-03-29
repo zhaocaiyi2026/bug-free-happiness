@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   Linking,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
@@ -24,8 +25,7 @@ import * as Location from 'expo-location';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_GAP = Spacing.sm;
-const CARD_MARGIN = Spacing.sm;
-const CARD_WIDTH = (SCREEN_WIDTH - CARD_MARGIN * 2 - CARD_GAP) / 2;
+const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - CARD_GAP) / 2;
 
 interface Bid {
   id: number;
@@ -76,31 +76,31 @@ export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locating, setLocating] = useState(false);
   
-  // 使用 ref 存储 userLocation、activeFilter 和 loading，避免循环依赖
   const userLocationRef = useRef<UserLocation | null>(null);
   const activeFilterRef = useRef<string>('all');
   const loadingRef = useRef(false);
 
-  // 快捷筛选入口
-  const filters = [
-    { key: 'all', label: '全部', icon: 'layer-group' },
-    { key: 'province', label: '全省招标', icon: 'map' },
-    { key: 'city', label: '全市招标', icon: 'city' },
-    { key: 'provinceWin', label: '本省中标', icon: 'trophy' },
-    { key: 'cityWin', label: '本市中标', icon: 'award' },
+  // 快捷入口
+  const quickActions = [
+    { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB' },
+    { key: 'province', label: '本省招标', icon: 'map-location-dot', color: '#7C3AED' },
+    { key: 'city', label: '本市招标', icon: 'city', color: '#EA580C' },
+    { key: 'provinceWin', label: '本省中标', icon: 'trophy', color: '#059669' },
   ];
 
-  // 获取首页统计数据
+  // 筛选标签
+  const filterTags = [
+    { key: 'all', label: '全部', icon: 'border-all' },
+    { key: 'province', label: '全省', icon: 'map' },
+    { key: 'city', label: '全市', icon: 'location-dot' },
+    { key: 'provinceWin', label: '省中标', icon: 'medal' },
+    { key: 'cityWin', label: '市中标', icon: 'award' },
+  ];
+
   const fetchStats = async () => {
     try {
-      /**
-       * 服务端文件：server/src/routes/bids.ts
-       * 接口：GET /api/v1/bids/stats
-       * 返回：今日新增、紧急招标、今日中标的数量
-       */
       const res = await fetch(`${API_BASE_URL}/api/v1/bids/stats`);
       const data = await res.json();
-
       if (data.success) {
         setStats({
           todayCount: data.data.todayBids || 0,
@@ -113,17 +113,9 @@ export default function HomeScreen() {
     }
   };
 
-  // 获取招标数据（核心函数）
   const fetchData = async (pageNum: number, filterKey: string) => {
-    // 防止重复请求
-    if (loadingRef.current) {
-      console.log('[Home] fetchData blocked, already loading');
-      return;
-    }
+    if (loadingRef.current) return;
     
-    console.log('[Home] fetchData called, pageNum:', pageNum, 'filterKey:', filterKey);
-    
-    // 使用 ref 获取最新的位置信息
     const currentLocation = userLocationRef.current;
     
     try {
@@ -132,7 +124,6 @@ export default function HomeScreen() {
       const isWinBidFilter = filterKey === 'provinceWin' || filterKey === 'cityWin';
       
       if (filterKey === 'all') {
-        // 全部 - 招标数据
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
@@ -157,14 +148,10 @@ export default function HomeScreen() {
           }
           setHasMore(data.data.page < data.data.totalPages);
         } else {
-          // API 返回失败，停止加载更多
-          if (pageNum === 1) {
-            setBids([]);
-          }
+          if (pageNum === 1) setBids([]);
           setHasMore(false);
         }
       } else if (isWinBidFilter) {
-        // 中标数据
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
@@ -203,13 +190,10 @@ export default function HomeScreen() {
           }
           setHasMore(data.data.page < data.data.totalPages);
         } else {
-          if (pageNum === 1) {
-            setBids([]);
-          }
+          if (pageNum === 1) setBids([]);
           setHasMore(false);
         }
       } else {
-        // 招标数据（按地区筛选）
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
@@ -237,19 +221,14 @@ export default function HomeScreen() {
           }
           setHasMore(data.data.page < data.data.totalPages);
         } else {
-          if (pageNum === 1) {
-            setBids([]);
-          }
+          if (pageNum === 1) setBids([]);
           setHasMore(false);
         }
       }
     } catch (error) {
       console.error('获取数据失败:', error);
-      // 请求失败时停止加载更多
       setHasMore(false);
-      if (pageNum === 1) {
-        setBids([]);
-      }
+      if (pageNum === 1) setBids([]);
     } finally {
       loadingRef.current = false;
       setLoading(false);
@@ -257,17 +236,13 @@ export default function HomeScreen() {
     }
   };
 
-  // 初始加载和页面聚焦时刷新
   useFocusEffect(
     useCallback(() => {
-      // 页面聚焦时加载数据，loadingRef 会防止重复请求
       fetchData(1, activeFilterRef.current);
       fetchStats();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   );
 
-  // 打开系统定位设置
   const openLocationSettings = async () => {
     try {
       await Linking.openSettings();
@@ -276,7 +251,6 @@ export default function HomeScreen() {
     }
   };
 
-  // 请求定位权限并获取位置
   const requestLocation = async () => {
     try {
       setLocating(true);
@@ -323,7 +297,6 @@ export default function HomeScreen() {
         const province = address.region || address.subregion || '';
         const city = address.city || address.subregion || '';
         
-        // 同时更新 state 和 ref
         const newLocation = { province, city };
         setUserLocation(newLocation);
         userLocationRef.current = newLocation;
@@ -354,7 +327,6 @@ export default function HomeScreen() {
   };
 
   const handleFilterPress = async (filterKey: string) => {
-    // 如果是位置相关筛选，检查是否已定位
     if (filterKey !== 'all' && !userLocation) {
       const isLocationEnabled = await Location.hasServicesEnabledAsync();
       if (!isLocationEnabled) {
@@ -381,13 +353,11 @@ export default function HomeScreen() {
       return;
     }
     
-    // 重置状态并刷新
     setPage(1);
     setHasMore(true);
     setBids([]);
     setActiveFilter(filterKey);
     activeFilterRef.current = filterKey;
-    // 手动触发数据获取
     fetchData(1, filterKey);
   };
 
@@ -426,7 +396,6 @@ export default function HomeScreen() {
           styles.bidCard,
           item.is_urgent && styles.bidCardUrgent,
           isWinBid && styles.bidCardWin,
-          { width: CARD_WIDTH - 4 }
         ]}
         onPress={() => handleBidPress(item.id)}
         activeOpacity={0.7}
@@ -464,24 +433,11 @@ export default function HomeScreen() {
         {isWinBid && item.publish_date && <Text style={styles.bidPublishDate}>发布 {formatDeadline(item.publish_date)}</Text>}
       </TouchableOpacity>
     );
-  }, [styles, CARD_WIDTH]);
+  }, [styles]);
 
   if (loading && page === 1 && bids.length === 0) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-          <View style={styles.headerTop}>
-            <View style={styles.appTitleWrapper}>
-              <View style={styles.appLogo}>
-                <FontAwesome6 name="gavel" size={18} color="#FFFFFF" />
-              </View>
-              <View style={styles.appTitleContainer}>
-                <Text style={styles.appTitle}>招标</Text>
-                <Text style={[styles.appTitle, styles.appTitleAccent]}>通</Text>
-              </View>
-            </View>
-          </View>
-        </View>
+      <Screen backgroundColor="#F5F7FA" statusBarStyle="light">
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>加载中...</Text>
@@ -491,78 +447,152 @@ export default function HomeScreen() {
   }
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
+    <Screen backgroundColor="#F5F7FA" statusBarStyle="light">
       <View style={{ flex: 1 }}>
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-          <View style={styles.headerTop}>
-            <View style={styles.appTitleWrapper}>
-              <View style={styles.appLogo}>
-                <FontAwesome6 name="gavel" size={18} color="#FFFFFF" />
+        {/* Header with Gradient */}
+        <View 
+          style={[
+            styles.headerGradient, 
+            { 
+              paddingTop: insets.top + Spacing.md,
+              backgroundColor: '#2563EB',
+            }
+          ]}
+        >
+          <View style={styles.headerContent}>
+            {/* Top Row */}
+            <View style={styles.headerTop}>
+              <View style={styles.appBrand}>
+                <View style={styles.appLogo}>
+                  <FontAwesome6 name="gavel" size={20} color="#FFFFFF" />
+                </View>
+                <View style={styles.appTitleRow}>
+                  <Text style={styles.appTitle}>招标通</Text>
+                  <Text style={styles.appSubtitle}>专业招标信息平台</Text>
+                </View>
               </View>
-              <View style={styles.appTitleContainer}>
-                <Text style={styles.appTitle}>招标</Text>
-                <Text style={[styles.appTitle, styles.appTitleAccent]}>通</Text>
+              <View style={styles.headerActions}>
+                <TouchableOpacity 
+                  style={[styles.locationButton, userLocation && styles.locationButtonActive]} 
+                  onPress={requestLocation}
+                  disabled={locating}
+                >
+                  {locating ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <FontAwesome6 
+                      name="location-crosshairs" 
+                      size={16} 
+                      color="#FFFFFF" 
+                    />
+                  )}
+                </TouchableOpacity>
               </View>
             </View>
-          </View>
-          <View style={styles.searchRow}>
+            
+            {/* Search Bar */}
             <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
-              <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
-              <Text style={styles.searchPlaceholder}>搜索招标信息、行业...</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.locationButton, userLocation && styles.locationButtonActive]} 
-              onPress={requestLocation}
-              disabled={locating}
-            >
-              {locating ? (
-                <ActivityIndicator size="small" color="#2563EB" />
-              ) : (
-                <FontAwesome6 
-                  name="location-crosshairs" 
-                  size={16} 
-                  color={userLocation ? "#2563EB" : "#6B7280"} 
-                />
-              )}
+              <FontAwesome6 name="magnifying-glass" size={16} color="#64748B" style={styles.searchIcon} />
+              <Text style={styles.searchPlaceholder}>搜索招标信息、行业、地区...</Text>
+              <View style={styles.searchButton}>
+                <Text style={styles.searchButtonText}>搜索</Text>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* 统计卡片 */}
-        <View style={styles.statsCard}>
-          <TouchableOpacity 
-            style={styles.statItem}
-            onPress={() => router.push('/bidList', { type: 'today' })}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.statValue}>{stats.todayCount}</Text>
-            <Text style={styles.statLabel}>今日新增</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <TouchableOpacity 
-            style={styles.statItem}
-            onPress={() => router.push('/bidList', { type: 'urgent' })}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.statValue, styles.statValueRed]}>{stats.urgentCount}</Text>
-            <Text style={styles.statLabel}>紧急招标</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <TouchableOpacity 
-            style={styles.statItem}
-            onPress={() => router.push('/bidList', { type: 'win' })}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.statValue, styles.statValueGreen]}>{stats.winBidCount}</Text>
-            <Text style={styles.statLabel}>今日中标</Text>
-          </TouchableOpacity>
+        {/* Stats Card */}
+        <View style={styles.statsSection}>
+          <View style={styles.statsCard}>
+            <TouchableOpacity 
+              style={styles.statItem}
+              onPress={() => router.push('/bidList', { type: 'today' })}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.statIconWrapper, styles.statIconToday]}>
+                <FontAwesome6 name="file-circle-plus" size={22} color="#2563EB" />
+              </View>
+              <Text style={[styles.statValue, styles.statValueBlue]}>{stats.todayCount}</Text>
+              <Text style={styles.statLabel}>今日新增</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.statDivider} />
+            
+            <TouchableOpacity 
+              style={styles.statItem}
+              onPress={() => router.push('/bidList', { type: 'urgent' })}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.statIconWrapper, styles.statIconUrgent]}>
+                <FontAwesome6 name="fire" size={22} color="#DC2626" />
+              </View>
+              <Text style={[styles.statValue, styles.statValueRed]}>{stats.urgentCount}</Text>
+              <Text style={styles.statLabel}>紧急招标</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.statDivider} />
+            
+            <TouchableOpacity 
+              style={styles.statItem}
+              onPress={() => router.push('/bidList', { type: 'win' })}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.statIconWrapper, styles.statIconWin]}>
+                <FontAwesome6 name="trophy" size={22} color="#059669" />
+              </View>
+              <Text style={[styles.statValue, styles.statValueGreen]}>{stats.winBidCount}</Text>
+              <Text style={styles.statLabel}>今日中标</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* 快捷筛选入口 */}
+        {/* Quick Actions */}
+        <View style={styles.quickActionsSection}>
+          <Text style={styles.sectionTitle}>快捷入口</Text>
+          <View style={styles.quickActionsRow}>
+            {quickActions.map((action) => {
+              const isActive = activeFilter === action.key;
+              return (
+                <TouchableOpacity
+                  key={action.key}
+                  style={[styles.quickActionCard, isActive && styles.quickActionActive]}
+                  onPress={() => handleFilterPress(action.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[
+                    styles.quickActionIconWrapper,
+                    action.key === 'all' && styles.quickActionIconAll,
+                    action.key === 'province' && styles.quickActionIconProvince,
+                    action.key === 'city' && styles.quickActionIconCity,
+                    action.key === 'provinceWin' && styles.quickActionIconWin,
+                    isActive && { backgroundColor: 'rgba(255,255,255,0.2)' },
+                  ]}>
+                    <FontAwesome6 
+                      name={action.icon as any} 
+                      size={20} 
+                      color={isActive ? '#FFFFFF' : action.color} 
+                    />
+                  </View>
+                  <Text style={[
+                    styles.quickActionLabel,
+                    isActive && styles.quickActionLabelActive
+                  ]}>
+                    {action.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Filter Tags */}
         <View style={styles.filterSection}>
-          <View style={styles.filterContainer}>
-            {filters.map((filter) => {
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScrollView}
+          >
+            {filterTags.map((filter) => {
               const isActive = activeFilter === filter.key;
               const isLocationFilter = filter.key !== 'all';
               
@@ -572,14 +602,13 @@ export default function HomeScreen() {
                   style={[
                     styles.filterChip, 
                     isActive && styles.filterChipActive,
-                    isLocationFilter && !userLocation && styles.filterChipDisabled
                   ]}
                   onPress={() => handleFilterPress(filter.key)}
                 >
                   <FontAwesome6 
                     name={filter.icon as any} 
-                    size={9} 
-                    color={isActive ? '#FFFFFF' : '#1D4ED8'} 
+                    size={11} 
+                    color={isActive ? '#FFFFFF' : '#475569'} 
                   />
                   <Text style={[
                     styles.filterChipText, 
@@ -590,12 +619,11 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
         </View>
 
-        {/* 双列网格招标列表 */}
+        {/* Bid List */}
         <FlatList
-          key="home-bids-grid"
           data={bids}
           renderItem={renderBidItem}
           keyExtractor={(item, index) => `${item.id}-${index}`}
@@ -621,7 +649,7 @@ export default function HomeScreen() {
           ListEmptyComponent={
             !loading ? (
               <View style={styles.emptyContainer}>
-                <FontAwesome6 name="folder-open" size={40} color="#D1D5DB" style={styles.emptyIcon} />
+                <FontAwesome6 name="folder-open" size={48} color="#CBD5E1" style={styles.emptyIcon} />
                 <Text style={styles.emptyText}>暂无招标信息</Text>
               </View>
             ) : null
