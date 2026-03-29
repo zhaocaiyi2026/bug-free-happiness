@@ -97,19 +97,13 @@ export default function HomeScreen() {
   const activeFilterRef = useRef<string>('all');
   const loadingRef = useRef(false);
 
-  // 快捷入口 - 根据选择的地区动态显示
-  const quickActions = useMemo(() => {
-    const provinceLabel = selectedProvince ? `${selectedProvince.name}招标` : '本省招标';
-    const cityLabel = selectedCity ? `${selectedCity.name}招标` : (selectedProvince ? `${selectedProvince.name}招标` : '本市招标');
-    const provinceWinLabel = selectedProvince ? `${selectedProvince.name}中标` : '本省中标';
-    
-    return [
-      { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB', bgColor: '#EFF6FF', activeBgColor: '#2563EB' },
-      { key: 'province', label: provinceLabel, icon: 'map-location-dot', color: '#7C3AED', bgColor: '#F5F3FF', activeBgColor: '#7C3AED' },
-      { key: 'city', label: cityLabel, icon: 'city', color: '#EA580C', bgColor: '#FFF7ED', activeBgColor: '#EA580C' },
-      { key: 'provinceWin', label: provinceWinLabel, icon: 'trophy', color: '#059669', bgColor: '#ECFDF5', activeBgColor: '#059669' },
-    ];
-  }, [selectedProvince, selectedCity]);
+  // 快捷入口 - 固定4个
+  const quickActions = [
+    { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB', bgColor: '#EFF6FF', activeBgColor: '#2563EB' },
+    { key: 'province', label: '本省招标', icon: 'map-location-dot', color: '#7C3AED', bgColor: '#F5F3FF', activeBgColor: '#7C3AED' },
+    { key: 'city', label: '本市招标', icon: 'city', color: '#EA580C', bgColor: '#FFF7ED', activeBgColor: '#EA580C' },
+    { key: 'provinceWin', label: '本省中标', icon: 'trophy', color: '#059669', bgColor: '#ECFDF5', activeBgColor: '#059669' },
+  ];
 
   const fetchStats = async () => {
     try {
