@@ -126,11 +126,16 @@ router.get('/', async (req, res) => {
       }
     }
     
+    // 发布日期过滤：使用严格的日期范围
+    // publishDateFrom >= 该日期的 00:00:00
+    // publishDateTo < 该日期的 00:00:00（使用 lt 排除当天，因为我们要的是"到该日期之前"）
     if (publishDateFrom) {
       query = query.gte('publish_date', publishDateFrom as string);
     }
     if (publishDateTo) {
-      query = query.lte('publish_date', publishDateTo as string);
+      // 使用 lt 而不是 lte，确保不包含 publishDateTo 当天的数据
+      // 例如：publishDateTo=2026-03-30 时，只包含 2026-03-29 及之前的数据
+      query = query.lt('publish_date', publishDateTo as string);
     }
 
     // 核心过滤条件：
