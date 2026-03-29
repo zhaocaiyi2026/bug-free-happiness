@@ -97,13 +97,19 @@ export default function HomeScreen() {
   const activeFilterRef = useRef<string>('all');
   const loadingRef = useRef(false);
 
-  // 快捷入口 - 固定4个
-  const quickActions = [
-    { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB', bgColor: '#EFF6FF', activeBgColor: '#2563EB' },
-    { key: 'province', label: '本省招标', icon: 'map-location-dot', color: '#7C3AED', bgColor: '#F5F3FF', activeBgColor: '#7C3AED' },
-    { key: 'city', label: '本市招标', icon: 'city', color: '#EA580C', bgColor: '#FFF7ED', activeBgColor: '#EA580C' },
-    { key: 'provinceWin', label: '本省中标', icon: 'trophy', color: '#059669', bgColor: '#ECFDF5', activeBgColor: '#059669' },
-  ];
+  // 快捷入口 - 根据选择的地区动态显示
+  const quickActions = useMemo(() => {
+    const provinceLabel = selectedProvince ? `${selectedProvince.name}招标` : '本省招标';
+    const cityLabel = selectedCity ? `${selectedCity.name}招标` : (selectedProvince ? `${selectedProvince.name}招标` : '本市招标');
+    const provinceWinLabel = selectedProvince ? `${selectedProvince.name}中标` : '本省中标';
+    
+    return [
+      { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB', bgColor: '#EFF6FF', activeBgColor: '#2563EB' },
+      { key: 'province', label: provinceLabel, icon: 'map-location-dot', color: '#7C3AED', bgColor: '#F5F3FF', activeBgColor: '#7C3AED' },
+      { key: 'city', label: cityLabel, icon: 'city', color: '#EA580C', bgColor: '#FFF7ED', activeBgColor: '#EA580C' },
+      { key: 'provinceWin', label: provinceWinLabel, icon: 'trophy', color: '#059669', bgColor: '#ECFDF5', activeBgColor: '#059669' },
+    ];
+  }, [selectedProvince, selectedCity]);
 
   const fetchStats = async () => {
     try {
@@ -286,7 +292,43 @@ export default function HomeScreen() {
   );
 
   const handleFilterPress = async (filterKey: string) => {
-    // 本省招标、本省中标、本市招标需要先选择地区
+    // 如果已经选择了地区，直接按选择的地区筛选
+    if (filterKey === 'province' || filterKey === 'provinceWin') {
+      if (selectedProvince) {
+        // 已选择省份，直接筛选
+        setPage(1);
+        setHasMore(true);
+        setBids([]);
+        setActiveFilter(filterKey);
+        activeFilterRef.current = filterKey;
+        fetchData(1, filterKey, selectedProvince.name);
+        return;
+      }
+    }
+    
+    if (filterKey === 'city') {
+      if (selectedProvince && selectedCity) {
+        // 已选择城市，直接筛选
+        setPage(1);
+        setHasMore(true);
+        setBids([]);
+        setActiveFilter(filterKey);
+        activeFilterRef.current = filterKey;
+        fetchData(1, filterKey, selectedProvince.name, selectedCity.name);
+        return;
+      } else if (selectedProvince && !selectedCity) {
+        // 只选择了省份，按省份筛选
+        setPage(1);
+        setHasMore(true);
+        setBids([]);
+        setActiveFilter('province');
+        activeFilterRef.current = 'province';
+        fetchData(1, 'province', selectedProvince.name);
+        return;
+      }
+    }
+    
+    // 没有选择地区，弹出选择弹窗
     if (filterKey !== 'all') {
       if (provinces.length === 0) {
         Alert.alert('提示', '正在加载地区数据，请稍候');
@@ -297,6 +339,7 @@ export default function HomeScreen() {
       return;
     }
     
+    // 全部招标
     setPage(1);
     setHasMore(true);
     setBids([]);
