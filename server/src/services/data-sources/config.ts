@@ -213,6 +213,30 @@ export const DATA_SOURCE_CONFIGS: DataSourceConfig[] = [
     },
   },
   
+  {
+    name: '吉林省公共资源交易平台',
+    platform: 'province_jilin',
+    baseUrl: 'http://www.ggzyzx.jl.gov.cn',
+    enabled: true,
+    priority: 80,
+    rateLimit: {
+      requestsPerSecond: 1,
+      requestsPerDay: 3000,
+    },
+  },
+  
+  {
+    name: '吉林省政府采购网',
+    platform: 'jilin_ccgp',
+    baseUrl: 'http://www.ccgp-jilin.gov.cn',
+    enabled: true,
+    priority: 78,
+    rateLimit: {
+      requestsPerSecond: 1,
+      requestsPerDay: 2000,
+    },
+  },
+  
   // ==================== 商业数据源（备用）====================
   
   {
@@ -293,5 +317,7 @@ export const SOURCE_PRIORITY_WEIGHTS = {
   province_hubei: 0.80,
   province_henan: 0.80,
   province_fujian: 0.80,
+  province_jilin: 0.80,
+  jilin_ccgp: 0.78,
   apispace: 0.6,    // 商业数据源
 };

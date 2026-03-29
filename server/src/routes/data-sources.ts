@@ -70,6 +70,8 @@ router.get('/status', async (req: Request, res: Response) => {
         case 'province_hubei':
         case 'province_henan':
         case 'province_fujian':
+        case 'province_jilin':
+        case 'jilin_ccgp':
           // 省级平台始终可用（公开网页）
           isAvailable = true;
           break;

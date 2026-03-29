@@ -37,6 +37,7 @@ export const PROVINCIAL_PLATFORMS = [
   { code: 'hubei', name: '湖北省', url: 'https://www.hbggzyfwy.cn' },
   { code: 'henan', name: '河南省', url: 'https://hnsggzyjy.henan.gov.cn' },
   { code: 'fujian', name: '福建省', url: 'https://ggzyywgz.fj.gov.cn' },
+  { code: 'jilin', name: '吉林省', url: 'http://www.ggzyzx.jl.gov.cn' },
 ];
 
 // 交易类型
