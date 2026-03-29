@@ -51,6 +51,8 @@ export const createStyles = (theme: Theme) => {
       fontSize: 14,
       color: '#1C1917',
       marginLeft: Spacing.sm,
+      borderWidth: 0,
+      outlineWidth: 0,
     },
     // 搜索类型切换
     typeSection: {
@@ -149,6 +151,8 @@ export const createStyles = (theme: Theme) => {
       fontSize: 13,
       color: '#1C1917',
       textAlign: 'center',
+      borderWidth: 0,
+      outlineWidth: 0,
     },
     budgetSeparator: {
       marginHorizontal: Spacing.sm,

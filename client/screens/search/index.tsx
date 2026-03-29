@@ -340,6 +340,7 @@ export default function SearchScreen() {
               onChangeText={handleKeywordChange}
               onSubmitEditing={handleSearch}
               returnKeyType="search"
+              underlineColorAndroid="transparent"
             />
             {keyword.length > 0 && (
               <TouchableOpacity onPress={() => {
@@ -498,6 +499,7 @@ export default function SearchScreen() {
                 value={minBudget}
                 onChangeText={setMinBudget}
                 keyboardType="numeric"
+                underlineColorAndroid="transparent"
               />
               <Text style={styles.budgetSeparator}>—</Text>
               <TextInput
@@ -507,6 +509,7 @@ export default function SearchScreen() {
                 value={maxBudget}
                 onChangeText={setMaxBudget}
                 keyboardType="numeric"
+                underlineColorAndroid="transparent"
               />
             </View>
           </View>
