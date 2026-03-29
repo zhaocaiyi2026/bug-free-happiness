@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -45,6 +45,67 @@ const mockHistory: HistoryItem[] = [
   { id: 6, bid_id: 106, title: '城市园林绿化养护工程招标', budget: 15000000, province: '四川', city: '成都', industry: '建筑工程', deadline: '2026-04-28', is_urgent: true, viewed_at: '2026-03-26T09:00:00' },
 ];
 
+const formatBudget = (budget: number | null) => {
+  if (!budget) return '面议';
+  if (budget >= 100000000) {
+    return `${(budget / 100000000).toFixed(1)}亿`;
+  } else if (budget >= 10000) {
+    return `${(budget / 10000).toFixed(0)}万`;
+  }
+  return `${budget}`;
+};
+
+const formatViewedAt = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  
+  if (isToday) {
+    return `今天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  }
+  return `${date.getMonth() + 1}月${date.getDate()}日`;
+};
+
+// 独立的列表项组件
+interface HistoryItemCardProps {
+  item: HistoryItem;
+  styles: ReturnType<typeof createStyles>;
+  onPress: (bidId: number) => void;
+}
+
+function HistoryItemCard({ item, styles, onPress }: HistoryItemCardProps) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.bidCard,
+        item.is_urgent && styles.bidCardUrgent,
+        { width: CARD_WIDTH - 4 }
+      ]}
+      onPress={() => onPress(item.bid_id)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.cardHeader}>
+        <View style={styles.categoryTag}>
+          <Text style={styles.categoryTagText} numberOfLines={1}>
+            {item.industry?.slice(0, 4) || '项目'}
+          </Text>
+        </View>
+        {item.is_urgent && (
+          <View style={styles.urgentTag}>
+            <Text style={styles.urgentTagText}>紧急</Text>
+          </View>
+        )}
+      </View>
+      <Text style={styles.bidTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
+      <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
+      <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
+      <Text style={styles.bidTime}>浏览于 {formatViewedAt(item.viewed_at)}</Text>
+    </TouchableOpacity>
+  );
+}
+
 export default function HistoryScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -82,66 +143,6 @@ export default function HistoryScreen() {
       },
     ]);
   };
-
-  const formatBudget = (budget: number | null) => {
-    if (!budget) return '面议';
-    if (budget >= 100000000) {
-      return `${(budget / 100000000).toFixed(1)}亿`;
-    } else if (budget >= 10000) {
-      return `${(budget / 10000).toFixed(0)}万`;
-    }
-    return `${budget}`;
-  };
-
-  const formatDeadline = (dateStr: string | null) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${month}/${day}`;
-  };
-
-  const formatViewedAt = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-    
-    if (isToday) {
-      return `今天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-    }
-    return `${date.getMonth() + 1}月${date.getDate()}日`;
-  };
-
-  const renderHistoryItem = useCallback(({ item, index }: { item: HistoryItem; index: number }) => (
-    <TouchableOpacity
-      style={[
-        styles.bidCard,
-        item.is_urgent && styles.bidCardUrgent,
-        { width: CARD_WIDTH - 4 }
-      ]}
-      onPress={() => handleBidPress(item.bid_id)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.categoryTag}>
-          <Text style={styles.categoryTagText} numberOfLines={1}>
-            {item.industry?.slice(0, 4) || '项目'}
-          </Text>
-        </View>
-        {item.is_urgent && (
-          <View style={styles.urgentTag}>
-            <Text style={styles.urgentTagText}>紧急</Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.bidTitle} numberOfLines={2}>
-        {item.title}
-      </Text>
-      <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
-      <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
-      <Text style={styles.bidTime}>浏览于 {formatViewedAt(item.viewed_at)}</Text>
-    </TouchableOpacity>
-  ), [styles, CARD_WIDTH]);
 
   if (loading) {
     return (
@@ -192,7 +193,9 @@ export default function HistoryScreen() {
         <FlatList
           key="history-list"
           data={history}
-          renderItem={renderHistoryItem}
+          renderItem={({ item }) => (
+            <HistoryItemCard item={item} styles={styles} onPress={handleBidPress} />
+          )}
           keyExtractor={(item) => String(item.id)}
           numColumns={2}
           columnWrapperStyle={styles.columnWrapper}

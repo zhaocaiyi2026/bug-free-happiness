@@ -264,7 +264,7 @@ export default function WinBidDetailScreen() {
             {/* 单位地址 */}
             <View style={styles.contactRow}>
               <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="map-marker-alt" size={12} color="#C8102E" />
+                <FontAwesome6 name="location-dot" size={12} color="#C8102E" />
               </View>
               <Text style={styles.contactLabel}>单位地址</Text>
               <Text style={styles.contactValue}>{winBid.win_company_address || '暂无'}</Text>

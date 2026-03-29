@@ -357,7 +357,7 @@ export default function DetailScreen() {
             {/* 项目地址 */}
             <View style={styles.contactRow}>
               <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="map-marker-alt" size={12} color="#C8102E" />
+                <FontAwesome6 name="location-dot" size={12} color="#C8102E" />
               </View>
               <Text style={styles.contactLabel}>项目地址</Text>
               <Text style={styles.contactValue}>{bid.project_location || `${bid.province || ''}${bid.city || ''}`}</Text>

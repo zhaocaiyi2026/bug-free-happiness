@@ -27,7 +27,7 @@ export default function PrivacyScreen() {
       
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          招标通（以下简称"我们"）非常重视用户的隐私和个人信息保护。本隐私政策将向您说明我们如何收集、使用、存储和保护您的个人信息，以及您享有的相关权利。请您在使用我们的服务前，仔细阅读并理解本隐私政策。
+          招标通（以下简称&quot;我们&quot;）非常重视用户的隐私和个人信息保护。本隐私政策将向您说明我们如何收集、使用、存储和保护您的个人信息，以及您享有的相关权利。请您在使用我们的服务前，仔细阅读并理解本隐私政策。
         </ThemedText>
 
         <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
