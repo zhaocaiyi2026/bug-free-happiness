@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,11 @@ import {
   RefreshControl,
   Dimensions,
   Alert,
-  ScrollView,
-  Linking,
   Platform,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
@@ -39,25 +39,15 @@ interface Bid {
   deadline: string | null;
   is_urgent: boolean;
   view_count: number;
-}
-
-interface WinBid {
-  id: number;
-  title: string;
-  win_amount: number | null;
-  province: string | null;
-  city: string | null;
-  industry: string | null;
-  win_company: string | null;
-  publish_date: string | null;
+  isWinBid?: boolean;
+  winCompany?: string;
+  bidType?: '招标' | '中标';
 }
 
 interface Stats {
   todayCount: number;
   urgentCount: number;
   winBidCount: number;
-  provinceCount: number;
-  cityCount: number;
 }
 
 interface UserLocation {
@@ -72,13 +62,10 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
 
   const [bids, setBids] = useState<Bid[]>([]);
-  const [winBids, setWinBids] = useState<WinBid[]>([]);
   const [stats, setStats] = useState<Stats>({ 
     todayCount: 156, 
     urgentCount: 8, 
     winBidCount: 32,
-    provinceCount: 0,
-    cityCount: 0,
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,7 +76,7 @@ export default function HomeScreen() {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locating, setLocating] = useState(false);
 
-  // 快捷筛选入口：全部、全省招标、全市招标、本省中标、本市中标
+  // 快捷筛选入口
   const filters = [
     { key: 'all', label: '全部', icon: 'layer-group' },
     { key: 'province', label: '全省招标', icon: 'map' },
@@ -106,52 +93,42 @@ export default function HomeScreen() {
        * 接口：GET /api/v1/bids/stats
        * 返回：今日新增、紧急招标、今日中标的数量
        */
-      const res = await fetch(
-        `${API_BASE_URL}/api/v1/bids/stats`
-      );
+      const res = await fetch(`${API_BASE_URL}/api/v1/bids/stats`);
       const data = await res.json();
 
       if (data.success) {
-        setStats(prev => ({
-          ...prev,
+        setStats({
           todayCount: data.data.todayBids || 0,
           urgentCount: data.data.urgentBids || 0,
           winBidCount: data.data.todayWinBids || 0,
-        }));
+        });
       }
     } catch (error) {
       console.error('获取统计数据失败:', error);
     }
   };
 
-  // 获取招标数据
-  const fetchData = async (pageNum: number) => {
-    console.log('[Home] fetchData called, pageNum:', pageNum, 'activeFilter:', activeFilter);
+  // 获取招标数据（核心函数）
+  const fetchData = useCallback(async (pageNum: number, filterKey: string) => {
+    console.log('[Home] fetchData called, pageNum:', pageNum, 'filterKey:', filterKey);
+    
     try {
       setLoading(true);
-      // 判断是否为中标筛选
-      const isWinBidFilter = activeFilter === 'provinceWin' || activeFilter === 'cityWin';
+      const isWinBidFilter = filterKey === 'provinceWin' || filterKey === 'cityWin';
       
-      // "全部"筛选只显示招标数据（按省份筛选）
-      if (activeFilter === 'all') {
+      if (filterKey === 'all') {
+        // 全部 - 招标数据
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
-        
-        // 如果用户已定位，按省份筛选
         if (userLocation?.province) {
           params.append('province', userLocation.province);
         }
 
-        const url = `${API_BASE_URL}/api/v1/bids?${params.toString()}`;
-        console.log('[Home] Fetching bids from:', url);
-        
-        const res = await fetch(url);
+        const res = await fetch(`${API_BASE_URL}/api/v1/bids?${params.toString()}`);
         const data = await res.json();
-        console.log('[Home] Bids response:', data.success, 'total:', data.data?.total);
 
         if (data.success) {
-          // 为招标数据添加类型标识
           const bidItems = data.data.list.map((item: Bid) => ({
             ...item,
             isWinBid: false,
@@ -166,25 +143,22 @@ export default function HomeScreen() {
           setHasMore(data.data.page < data.data.totalPages);
         }
       } else if (isWinBidFilter) {
-        // 获取中标数据
+        // 中标数据
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
 
-        if (activeFilter === 'provinceWin' && userLocation?.province) {
+        if (filterKey === 'provinceWin' && userLocation?.province) {
           params.append('province', userLocation.province);
-        } else if (activeFilter === 'cityWin' && userLocation?.city) {
+        } else if (filterKey === 'cityWin' && userLocation?.city) {
           params.append('city', userLocation.city);
         }
 
-        const res = await fetch(
-          `${API_BASE_URL}/api/v1/win-bids?${params.toString()}`
-        );
+        const res = await fetch(`${API_BASE_URL}/api/v1/win-bids?${params.toString()}`);
         const data = await res.json();
 
         if (data.success) {
-          // 将中标数据转换为统一格式显示
-          const winBidItems = data.data.list.map((item: WinBid) => ({
+          const winBidItems = data.data.list.map((item: any) => ({
             id: item.id,
             title: item.title,
             budget: item.win_amount,
@@ -198,6 +172,7 @@ export default function HomeScreen() {
             view_count: 0,
             isWinBid: true,
             winCompany: item.win_company,
+            bidType: '中标' as const,
           }));
           
           if (pageNum === 1) {
@@ -208,27 +183,31 @@ export default function HomeScreen() {
           setHasMore(data.data.page < data.data.totalPages);
         }
       } else {
-        // 获取招标数据
+        // 招标数据（按地区筛选）
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
 
-        if (activeFilter === 'province' && userLocation?.province) {
+        if (filterKey === 'province' && userLocation?.province) {
           params.append('province', userLocation.province);
-        } else if (activeFilter === 'city' && userLocation?.city) {
+        } else if (filterKey === 'city' && userLocation?.city) {
           params.append('city', userLocation.city);
         }
 
-        const res = await fetch(
-          `${API_BASE_URL}/api/v1/bids?${params.toString()}`
-        );
+        const res = await fetch(`${API_BASE_URL}/api/v1/bids?${params.toString()}`);
         const data = await res.json();
 
         if (data.success) {
+          const bidItems = data.data.list.map((item: Bid) => ({
+            ...item,
+            isWinBid: false,
+            bidType: '招标' as const,
+          }));
+          
           if (pageNum === 1) {
-            setBids(data.data.list);
+            setBids(bidItems);
           } else {
-            setBids((prev) => [...prev, ...data.data.list]);
+            setBids((prev) => [...prev, ...bidItems]);
           }
           setHasMore(data.data.page < data.data.totalPages);
         }
@@ -239,31 +218,22 @@ export default function HomeScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userLocation]);
 
-  useEffect(() => {
-    fetchData(1);
-    fetchStats();
-  }, [activeFilter, userLocation?.province]);
+  // 初始加载和页面聚焦时刷新
+  useFocusEffect(
+    useCallback(() => {
+      fetchData(1, activeFilter);
+      fetchStats();
+    }, [activeFilter, userLocation?.province])
+  );
 
   // 打开系统定位设置
   const openLocationSettings = async () => {
     try {
-      if (Platform.OS === 'android') {
-        // Android: 直接打开位置服务设置页面
-        await Linking.openSettings();
-      } else {
-        // iOS: 打开应用设置页面（iOS没有直接的定位服务设置页面）
-        await Linking.openSettings();
-      }
+      await Linking.openSettings();
     } catch (error) {
-      console.error('打开设置失败:', error);
-      // 如果打开失败，尝试通用方式
-      try {
-        await Linking.openSettings();
-      } catch (e) {
-        Alert.alert('提示', '无法自动打开设置，请手动前往系统设置开启定位服务');
-      }
+      Alert.alert('提示', '无法自动打开设置，请手动前往系统设置开启定位服务');
     }
   };
 
@@ -272,7 +242,6 @@ export default function HomeScreen() {
     try {
       setLocating(true);
       
-      // 先检查定位服务是否开启
       const isLocationEnabled = await Location.hasServicesEnabledAsync();
       if (!isLocationEnabled) {
         Alert.alert(
@@ -287,7 +256,6 @@ export default function HomeScreen() {
         return;
       }
       
-      // 请求权限
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -302,12 +270,10 @@ export default function HomeScreen() {
         return;
       }
 
-      // 获取位置
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
 
-      // 逆地理编码
       const reverseGeocode = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -319,22 +285,11 @@ export default function HomeScreen() {
         const city = address.city || address.subregion || '';
         
         setUserLocation({ province, city });
-        
-        Alert.alert('定位成功', `已定位到：${province} ${city}`, [
-          { text: '好的', style: 'default' }
-        ]);
+        Alert.alert('定位成功', `已定位到：${province} ${city}`);
       }
     } catch (error) {
       console.error('定位失败:', error);
-      Alert.alert(
-        '定位失败', 
-        '无法获取您的位置，请检查：\n1. 定位服务是否开启\n2. 应用是否有定位权限\n3. 网络是否正常',
-        [
-          { text: '取消', style: 'cancel' },
-          { text: '去设置', onPress: openLocationSettings },
-          { text: '重试', onPress: requestLocation }
-        ]
-      );
+      Alert.alert('定位失败', '无法获取您的位置，请检查定位服务是否开启');
     } finally {
       setLocating(false);
     }
@@ -343,21 +298,20 @@ export default function HomeScreen() {
   const handleRefresh = () => {
     setRefreshing(true);
     setPage(1);
-    fetchData(1);
+    fetchData(1, activeFilter);
   };
 
   const handleLoadMore = () => {
     if (hasMore && !loading) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchData(nextPage);
+      fetchData(nextPage, activeFilter);
     }
   };
 
   const handleFilterPress = async (filterKey: string) => {
     // 如果是位置相关筛选，检查是否已定位
     if (filterKey !== 'all' && !userLocation) {
-      // 先检查定位服务是否开启
       const isLocationEnabled = await Location.hasServicesEnabledAsync();
       if (!isLocationEnabled) {
         Alert.alert(
@@ -383,9 +337,11 @@ export default function HomeScreen() {
       return;
     }
     
-    setActiveFilter(filterKey);
+    // 重置状态并刷新
     setPage(1);
-    setLoading(true);
+    setHasMore(true);
+    setBids([]);
+    setActiveFilter(filterKey);
   };
 
   const handleBidPress = (bidId: number) => {
@@ -394,10 +350,6 @@ export default function HomeScreen() {
 
   const handleSearchPress = () => {
     router.navigate('/search');
-  };
-
-  const handleFavoritePress = () => {
-    router.navigate('/favorites');
   };
 
   const formatBudget = (budget: number | null) => {
@@ -418,7 +370,7 @@ export default function HomeScreen() {
     return `${month}/${day}`;
   };
 
-  const renderBidItem = useCallback(({ item, index }: { item: any; index: number }) => {
+  const renderBidItem = useCallback(({ item, index }: { item: Bid; index: number }) => {
     const isWinBid = item.isWinBid;
     
     return (
@@ -467,7 +419,7 @@ export default function HomeScreen() {
     );
   }, [styles, CARD_WIDTH]);
 
-  if (loading && page === 1) {
+  if (loading && page === 1 && bids.length === 0) {
     return (
       <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
@@ -494,7 +446,7 @@ export default function HomeScreen() {
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
       <View style={{ flex: 1 }}>
-        {/* Header - 品牌增强型 */}
+        {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <View style={styles.appTitleWrapper}>
@@ -530,7 +482,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 统计卡片 - 今日新增、紧急招标、中标信息 */}
+        {/* 统计卡片 */}
         <View style={styles.statsCard}>
           <TouchableOpacity 
             style={styles.statItem}
@@ -599,7 +551,7 @@ export default function HomeScreen() {
           key="home-bids-grid"
           data={bids}
           renderItem={renderBidItem}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
           numColumns={2}
           columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.listContainer}
