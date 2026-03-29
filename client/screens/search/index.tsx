@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -8,6 +8,8 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
+  Alert,
+  Keyboard,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
@@ -16,6 +18,10 @@ import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const SEARCH_HISTORY_KEY = '@search_history';
+const MAX_HISTORY_COUNT = 10;
 
 interface Province {
   id: number;
@@ -40,6 +46,7 @@ interface Bid {
   publish_date: string | null;
   deadline: string | null;
   is_urgent: boolean;
+  win_company?: string;
 }
 
 // 默认省份示例（3个）
@@ -72,34 +79,36 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   
-  // 动态筛选示例列表（当用户选择不在示例中的选项时，替换最后一个）
+  // 搜索历史
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  
+  // 动态筛选示例列表
   const [provinceExamples, setProvinceExamples] = useState<string[]>(DEFAULT_PROVINCE_EXAMPLES);
   const [industryExamples, setIndustryExamples] = useState<string[]>(DEFAULT_INDUSTRY_EXAMPLES);
-
-  // 初始化：获取筛选数据
+  
+  // 防止重复导航
+  const isNavigatingRef = useRef(false);
+  
+  // 加载搜索历史
   useEffect(() => {
-    // 可以在这里获取数据用于其他用途
+    loadSearchHistory();
   }, []);
-
+  
   // 监听参数变化并更新状态
   useEffect(() => {
     if (searchParams) {
-      // 更新关键词
       if (searchParams.keyword !== undefined) {
         setKeyword(searchParams.keyword);
       }
-      // 更新行业
       if (searchParams.industry !== undefined) {
         setSelectedIndustry(searchParams.industry);
       }
-      // 更新省份
       if (searchParams.province !== undefined) {
         setSelectedProvince(searchParams.province);
       }
       
       // 如果带有 autoSearch 参数，执行自动搜索
       if (searchParams.autoSearch === 'true') {
-        // 延迟执行，等待状态更新完成
         setTimeout(() => {
           handleSearchWithParams(
             searchParams.keyword || '',
@@ -112,8 +121,69 @@ export default function SearchScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.keyword, searchParams?.industry, searchParams?.province, searchParams?.autoSearch]);
 
-  // 执行搜索（只使用关键词，不叠加行业筛选）
+  // 加载搜索历史
+  const loadSearchHistory = async () => {
+    try {
+      const history = await AsyncStorage.getItem(SEARCH_HISTORY_KEY);
+      if (history) {
+        setSearchHistory(JSON.parse(history));
+      }
+    } catch (error) {
+      console.error('加载搜索历史失败:', error);
+    }
+  };
+
+  // 保存搜索历史
+  const saveSearchHistory = async (newKeyword: string) => {
+    if (!newKeyword.trim()) return;
+    
+    try {
+      let newHistory = [newKeyword, ...searchHistory.filter(h => h !== newKeyword)];
+      newHistory = newHistory.slice(0, MAX_HISTORY_COUNT);
+      setSearchHistory(newHistory);
+      await AsyncStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
+    } catch (error) {
+      console.error('保存搜索历史失败:', error);
+    }
+  };
+
+  // 清空搜索历史
+  const clearSearchHistory = async () => {
+    Alert.alert(
+      '清空历史',
+      '确定要清空所有搜索历史吗？',
+      [
+        { text: '取消', style: 'cancel' },
+        { 
+          text: '清空', 
+          style: 'destructive',
+          onPress: async () => {
+            setSearchHistory([]);
+            await AsyncStorage.removeItem(SEARCH_HISTORY_KEY);
+          }
+        }
+      ]
+    );
+  };
+
+  // 删除单条历史
+  const removeHistoryItem = async (item: string) => {
+    const newHistory = searchHistory.filter(h => h !== item);
+    setSearchHistory(newHistory);
+    await AsyncStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
+  };
+
+  // 点击历史记录搜索
+  const handleHistoryPress = (historyKeyword: string) => {
+    setKeyword(historyKeyword);
+    // 点击历史记录时，取消行业筛选
+    setSelectedIndustry('');
+    handleSearchWithParams(historyKeyword, '', selectedProvince);
+  };
+
+  // 执行搜索
   const handleSearch = async () => {
+    Keyboard.dismiss();
     // 用户输入关键词搜索时，只使用关键词
     await handleSearchWithParams(keyword, '', selectedProvince);
   };
@@ -126,6 +196,11 @@ export default function SearchScreen() {
     setLoading(true);
     setHasSearched(true);
 
+    // 保存搜索历史
+    if (searchKeyword.trim()) {
+      await saveSearchHistory(searchKeyword.trim());
+    }
+
     try {
       const params = new URLSearchParams();
       if (searchKeyword) params.append('keyword', searchKeyword);
@@ -134,18 +209,14 @@ export default function SearchScreen() {
       if (minBudget) params.append('minBudget', minBudget);
       if (maxBudget) params.append('maxBudget', maxBudget);
       
-      // 搜索模式：放宽过滤条件，搜索项目名称和项目详情
       params.append('isSearch', 'true');
       
-      // 招标搜索：包含过期招标
       if (searchType === 'bid') {
         params.append('includeExpired', 'true');
       }
 
       const endpoint = searchType === 'bid' ? '/api/v1/bids' : '/api/v1/win-bids';
-      const res = await fetch(
-        `${API_BASE_URL}${endpoint}?${params.toString()}`
-      );
+      const res = await fetch(`${API_BASE_URL}${endpoint}?${params.toString()}`);
       const data = await res.json();
 
       if (data.success) {
@@ -174,33 +245,45 @@ export default function SearchScreen() {
     return `${date.getMonth() + 1}.${date.getDate()}`;
   };
 
+  // 进入详情页 - 传递搜索上下文
   const handleBidPress = useCallback((bidId: number) => {
-    if (searchType === 'bid') {
-      router.push('/detail', { id: bidId });
-    } else {
-      router.push('/win-bid-detail', { id: bidId });
-    }
-  }, [searchType, router]);
+    // 防止重复点击
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    
+    const targetRoute = searchType === 'bid' ? '/detail' : '/win-bid-detail';
+    
+    router.push(targetRoute, {
+      id: bidId,
+      // 传递搜索上下文，用于返回时恢复
+      fromSearch: 'true',
+      searchKeyword: keyword,
+      searchIndustry: selectedIndustry,
+      searchProvince: selectedProvince,
+      searchType: searchType,
+    });
+    
+    // 延迟重置
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 500);
+  }, [searchType, router, keyword, selectedIndustry, selectedProvince]);
 
   const handleProvinceSelect = (provinceName: string) => {
     const newProvince = provinceName === selectedProvince ? '' : provinceName;
     setSelectedProvince(newProvince);
-    // 选择省份后自动搜索
     setTimeout(() => {
       handleSearchWithParams(keyword, selectedIndustry, newProvince);
     }, 50);
   };
 
-  // 从"更多"选择省份
   const handleProvinceFromMore = (provinceName: string) => {
-    // 如果选中的省份不在当前示例列表中，替换最后一个示例
     if (!provinceExamples.includes(provinceName)) {
       const newExamples = [...provinceExamples];
       newExamples[newExamples.length - 1] = provinceName;
       setProvinceExamples(newExamples);
     }
     setSelectedProvince(provinceName);
-    // 选择省份后自动搜索
     setTimeout(() => {
       handleSearchWithParams(keyword, selectedIndustry, provinceName);
     }, 50);
@@ -209,19 +292,13 @@ export default function SearchScreen() {
   const handleIndustrySelect = (industryName: string) => {
     const newIndustry = industryName === selectedIndustry ? '' : industryName;
     setSelectedIndustry(newIndustry);
-    
-    // 选择行业后，用行业名称作为关键词
     setKeyword(newIndustry);
-    
-    // 自动搜索：只用行业关键词，不叠加省份
     setTimeout(() => {
       handleSearchWithParams(newIndustry, '', '');
     }, 50);
   };
 
-  // 从"更多"选择行业
   const handleIndustryFromMore = (industryName: string) => {
-    // 如果选中的行业不在当前示例列表中，替换最后一个示例
     if (!industryExamples.includes(industryName)) {
       const newExamples = [...industryExamples];
       newExamples[newExamples.length - 1] = industryName;
@@ -229,8 +306,6 @@ export default function SearchScreen() {
     }
     setSelectedIndustry(industryName);
     setKeyword(industryName);
-    
-    // 自动搜索：只用行业关键词，不叠加省份
     setTimeout(() => {
       handleSearchWithParams(industryName, '', '');
     }, 50);
@@ -239,7 +314,6 @@ export default function SearchScreen() {
   // 用户输入关键词时的处理
   const handleKeywordChange = (text: string) => {
     setKeyword(text);
-    // 用户输入关键词时，自动取消行业筛选
     if (text.length > 0 && selectedIndustry) {
       setSelectedIndustry('');
     }
@@ -247,6 +321,9 @@ export default function SearchScreen() {
 
   // 跳转到省份选择页面
   const handleProvinceMore = () => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    
     router.push('/filter-select', { 
       type: 'province',
       selected: selectedProvince,
@@ -254,10 +331,17 @@ export default function SearchScreen() {
       industry: selectedIndustry,
       province: selectedProvince,
     });
+    
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 500);
   };
 
   // 跳转到行业选择页面
   const handleIndustryMore = () => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    
     router.push('/filter-select', { 
       type: 'industry',
       selected: selectedIndustry,
@@ -265,20 +349,33 @@ export default function SearchScreen() {
       industry: selectedIndustry,
       province: selectedProvince,
     });
+    
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 500);
   };
 
   // 监听从筛选页面返回的参数
   useEffect(() => {
     if (searchParams?.province && searchParams.province !== selectedProvince) {
-      // 从省份筛选页面返回
       handleProvinceFromMore(searchParams.province);
     }
     if (searchParams?.industry && searchParams.industry !== selectedIndustry) {
-      // 从行业筛选页面返回
       handleIndustryFromMore(searchParams.industry);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.province, searchParams?.industry]);
+
+  // 清空筛选条件
+  const handleClearFilters = () => {
+    setKeyword('');
+    setSelectedProvince('');
+    setSelectedIndustry('');
+    setMinBudget('');
+    setMaxBudget('');
+    setResults([]);
+    setHasSearched(false);
+  };
 
   const renderFilterChip = useCallback((
     item: { id: number; name: string },
@@ -326,40 +423,80 @@ export default function SearchScreen() {
     const isWinBid = searchType === 'winBid';
     
     return (
-    <TouchableOpacity 
-      style={[styles.bidCard, isWinBid && styles.winBidCard]} 
-      onPress={() => handleBidPress(item.id)} 
-      activeOpacity={0.7}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.categoryTag}>
-          <Text style={styles.categoryTagText}>{item.industry || '综合'}</Text>
-        </View>
-        <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
-          <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]}>
-            {isWinBid ? '中标' : '招标'}
-          </Text>
-        </View>
-        {item.is_urgent && (
-          <View style={styles.urgentTag}>
-            <Text style={styles.urgentTagText}>紧急</Text>
+      <TouchableOpacity 
+        style={[styles.bidCard, isWinBid && styles.winBidCard]} 
+        onPress={() => handleBidPress(item.id)} 
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.categoryTag}>
+            <Text style={styles.categoryTagText}>{item.industry || '综合'}</Text>
           </View>
+          <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
+            <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]}>
+              {isWinBid ? '中标' : '招标'}
+            </Text>
+          </View>
+          {item.is_urgent && (
+            <View style={styles.urgentTag}>
+              <Text style={styles.urgentTagText}>紧急</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.bidTitle} numberOfLines={2}>{item.title}</Text>
+        <Text style={[styles.bidBudget, isWinBid && styles.bidBudgetWin]}>{formatBudget(item.budget)}</Text>
+        {isWinBid && item.win_company && (
+          <Text style={styles.bidWinCompany} numberOfLines={1}>
+            中标单位: {item.win_company}
+          </Text>
         )}
+        <View style={styles.bidMetaRow}>
+          <Text style={styles.bidMeta}>{item.province} {item.city}</Text>
+          <Text style={styles.bidMetaSeparator}>|</Text>
+          <Text style={styles.bidMeta}>{formatDate(item.publish_date)}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }, [styles, handleBidPress, searchType]);
+
+  // 渲染搜索历史
+  const renderSearchHistory = () => {
+    if (hasSearched || searchHistory.length === 0) return null;
+    
+    return (
+      <View style={styles.historySection}>
+        <View style={styles.historyHeader}>
+          <Text style={styles.historyTitle}>搜索历史</Text>
+          {searchHistory.length > 0 && (
+            <TouchableOpacity onPress={clearSearchHistory}>
+              <FontAwesome6 name="trash-can" size={14} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={styles.historyList}>
+          {searchHistory.slice(0, 8).map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.historyItem}
+              onPress={() => handleHistoryPress(item)}
+              onLongPress={() => removeHistoryItem(item)}
+              activeOpacity={0.7}
+            >
+              <FontAwesome6 name="clock-rotate-left" size={12} color="#9CA3AF" style={{ marginRight: 6 }} />
+              <Text style={styles.historyText} numberOfLines={1}>{item}</Text>
+              <TouchableOpacity 
+                onPress={() => removeHistoryItem(item)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <FontAwesome6 name="xmark" size={10} color="#D1D5DB" />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text style={styles.historyHint}>长按可删除单条记录</Text>
       </View>
-      <Text style={styles.bidTitle} numberOfLines={2}>{item.title}</Text>
-      <Text style={[styles.bidBudget, isWinBid && styles.bidBudgetWin]}>{formatBudget(item.budget)}</Text>
-      {isWinBid && (item as any).win_company && (
-        <Text style={styles.bidWinCompany} numberOfLines={1}>
-          中标单位: {(item as any).win_company}
-        </Text>
-      )}
-      <View style={styles.bidMetaRow}>
-        <Text style={styles.bidMeta}>{item.province} {item.city}</Text>
-        <Text style={styles.bidMetaSeparator}>|</Text>
-        <Text style={styles.bidMeta}>{formatDate(item.publish_date)}</Text>
-      </View>
-    </TouchableOpacity>
-  )}, [styles, handleBidPress, searchType]);
+    );
+  };
 
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
@@ -400,14 +537,13 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* 搜索类型切换 */}
         <View style={styles.typeSection}>
           <TouchableOpacity
             style={[styles.typeTab, searchType === 'bid' && styles.typeTabActive]}
             onPress={() => {
               setSearchType('bid');
-              // 切换类型时清空搜索结果
               if (hasSearched) {
                 setResults([]);
                 setHasSearched(false);
@@ -427,7 +563,6 @@ export default function SearchScreen() {
             style={[styles.typeTab, searchType === 'winBid' && styles.typeTabActive]}
             onPress={() => {
               setSearchType('winBid');
-              // 切换类型时清空搜索结果
               if (hasSearched) {
                 setResults([]);
                 setHasSearched(false);
@@ -452,7 +587,6 @@ export default function SearchScreen() {
             <Text style={styles.filterLabel}>省份</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-                {/* 显示3个示例省份 */}
                 {provinceExamples.map((name, index) =>
                   renderFilterChip(
                     { id: index, name },
@@ -460,7 +594,6 @@ export default function SearchScreen() {
                     () => handleProvinceSelect(name)
                   )
                 )}
-                {/* 更多按钮 */}
                 {renderFilterChip(
                   { id: -1, name: '' },
                   false,
@@ -476,7 +609,6 @@ export default function SearchScreen() {
             <Text style={styles.filterLabel}>行业</Text>
             <View style={styles.filterScrollWrapper}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-                {/* 显示3个示例行业 */}
                 {industryExamples.map((name, index) =>
                   renderFilterChip(
                     { id: index, name },
@@ -484,7 +616,6 @@ export default function SearchScreen() {
                     () => handleIndustrySelect(name)
                   )
                 )}
-                {/* 更多按钮 */}
                 {renderFilterChip(
                   { id: -1, name: '' },
                   false,
@@ -529,6 +660,17 @@ export default function SearchScreen() {
           </View>
           <Text style={styles.searchButtonText}>搜索</Text>
         </TouchableOpacity>
+
+        {/* 清空筛选按钮 */}
+        {(keyword || selectedProvince || selectedIndustry || minBudget || maxBudget) && hasSearched && (
+          <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
+            <FontAwesome6 name="rotate-left" size={14} color="#6B7280" />
+            <Text style={styles.clearButtonText}>重置筛选条件</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* 搜索历史 */}
+        {renderSearchHistory()}
 
         {/* 搜索结果 */}
         {hasSearched && (

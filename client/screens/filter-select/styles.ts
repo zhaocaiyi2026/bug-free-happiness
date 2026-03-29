@@ -98,5 +98,28 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       paddingVertical: Spacing['3xl'],
     },
+    // 提示条
+    tipBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFFBEB',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      marginHorizontal: Spacing.sm,
+      marginTop: Spacing.sm,
+      borderRadius: BorderRadius.md,
+    },
+    tipText: {
+      fontSize: 11,
+      color: '#D97706',
+      marginLeft: Spacing.xs,
+    },
+    // 列表计数
+    listCount: {
+      fontSize: 12,
+      color: '#9CA3AF',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.xs,
+    },
   });
 };

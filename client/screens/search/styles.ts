@@ -312,5 +312,64 @@ export const createStyles = (theme: Theme) => {
       color: '#9CA3AF',
       marginTop: Spacing.xs,
     },
+    // 清空筛选按钮
+    clearButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      marginBottom: Spacing.sm,
+    },
+    clearButtonText: {
+      fontSize: 13,
+      color: '#6B7280',
+      marginLeft: Spacing.xs,
+    },
+    // 搜索历史
+    historySection: {
+      backgroundColor: '#FFFFFF',
+      marginHorizontal: Spacing.sm,
+      marginTop: Spacing.sm,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+    },
+    historyHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: Spacing.sm,
+    },
+    historyTitle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: '#1C1917',
+    },
+    historyList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginHorizontal: -Spacing.xs,
+    },
+    historyItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#F5F5F5',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs + 2,
+      borderRadius: BorderRadius.full,
+      margin: Spacing.xs,
+      maxWidth: '45%',
+    },
+    historyText: {
+      fontSize: 12,
+      color: '#4B5563',
+      flex: 1,
+    },
+    historyHint: {
+      fontSize: 10,
+      color: '#9CA3AF',
+      marginTop: Spacing.sm,
+      textAlign: 'center',
+    },
   });
 };

@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '@/constants/api';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -49,7 +49,6 @@ export default function FilterSelectScreen() {
   const filterType = params?.type || 'province';
   const selectedValue = params?.selected || '';
   const returnTo = params?.returnTo || 'search';
-  // 保留原有的筛选参数
   const existingKeyword = params?.keyword || '';
   const existingIndustry = params?.industry || '';
   const existingProvince = params?.province || '';
@@ -57,8 +56,12 @@ export default function FilterSelectScreen() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [allItems, setAllItems] = useState<(Province | Industry)[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // 防止重复导航
+  const isNavigatingRef = useRef(false);
 
   const pageTitle = filterType === 'province' ? '选择省份' : '选择行业';
+  const placeholder = filterType === 'province' ? '搜索省份...' : '搜索行业...';
 
   useEffect(() => {
     fetchItems();
@@ -72,9 +75,7 @@ export default function FilterSelectScreen() {
         ? '/api/v1/common/provinces' 
         : '/api/v1/common/industries';
       
-      const res = await fetch(
-        `${API_BASE_URL}${endpoint}`
-      );
+      const res = await fetch(`${API_BASE_URL}${endpoint}`);
       const data = await res.json();
 
       if (data.success) {
@@ -96,9 +97,12 @@ export default function FilterSelectScreen() {
   }, [allItems, searchKeyword]);
 
   const handleSelect = useCallback((itemName: string) => {
+    // 防止重复导航
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    
     // 根据返回目标页面处理
     if (returnTo === 'potential-customers') {
-      // 返回潜在客户页面
       router.replace('/potential-customers', {
         industry: itemName,
         customerType: params?.customerType || 'all',
@@ -122,20 +126,23 @@ export default function FilterSelectScreen() {
     // 根据筛选类型设置对应参数
     if (filterType === 'province') {
       searchParams.province = itemName;
-      // 保留原有的行业筛选
       if (existingIndustry) {
         searchParams.industry = existingIndustry;
       }
     } else {
       searchParams.industry = itemName;
-      // 保留原有的省份筛选
       if (existingProvince) {
         searchParams.province = existingProvince;
       }
     }
     
-    // 使用 replace 替换当前页面，这样返回时会跳过 filter-select 页面
+    // 关键：使用 replace 替换当前页面，返回时会跳过此页面
     router.replace('/search', searchParams);
+    
+    // 延迟重置导航状态
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 500);
   }, [filterType, router, existingKeyword, existingIndustry, existingProvince, returnTo, params?.customerType]);
 
   const renderItem = useCallback(({ item }: { item: Province | Industry }) => {
@@ -194,10 +201,12 @@ export default function FilterSelectScreen() {
             <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
             <TextInput
               style={styles.searchInput}
-              placeholder={`搜索${filterType === 'province' ? '省份' : '行业'}...`}
+              placeholder={placeholder}
               placeholderTextColor="#9CA3AF"
               value={searchKeyword}
               onChangeText={setSearchKeyword}
+              autoCorrect={false}
+              autoCapitalize="none"
             />
             {searchKeyword.length > 0 && (
               <TouchableOpacity onPress={() => setSearchKeyword('')}>
@@ -208,6 +217,12 @@ export default function FilterSelectScreen() {
         </View>
       </View>
 
+      {/* 快捷提示 */}
+      <View style={styles.tipBar}>
+        <FontAwesome6 name="lightbulb" size={12} color="#F59E0B" />
+        <Text style={styles.tipText}>选择后将自动返回搜索页面并刷新结果</Text>
+      </View>
+
       {/* 列表 */}
       <FlatList
         data={filteredItems}
@@ -215,6 +230,11 @@ export default function FilterSelectScreen() {
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          filteredItems.length > 0 ? (
+            <Text style={styles.listCount}>共 {filteredItems.length} 个{filterType === 'province' ? '省份' : '行业'}</Text>
+          ) : null
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <FontAwesome6 name="magnifying-glass" size={48} color="#D1D5DB" />
