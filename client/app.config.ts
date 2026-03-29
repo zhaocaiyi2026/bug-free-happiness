@@ -63,7 +63,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": `招标通App需要访问您的位置以提供周边服务及导航功能。`
+          "locationWhenInUsePermission": "招标通App需要访问您的位置以提供周边服务及导航功能。",
+          "isAndroidBackgroundLocationEnabled": false
         }
       ],
       [

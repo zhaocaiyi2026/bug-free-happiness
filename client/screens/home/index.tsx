@@ -245,22 +245,18 @@ export default function HomeScreen() {
     try {
       setLocating(true);
       
-      const isLocationEnabled = await Location.hasServicesEnabledAsync();
-      if (!isLocationEnabled) {
-        Alert.alert(
-          '定位服务未开启', 
-          '请在手机设置中开启定位服务（GPS），以便使用位置相关功能',
-          [
-            { text: '取消', style: 'cancel' },
-            { text: '去设置', onPress: openLocationSettings }
-          ]
-        );
-        setLocating(false);
-        return;
+      // 先请求权限，再检查服务状态（体验版上顺序很重要）
+      const { status } = await Location.getForegroundPermissionsAsync();
+      
+      let finalStatus = status;
+      
+      // 如果还没有权限，尝试请求
+      if (status !== 'granted') {
+        const requestResult = await Location.requestForegroundPermissionsAsync();
+        finalStatus = requestResult.status;
       }
       
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (finalStatus !== 'granted') {
         Alert.alert(
           '定位权限被拒绝', 
           '需要定位权限才能使用此功能，请在手机设置中为应用开启定位权限',
@@ -273,28 +269,61 @@ export default function HomeScreen() {
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      // 获取位置（体验版上可能需要更长时间）
+      let location;
+      try {
+        // 使用 Promise.race 实现超时
+        location = await Promise.race([
+          Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }),
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('定位超时')), 15000)
+          ),
+        ]);
+      } catch (timeoutError) {
+        // 超时后尝试使用低精度定位
+        console.log('高精度定位超时，尝试低精度定位');
+        location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Low,
+        });
+      }
 
+      // 逆地理编码
       const reverseGeocode = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       });
 
+      // 解析地址信息
       if (reverseGeocode.length > 0) {
         const address = reverseGeocode[0];
-        const province = address.region || address.subregion || '';
-        const city = address.city || address.subregion || '';
+        // 优先使用 region，其次 subregion，再次使用其他字段
+        let province = address.region || address.subregion || address.country || '';
+        let city = address.city || address.subregion || address.district || '';
         
-        const newLocation = { province, city };
-        setUserLocation(newLocation);
-        userLocationRef.current = newLocation;
-        Alert.alert('定位成功', `已定位到：${province} ${city}`);
+        // 处理直辖市情况（北京、上海、天津、重庆）
+        const municipalities = ['北京市', '上海市', '天津市', '重庆市', '北京', '上海', '天津', '重庆'];
+        const isMunicipality = municipalities.some(m => province.includes(m));
+        if (isMunicipality && !city) {
+          city = province;
+        }
+        
+        if (province || city) {
+          const newLocation = { province, city };
+          setUserLocation(newLocation);
+          userLocationRef.current = newLocation;
+          Alert.alert('定位成功', `已定位到：${province} ${city}`);
+        } else {
+          // 即使没有详细地址，也记录坐标
+          Alert.alert('定位成功', '已获取您的位置，但无法解析详细地址');
+        }
+      } else {
+        Alert.alert('定位成功', '已获取您的位置，但无法解析详细地址');
       }
     } catch (error) {
       console.error('定位失败:', error);
-      Alert.alert('定位失败', '无法获取您的位置，请检查定位服务是否开启');
+      Alert.alert('定位失败', '无法获取您的位置，请检查定位服务是否开启后重试');
     } finally {
       setLocating(false);
     }
@@ -317,21 +346,8 @@ export default function HomeScreen() {
   };
 
   const handleFilterPress = async (filterKey: string) => {
+    // 需要定位但还没有位置信息时，直接请求定位
     if (filterKey !== 'all' && !userLocation) {
-      const isLocationEnabled = await Location.hasServicesEnabledAsync();
-      if (!isLocationEnabled) {
-        Alert.alert(
-          '定位服务未开启', 
-          '使用此功能需要开启定位服务，请在手机设置中开启GPS定位',
-          [
-            { text: '取消', style: 'cancel' },
-            { text: '去设置', onPress: openLocationSettings },
-            { text: '重试定位', onPress: requestLocation }
-          ]
-        );
-        return;
-      }
-      
       Alert.alert(
         '需要定位', 
         '使用此功能需要先获取您的位置，是否现在定位？',
