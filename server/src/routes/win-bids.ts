@@ -64,9 +64,49 @@ router.get('/', async (req, res) => {
       query = query.eq('industry', industry as string);
     }
     
-    // 关键词搜索：搜索项目名称(title)和中标单位(win_company)
+    // 关键词搜索：支持分词匹配，搜索项目名称(title)、中标单位(win_company)和项目详情(content)
+    // 例如搜索"能源环保"，会拆分为"能源"和"环保"，只要包含任意一个词即可匹配
     if (keyword) {
-      query = query.or(`title.ilike.%${keyword}%,win_company.ilike.%${keyword}%,content.ilike.%${keyword}%`);
+      const keywordStr = keyword as string;
+      
+      // 分词函数：支持空格分隔和中文自动分词
+      const tokenize = (text: string): string[] => {
+        // 1. 先按空格分词
+        const spaceTokens = text.split(/\s+/).filter(k => k.length > 0);
+        const allTokens: string[] = [];
+        
+        for (const token of spaceTokens) {
+          // 如果是纯中文且长度>2，尝试按2-4字分词（滑动窗口）
+          if (/^[\u4e00-\u9fa5]+$/.test(token) && token.length > 2) {
+            // 使用滑动窗口提取所有可能的2-4字词组
+            for (let len = 2; len <= Math.min(4, token.length); len++) {
+              for (let i = 0; i <= token.length - len; i++) {
+                const subToken = token.substring(i, i + len);
+                allTokens.push(subToken);
+              }
+            }
+          } else {
+            // 非中文或长度<=2，直接使用
+            allTokens.push(token);
+          }
+        }
+        
+        // 去重
+        return [...new Set(allTokens)];
+      };
+      
+      const keywords = tokenize(keywordStr);
+      
+      if (keywords.length === 1) {
+        // 单个关键词：直接匹配
+        query = query.or(`title.ilike.%${keywords[0]}%,win_company.ilike.%${keywords[0]}%,content.ilike.%${keywords[0]}%`);
+      } else if (keywords.length > 1) {
+        // 多个关键词：构建OR条件，匹配任意一个词
+        const conditions = keywords.map(k => 
+          `title.ilike.%${k}%,win_company.ilike.%${k}%,content.ilike.%${k}%`
+        ).join(',');
+        query = query.or(conditions);
+      }
     }
 
     // 核心过滤条件：

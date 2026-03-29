@@ -47,8 +47,41 @@ router.get('/', async (req, res) => {
       if (industry) {
         bidQuery = bidQuery.eq('industry', industry as string);
       }
+      // 关键词搜索：支持分词匹配
       if (keyword) {
-        bidQuery = bidQuery.or(`title.ilike.%${keyword}%,contact_person.ilike.%${keyword}%,contact_address.ilike.%${keyword}%`);
+        const keywordStr = keyword as string;
+        
+        // 分词函数：支持空格分隔和中文自动分词
+        const tokenize = (text: string): string[] => {
+          const spaceTokens = text.split(/\s+/).filter(k => k.length > 0);
+          const allTokens: string[] = [];
+          
+          for (const token of spaceTokens) {
+            if (/^[\u4e00-\u9fa5]+$/.test(token) && token.length > 2) {
+              for (let len = 2; len <= Math.min(4, token.length); len++) {
+                for (let i = 0; i <= token.length - len; i++) {
+                  const subToken = token.substring(i, i + len);
+                  allTokens.push(subToken);
+                }
+              }
+            } else {
+              allTokens.push(token);
+            }
+          }
+          
+          return [...new Set(allTokens)];
+        };
+        
+        const keywords = tokenize(keywordStr);
+        
+        if (keywords.length === 1) {
+          bidQuery = bidQuery.or(`title.ilike.%${keywords[0]}%,contact_person.ilike.%${keywords[0]}%,contact_address.ilike.%${keywords[0]}%`);
+        } else if (keywords.length > 1) {
+          const conditions = keywords.map(k => 
+            `title.ilike.%${k}%,contact_person.ilike.%${k}%,contact_address.ilike.%${k}%`
+          ).join(',');
+          bidQuery = bidQuery.or(conditions);
+        }
       }
 
       const { data: bids, error: bidError } = await bidQuery.order('publish_date', { ascending: false });
@@ -90,8 +123,41 @@ router.get('/', async (req, res) => {
       if (industry) {
         winBidQuery = winBidQuery.eq('industry', industry as string);
       }
+      // 关键词搜索：支持分词匹配
       if (keyword) {
-        winBidQuery = winBidQuery.or(`title.ilike.%${keyword}%,win_company.ilike.%${keyword}%,win_company_address.ilike.%${keyword}%`);
+        const keywordStr = keyword as string;
+        
+        // 分词函数：支持空格分隔和中文自动分词
+        const tokenize = (text: string): string[] => {
+          const spaceTokens = text.split(/\s+/).filter(k => k.length > 0);
+          const allTokens: string[] = [];
+          
+          for (const token of spaceTokens) {
+            if (/^[\u4e00-\u9fa5]+$/.test(token) && token.length > 2) {
+              for (let len = 2; len <= Math.min(4, token.length); len++) {
+                for (let i = 0; i <= token.length - len; i++) {
+                  const subToken = token.substring(i, i + len);
+                  allTokens.push(subToken);
+                }
+              }
+            } else {
+              allTokens.push(token);
+            }
+          }
+          
+          return [...new Set(allTokens)];
+        };
+        
+        const keywords = tokenize(keywordStr);
+        
+        if (keywords.length === 1) {
+          winBidQuery = winBidQuery.or(`title.ilike.%${keywords[0]}%,win_company.ilike.%${keywords[0]}%,win_company_address.ilike.%${keywords[0]}%`);
+        } else if (keywords.length > 1) {
+          const conditions = keywords.map(k => 
+            `title.ilike.%${k}%,win_company.ilike.%${k}%,win_company_address.ilike.%${k}%`
+          ).join(',');
+          winBidQuery = winBidQuery.or(conditions);
+        }
       }
 
       const { data: winBids, error: winBidError } = await winBidQuery.order('publish_date', { ascending: false });
