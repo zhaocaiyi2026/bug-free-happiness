@@ -81,10 +81,10 @@ export default function HomeScreen() {
 
   // 快捷入口 - 固定4个
   const quickActions = [
-    { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB', bgColor: 'rgba(37, 99, 235, 0.1)' },
-    { key: 'province', label: '本省招标', icon: 'map-location-dot', color: '#7C3AED', bgColor: 'rgba(124, 58, 237, 0.1)' },
-    { key: 'city', label: '本市招标', icon: 'city', color: '#EA580C', bgColor: 'rgba(234, 88, 12, 0.1)' },
-    { key: 'provinceWin', label: '本省中标', icon: 'trophy', color: '#059669', bgColor: 'rgba(5, 150, 105, 0.1)' },
+    { key: 'all', label: '全部招标', icon: 'layer-group', color: '#2563EB', bgColor: '#EFF6FF', activeBgColor: '#2563EB' },
+    { key: 'province', label: '本省招标', icon: 'map-location-dot', color: '#7C3AED', bgColor: '#F5F3FF', activeBgColor: '#7C3AED' },
+    { key: 'city', label: '本市招标', icon: 'city', color: '#EA580C', bgColor: '#FFF7ED', activeBgColor: '#EA580C' },
+    { key: 'provinceWin', label: '本省中标', icon: 'trophy', color: '#059669', bgColor: '#ECFDF5', activeBgColor: '#059669' },
   ];
 
   const fetchStats = async () => {
@@ -544,13 +544,15 @@ export default function HomeScreen() {
               return (
                 <TouchableOpacity
                   key={action.key}
-                  style={[styles.quickActionCard, isActive && styles.quickActionCardActive]}
+                  style={[styles.quickActionCard]}
                   onPress={() => handleFilterPress(action.key)}
                   activeOpacity={0.7}
                 >
                   <View style={[
                     styles.quickActionIconWrapper,
-                    { backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : action.bgColor }
+                    { 
+                      backgroundColor: isActive ? action.activeBgColor : action.bgColor,
+                    }
                   ]}>
                     <FontAwesome6 
                       name={action.icon as any} 
@@ -560,7 +562,7 @@ export default function HomeScreen() {
                   </View>
                   <Text style={[
                     styles.quickActionLabel,
-                    isActive && styles.quickActionLabelActive
+                    isActive && { color: action.color }
                   ]}>
                     {action.label}
                   </Text>

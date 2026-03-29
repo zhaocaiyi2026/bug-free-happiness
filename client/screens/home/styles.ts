@@ -186,41 +186,30 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: 4,
       alignItems: 'center',
     },
-    quickActionCardActive: {
-      // Active state styling handled in children
-    },
     quickActionIconWrapper: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
+      width: 56,
+      height: 56,
+      borderRadius: 18,
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: Spacing.xs + 2,
-      backgroundColor: '#FFFFFF',
       ...Platform.select({
         ios: {
           shadowColor: '#1E40AF',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.08,
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.12,
           shadowRadius: 8,
         },
         android: {
-          elevation: 2,
+          elevation: 3,
         },
       }),
-    },
-    quickActionCardActive: {
-      // Handled inline
     },
     quickActionLabel: {
       fontSize: 11,
       fontWeight: '600',
-      color: '#475569',
+      color: '#64748B',
       textAlign: 'center',
-    },
-    quickActionLabelActive: {
-      color: '#2563EB',
-      fontWeight: '700',
     },
     
     // ==================== Bid List ====================
