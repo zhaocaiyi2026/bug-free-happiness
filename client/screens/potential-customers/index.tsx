@@ -103,8 +103,12 @@ export default function PotentialCustomersScreen() {
       params.append('page', String(pageNum));
       params.append('pageSize', '20');
       
-      if (searchKeyword) params.append('keyword', searchKeyword);
-      if (searchIndustry) params.append('industry', searchIndustry);
+      // 用户输入关键词搜索时，只使用关键词，不叠加行业筛选
+      if (searchKeyword) {
+        params.append('keyword', searchKeyword);
+      } else if (searchIndustry) {
+        params.append('industry', searchIndustry);
+      }
       if (searchCustomerType !== 'all') params.append('customerType', searchCustomerType);
 
       /**
@@ -145,8 +149,12 @@ export default function PotentialCustomersScreen() {
       params.append('page', String(pageNum));
       params.append('pageSize', '20');
       
-      if (keyword) params.append('keyword', keyword);
-      if (selectedIndustry) params.append('industry', selectedIndustry);
+      // 用户输入关键词搜索时，只使用关键词，不叠加行业筛选
+      if (keyword) {
+        params.append('keyword', keyword);
+      } else if (selectedIndustry) {
+        params.append('industry', selectedIndustry);
+      }
       if (customerType !== 'all') params.append('customerType', customerType);
 
       /**
@@ -201,8 +209,18 @@ export default function PotentialCustomersScreen() {
   };
 
   const handleIndustryChipSelect = (industryName: string) => {
-    // 快捷行业按钮直接筛选
-    setSelectedIndustry(industryName);
+    // 选择行业时，用行业名称作为关键词搜索，不叠加行业筛选
+    setSelectedIndustry('');
+    setKeyword(industryName);
+  };
+
+  // 用户输入关键词时的处理
+  const handleKeywordChange = (text: string) => {
+    setKeyword(text);
+    // 用户输入关键词时，自动取消行业筛选
+    if (text.length > 0 && selectedIndustry) {
+      setSelectedIndustry('');
+    }
   };
 
   const handleClearIndustry = () => {
@@ -354,12 +372,17 @@ export default function PotentialCustomersScreen() {
               placeholder="输入公司名称、关键词搜索..."
               placeholderTextColor="#9CA3AF"
               value={keyword}
-              onChangeText={setKeyword}
+              onChangeText={handleKeywordChange}
               onSubmitEditing={handleSearch}
               returnKeyType="search"
+              underlineColorAndroid="transparent"
             />
             {keyword.length > 0 && (
-              <TouchableOpacity onPress={() => setKeyword('')}>
+              <TouchableOpacity onPress={() => {
+                setKeyword('');
+                setCustomers([]);
+                setHasSearched(false);
+              }}>
                 <FontAwesome6 name="circle-xmark" size={14} color="#9CA3AF" />
               </TouchableOpacity>
             )}

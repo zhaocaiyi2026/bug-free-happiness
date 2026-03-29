@@ -52,6 +52,8 @@ export const createStyles = (theme: Theme) => {
       fontSize: 14,
       color: '#1C1917',
       marginLeft: Spacing.sm,
+      borderWidth: 0,
+      outlineWidth: 0,
     },
     // 筛选区域
     filterSection: {
