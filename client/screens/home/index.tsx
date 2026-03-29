@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   Linking,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
@@ -54,6 +55,12 @@ interface UserLocation {
   city: string;
 }
 
+interface Province {
+  id: number;
+  name: string;
+  code: string;
+}
+
 export default function HomeScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -74,6 +81,11 @@ export default function HomeScreen() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [locating, setLocating] = useState(false);
+  
+  // 省份选择相关
+  const [provinces, setProvinces] = useState<Province[]>([]);
+  const [selectedProvince, setSelectedProvince] = useState<string>('');
+  const [provinceModalVisible, setProvinceModalVisible] = useState(false);
   
   const userLocationRef = useRef<UserLocation | null>(null);
   const activeFilterRef = useRef<string>('all');
@@ -103,10 +115,11 @@ export default function HomeScreen() {
     }
   };
 
-  const fetchData = async (pageNum: number, filterKey: string) => {
+  const fetchData = async (pageNum: number, filterKey: string, selectedProvinceParam?: string) => {
     if (loadingRef.current) return;
     
     const currentLocation = userLocationRef.current;
+    const provinceToUse = selectedProvinceParam || currentLocation?.province;
     
     try {
       loadingRef.current = true;
@@ -117,8 +130,8 @@ export default function HomeScreen() {
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
-        if (currentLocation?.province) {
-          params.append('province', currentLocation.province);
+        if (provinceToUse) {
+          params.append('province', provinceToUse);
         }
 
         const res = await fetch(`${API_BASE_URL}/api/v1/bids?${params.toString()}`);
@@ -146,8 +159,8 @@ export default function HomeScreen() {
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
 
-        if (filterKey === 'provinceWin' && currentLocation?.province) {
-          params.append('province', currentLocation.province);
+        if (filterKey === 'provinceWin' && provinceToUse) {
+          params.append('province', provinceToUse);
         } else if (filterKey === 'cityWin' && currentLocation?.city) {
           params.append('city', currentLocation.city);
         }
@@ -188,8 +201,8 @@ export default function HomeScreen() {
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
 
-        if (filterKey === 'province' && currentLocation?.province) {
-          params.append('province', currentLocation.province);
+        if (filterKey === 'province' && provinceToUse) {
+          params.append('province', provinceToUse);
         } else if (filterKey === 'city' && currentLocation?.city) {
           params.append('city', currentLocation.city);
         }
@@ -226,10 +239,24 @@ export default function HomeScreen() {
     }
   };
 
+  // 获取省份列表
+  const fetchProvinces = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/common/provinces`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setProvinces(data.data);
+      }
+    } catch (error) {
+      console.error('获取省份列表失败:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchData(1, activeFilterRef.current);
       fetchStats();
+      fetchProvinces();
     }, [])
   );
 
@@ -298,11 +325,11 @@ export default function HomeScreen() {
 
       if (reverseGeocode.length > 0) {
         const address = reverseGeocode[0];
-        let province = address.region || address.subregion || address.country || '';
-        let city = address.city || address.subregion || address.district || '';
         
         // 处理直辖市
         const municipalities = ['北京市', '上海市', '天津市', '重庆市', '北京', '上海', '天津', '重庆'];
+        const province = address.region || address.subregion || address.country || '';
+        let city = address.city || address.subregion || address.district || '';
         const isMunicipality = municipalities.some(m => province.includes(m));
         if (isMunicipality && !city) {
           city = province;
@@ -352,8 +379,18 @@ export default function HomeScreen() {
   };
 
   const handleFilterPress = async (filterKey: string) => {
-    // 需要定位但还没有位置信息时，直接请求定位
-    if (filterKey !== 'all' && !userLocation) {
+    // 本省招标和本省中标需要先选择省份
+    if (filterKey === 'province' || filterKey === 'provinceWin') {
+      if (provinces.length === 0) {
+        Alert.alert('提示', '正在加载省份列表，请稍候');
+        return;
+      }
+      setProvinceModalVisible(true);
+      return;
+    }
+    
+    // 本市招标需要定位
+    if (filterKey === 'city' && !userLocation) {
       Alert.alert(
         '需要定位', 
         '使用此功能需要先获取您的位置，是否现在定位？',
@@ -373,9 +410,26 @@ export default function HomeScreen() {
     fetchData(1, filterKey);
   };
 
-  const handleBidPress = (bidId: number) => {
-    router.push('/detail', { id: bidId });
+  // 选择省份后的处理
+  const handleProvinceSelect = (provinceName: string) => {
+    setSelectedProvince(provinceName);
+    setProvinceModalVisible(false);
+    
+    const filterKey = activeFilter === 'provinceWin' ? 'provinceWin' : 'province';
+    
+    setPage(1);
+    setHasMore(true);
+    setBids([]);
+    setActiveFilter(filterKey);
+    activeFilterRef.current = filterKey;
+    
+    // 根据选择的省份筛选数据
+    fetchData(1, filterKey, provinceName);
   };
+
+  const handleBidPress = useCallback((bidId: number) => {
+    router.push('/detail', { id: bidId });
+  }, [router]);
 
   const handleSearchPress = () => {
     router.navigate('/search');
@@ -445,7 +499,7 @@ export default function HomeScreen() {
         {isWinBid && item.publish_date && <Text style={styles.bidPublishDate}>发布 {formatDeadline(item.publish_date)}</Text>}
       </TouchableOpacity>
     );
-  }, [styles]);
+  }, [styles, handleBidPress]);
 
   if (loading && page === 1 && bids.length === 0) {
     return (
@@ -628,6 +682,52 @@ export default function HomeScreen() {
           }
         />
       </View>
+
+      {/* 省份选择弹窗 */}
+      <Modal
+        visible={provinceModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setProvinceModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>选择省份</Text>
+              <TouchableOpacity onPress={() => setProvinceModalVisible(false)}>
+                <FontAwesome6 name="xmark" size={20} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={provinces}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator
+              contentContainerStyle={styles.provinceList}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.provinceItem,
+                    selectedProvince === item.name && styles.provinceItemActive,
+                  ]}
+                  onPress={() => handleProvinceSelect(item.name)}
+                >
+                  <Text
+                    style={[
+                      styles.provinceText,
+                      selectedProvince === item.name && styles.provinceTextActive,
+                    ]}
+                  >
+                    {item.name}
+                  </Text>
+                  {selectedProvince === item.name && (
+                    <FontAwesome6 name="check" size={16} color={theme.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }

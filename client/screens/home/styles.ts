@@ -381,5 +381,59 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: 'rgba(255,255,255,0.25)',
       borderColor: 'rgba(255,255,255,0.4)',
     },
+    
+    // ==================== Province Modal ====================
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContainer: {
+      backgroundColor: '#FFFFFF',
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: '70%',
+      paddingBottom: Spacing.xl,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E2E8F0',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#1E293B',
+    },
+    provinceList: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+    },
+    provinceItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F1F5F9',
+    },
+    provinceItemActive: {
+      backgroundColor: 'rgba(37, 99, 235, 0.05)',
+      marginHorizontal: -Spacing.md,
+      paddingHorizontal: Spacing.md,
+      borderRadius: 8,
+    },
+    provinceText: {
+      fontSize: 15,
+      color: '#475569',
+    },
+    provinceTextActive: {
+      color: theme.primary,
+      fontWeight: '600',
+    },
   });
 };

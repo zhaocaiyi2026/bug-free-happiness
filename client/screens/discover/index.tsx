@@ -7,8 +7,6 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
-  Modal,
-  FlatList,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
@@ -17,12 +15,6 @@ import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
 import { createStyles } from './styles';
-
-interface Province {
-  id: number;
-  name: string;
-  code: string;
-}
 
 interface Industry {
   id: number;
@@ -89,29 +81,9 @@ export default function DiscoverScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // 地址选择相关
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [selectedProvince, setSelectedProvince] = useState<string>('');
-  const [provinceModalVisible, setProvinceModalVisible] = useState(false);
-
   useEffect(() => {
-    fetchProvinces();
     fetchData();
   }, []);
-
-  const fetchProvinces = async () => {
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/v1/common/provinces`
-      );
-      const data = await res.json();
-      if (data.success) {
-        setProvinces(data.data);
-      }
-    } catch (error) {
-      console.error('获取省份列表失败:', error);
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -173,17 +145,11 @@ export default function DiscoverScreen() {
   // 点击热门行业 - 自动搜索该行业
   const handleCategoryPress = (category: Category) => {
     if (category.id === 'more') {
-      // 更多行业 - 跳转到搜索页
-      router.push('/search', { 
-        province: selectedProvince,
-        autoSearch: 'true' 
-      });
+      router.push('/search', { autoSearch: 'true' });
       return;
     }
-    // 跳转到搜索页面并自动搜索该行业
     router.push('/search', { 
       industry: category.name,
-      province: selectedProvince,
       autoSearch: 'true'
     });
   };
@@ -193,19 +159,11 @@ export default function DiscoverScreen() {
   };
 
   const handleViewAllCategories = () => {
-    router.push('/search', { 
-      province: selectedProvince,
-      autoSearch: 'true' 
-    });
+    router.push('/search', { autoSearch: 'true' });
   };
 
   const handleViewAllBids = () => {
     router.push('/bidList', { type: 'today' });
-  };
-
-  const handleProvinceSelect = (provinceName: string) => {
-    setSelectedProvince(provinceName === '全部' ? '' : provinceName);
-    setProvinceModalVisible(false);
   };
 
   const formatBudget = (budget: number | null) => {
@@ -259,21 +217,6 @@ export default function DiscoverScreen() {
     </TouchableOpacity>
   ), [styles]);
 
-  const renderProvinceItem = useCallback(({ item }: { item: { id: number; name: string } }) => {
-    const isSelected = selectedProvince === item.name || (item.name === '全部' && !selectedProvince);
-    return (
-      <TouchableOpacity
-        style={[styles.modalItem, isSelected && styles.modalItemActive]}
-        onPress={() => handleProvinceSelect(item.name)}
-      >
-        <Text style={[styles.modalItemText, isSelected && styles.modalItemTextActive]}>
-          {item.name}
-        </Text>
-        {isSelected && <FontAwesome6 name="check" size={14} color="#2563EB" />}
-      </TouchableOpacity>
-    );
-  }, [styles, selectedProvince]);
-
   if (loading && !refreshing) {
     return (
       <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
@@ -304,7 +247,7 @@ export default function DiscoverScreen() {
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
       <View style={{ flex: 1 }}>
-        {/* Header - 品牌增强型 */}
+        {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <View style={styles.appTitleWrapper}>
@@ -334,27 +277,13 @@ export default function DiscoverScreen() {
             />
           }
         >
-          {/* 地址选择 */}
-          <View style={styles.locationSection}>
-            <TouchableOpacity 
-              style={styles.locationSelector}
-              onPress={() => setProvinceModalVisible(true)}
-            >
-              <FontAwesome6 name="location-dot" size={14} color="#2563EB" />
-              <Text style={styles.locationText}>
-                {selectedProvince || '选择地区'}
-              </Text>
-              <FontAwesome6 name="chevron-down" size={10} color="#6B7280" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleViewAllCategories}>
-              <Text style={styles.viewAllText}>查看全部</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* 热门行业 - 宫格 */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>热门行业</Text>
+              <TouchableOpacity onPress={handleViewAllCategories}>
+                <Text style={styles.sectionMore}>查看全部</Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.categoryGrid}>
               {categories.map((category) => (
@@ -439,36 +368,6 @@ export default function DiscoverScreen() {
             )}
           </View>
         </ScrollView>
-
-        {/* 省份选择弹窗 */}
-        <Modal
-          visible={provinceModalVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setProvinceModalVisible(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setProvinceModalVisible(false)}
-          >
-            <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>选择地区</Text>
-                <TouchableOpacity onPress={() => setProvinceModalVisible(false)}>
-                  <FontAwesome6 name="xmark" size={18} color="#6B7280" />
-                </TouchableOpacity>
-              </View>
-              <FlatList
-                data={[{ id: 0, name: '全部' }, ...provinces]}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderProvinceItem}
-                showsVerticalScrollIndicator={false}
-                style={styles.modalList}
-              />
-            </View>
-          </TouchableOpacity>
-        </Modal>
       </View>
     </Screen>
   );
