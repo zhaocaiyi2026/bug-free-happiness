@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
@@ -65,7 +66,7 @@ export default function DetailScreen() {
   const fetchBidDetail = async () => {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids/${params.id}`
+        `${API_BASE_URL}/api/v1/bids/${params.id}`
       );
       const data = await res.json();
 
@@ -87,7 +88,7 @@ export default function DetailScreen() {
   const checkFavorite = async () => {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites/check?userId=${userId}&bidId=${params.id}`
+        `${API_BASE_URL}/api/v1/favorites/check?userId=${userId}&bidId=${params.id}`
       );
       const data = await res.json();
 
@@ -103,7 +104,7 @@ export default function DetailScreen() {
     try {
       if (isFavorite) {
         const res = await fetch(
-          `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites/${params.id}?userId=${userId}`,
+          `${API_BASE_URL}/api/v1/favorites/${params.id}?userId=${userId}`,
           { method: 'DELETE' }
         );
         const data = await res.json();
@@ -114,7 +115,7 @@ export default function DetailScreen() {
         }
       } else {
         const res = await fetch(
-          `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites`,
+          `${API_BASE_URL}/api/v1/favorites`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

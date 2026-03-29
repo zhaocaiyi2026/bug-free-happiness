@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -75,7 +76,7 @@ export default function MessageListScreen() {
     try {
       setLoading(true);
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/messages?page=1&pageSize=100`
+        `${API_BASE_URL}/api/v1/messages?page=1&pageSize=100`
       );
       const data = await res.json();
 
@@ -100,7 +101,7 @@ export default function MessageListScreen() {
   const handleMarkRead = async (messageId: number) => {
     try {
       await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/messages/${messageId}/read`,
+        `${API_BASE_URL}/api/v1/messages/${messageId}/read`,
         { method: 'PUT' }
       );
 
@@ -146,7 +147,7 @@ export default function MessageListScreen() {
         onPress: async () => {
           try {
             const res = await fetch(
-              `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/messages/${messageId}`,
+              `${API_BASE_URL}/api/v1/messages/${messageId}`,
               { method: 'DELETE' }
             );
             const data = await res.json();

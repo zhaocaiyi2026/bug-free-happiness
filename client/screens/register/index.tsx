@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
@@ -61,7 +62,7 @@ export default function RegisterScreen() {
     setErrorMessage('');
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/auth/send-sms`,
+        `${API_BASE_URL}/api/v1/auth/send-sms`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -118,7 +119,7 @@ export default function RegisterScreen() {
 
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/auth/register`,
+        `${API_BASE_URL}/api/v1/auth/register`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

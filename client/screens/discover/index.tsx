@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -101,7 +102,7 @@ export default function DiscoverScreen() {
   const fetchProvinces = async () => {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/common/provinces`
+        `${API_BASE_URL}/api/v1/common/provinces`
       );
       const data = await res.json();
       if (data.success) {
@@ -125,7 +126,7 @@ export default function DiscoverScreen() {
   const fetchIndustries = async () => {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/common/industries`
+        `${API_BASE_URL}/api/v1/common/industries`
       );
       const data = await res.json();
 
@@ -152,7 +153,7 @@ export default function DiscoverScreen() {
       params.append('pageSize', '6');
 
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
+        `${API_BASE_URL}/api/v1/bids?${params.toString()}`
       );
       const data = await res.json();
 

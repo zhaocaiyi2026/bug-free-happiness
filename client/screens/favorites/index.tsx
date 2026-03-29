@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -51,7 +52,7 @@ export default function FavoritesScreen() {
   const fetchFavorites = async () => {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites?userId=${userId}`
+        `${API_BASE_URL}/api/v1/favorites?userId=${userId}`
       );
       const data = await res.json();
 
@@ -84,7 +85,7 @@ export default function FavoritesScreen() {
         onPress: async () => {
           try {
             const res = await fetch(
-              `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites/${bidId}?userId=${userId}`,
+              `${API_BASE_URL}/api/v1/favorites/${bidId}?userId=${userId}`,
               { method: 'DELETE' }
             );
             const data = await res.json();

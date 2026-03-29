@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -54,7 +55,7 @@ export default function MessagesScreen() {
     try {
       setLoading(true);
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/messages?page=1&pageSize=100`
+        `${API_BASE_URL}/api/v1/messages?page=1&pageSize=100`
       );
       const data = await res.json();
 

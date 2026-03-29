@@ -4,6 +4,9 @@ const appName = process.env.COZE_PROJECT_NAME || process.env.EXPO_PUBLIC_COZE_PR
 const projectId = process.env.COZE_PROJECT_ID || process.env.EXPO_PUBLIC_COZE_PROJECT_ID;
 const slugAppName = projectId ? `app${projectId}` : 'myapp';
 
+// 后端API地址：优先使用环境变量，否则使用默认值
+const backendBaseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://127.0.0.1:9091';
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   return {
     ...config,
@@ -29,6 +32,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "bundler": "metro",
       "output": "single",
       "favicon": "./assets/images/favicon.png"
+    },
+    "extra": {
+      expoPublicBackendBaseUrl: backendBaseUrl,
     },
     "plugins": [
       process.env.EXPO_PUBLIC_BACKEND_BASE_URL ? [

@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -72,7 +73,7 @@ export default function FilterSelectScreen() {
         : '/api/v1/common/industries';
       
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}${endpoint}`
+        `${API_BASE_URL}${endpoint}`
       );
       const data = await res.json();
 

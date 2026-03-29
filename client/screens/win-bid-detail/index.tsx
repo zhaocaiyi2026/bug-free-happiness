@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
@@ -55,7 +56,7 @@ export default function WinBidDetailScreen() {
   const fetchWinBidDetail = async () => {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids/${params.id}`
+        `${API_BASE_URL}/api/v1/win-bids/${params.id}`
       );
       const data = await res.json();
 

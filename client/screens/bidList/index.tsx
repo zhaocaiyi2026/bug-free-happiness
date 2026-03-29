@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -119,7 +120,7 @@ export default function BidListScreen() {
       }
 
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${queryParams.toString()}`
+        `${API_BASE_URL}/api/v1/bids?${queryParams.toString()}`
       );
       const data = await res.json();
 
@@ -149,7 +150,7 @@ export default function BidListScreen() {
       queryParams.append('today', 'true');
 
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?${queryParams.toString()}`
+        `${API_BASE_URL}/api/v1/win-bids?${queryParams.toString()}`
       );
       const data = await res.json();
 

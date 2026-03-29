@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
@@ -66,7 +67,7 @@ export default function ProfileScreen() {
 
       // 获取收藏数量
       const favRes = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/favorites?userId=${user?.id || 1}&pageSize=1`
+        `${API_BASE_URL}/api/v1/favorites?userId=${user?.id || 1}&pageSize=1`
       );
       const favData = await favRes.json();
 

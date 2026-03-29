@@ -19,6 +19,7 @@ import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
+import { API_BASE_URL } from '@/constants/api';
 import * as Location from 'expo-location';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -106,7 +107,7 @@ export default function HomeScreen() {
        * 返回：今日新增、紧急招标、今日中标的数量
        */
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids/stats`
+        `${API_BASE_URL}/api/v1/bids/stats`
       );
       const data = await res.json();
 
@@ -125,6 +126,7 @@ export default function HomeScreen() {
 
   // 获取招标数据
   const fetchData = async (pageNum: number) => {
+    console.log('[Home] fetchData called, pageNum:', pageNum, 'activeFilter:', activeFilter);
     try {
       setLoading(true);
       // 判断是否为中标筛选
@@ -141,10 +143,12 @@ export default function HomeScreen() {
           params.append('province', userLocation.province);
         }
 
-        const res = await fetch(
-          `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
-        );
+        const url = `${API_BASE_URL}/api/v1/bids?${params.toString()}`;
+        console.log('[Home] Fetching bids from:', url);
+        
+        const res = await fetch(url);
         const data = await res.json();
+        console.log('[Home] Bids response:', data.success, 'total:', data.data?.total);
 
         if (data.success) {
           // 为招标数据添加类型标识
@@ -174,7 +178,7 @@ export default function HomeScreen() {
         }
 
         const res = await fetch(
-          `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/win-bids?${params.toString()}`
+          `${API_BASE_URL}/api/v1/win-bids?${params.toString()}`
         );
         const data = await res.json();
 
@@ -216,7 +220,7 @@ export default function HomeScreen() {
         }
 
         const res = await fetch(
-          `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/bids?${params.toString()}`
+          `${API_BASE_URL}/api/v1/bids?${params.toString()}`
         );
         const data = await res.json();
 

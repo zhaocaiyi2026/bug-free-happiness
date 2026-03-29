@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -112,7 +113,7 @@ export default function PotentialCustomersScreen() {
        * Query参数：page, pageSize, industry, keyword, customerType
        */
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/potential-customers?${params.toString()}`
+        `${API_BASE_URL}/api/v1/potential-customers?${params.toString()}`
       );
       const data = await res.json();
 
@@ -154,7 +155,7 @@ export default function PotentialCustomersScreen() {
        * Query参数：page, pageSize, industry, keyword, customerType
        */
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/potential-customers?${params.toString()}`
+        `${API_BASE_URL}/api/v1/potential-customers?${params.toString()}`
       );
       const data = await res.json();
 

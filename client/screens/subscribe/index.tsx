@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
@@ -72,7 +73,7 @@ export default function SubscribeScreen() {
   const fetchSubscribes = async () => {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/subscriptions?userId=1`
+        `${API_BASE_URL}/api/v1/subscriptions?userId=1`
       );
       const data = await res.json();
 
@@ -105,7 +106,7 @@ export default function SubscribeScreen() {
   const fetchIndustries = async () => {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/common/industries`
+        `${API_BASE_URL}/api/v1/common/industries`
       );
       const data = await res.json();
 
@@ -129,7 +130,7 @@ export default function SubscribeScreen() {
 
     try {
       await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/subscriptions/${id}`,
+        `${API_BASE_URL}/api/v1/subscriptions/${id}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -151,7 +152,7 @@ export default function SubscribeScreen() {
           setSubscribes(prev => prev.filter(s => s.id !== id));
           try {
             await fetch(
-              `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/subscriptions/${id}`,
+              `${API_BASE_URL}/api/v1/subscriptions/${id}`,
               { method: 'DELETE' }
             );
           } catch (error) {
@@ -201,7 +202,7 @@ export default function SubscribeScreen() {
 
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/subscriptions`,
+        `${API_BASE_URL}/api/v1/subscriptions`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

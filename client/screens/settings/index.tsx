@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
@@ -49,7 +50,7 @@ export default function SettingsScreen() {
     try {
       setLoadingDataSources(true);
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/data-sources/status`
+        `${API_BASE_URL}/api/v1/data-sources/status`
       );
       const data = await res.json();
       if (data.success) {

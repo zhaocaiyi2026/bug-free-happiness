@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -137,7 +138,7 @@ export default function SearchScreen() {
 
       const endpoint = searchType === 'bid' ? '/api/v1/bids' : '/api/v1/win-bids';
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BACKEND_BASE_URL}${endpoint}?${params.toString()}`
+        `${API_BASE_URL}${endpoint}?${params.toString()}`
       );
       const data = await res.json();
 
