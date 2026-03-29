@@ -84,7 +84,8 @@ router.get('/', async (req, res) => {
       let winBidQuery = client
         .from('win_bids')
         .select('id, title, province, city, industry, win_company, win_company_phone, win_company_address, win_date, publish_date')
-        .not('win_company', 'is', null);
+        .not('win_company', 'is', null)
+        .not('win_company_phone', 'is', null);
 
       if (industry) {
         winBidQuery = winBidQuery.eq('industry', industry as string);
