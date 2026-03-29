@@ -116,8 +116,10 @@ export default function SearchScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.keyword, searchParams?.industry, searchParams?.province, searchParams?.autoSearch]);
 
+  // 执行搜索（只使用关键词，不叠加行业筛选）
   const handleSearch = async () => {
-    await handleSearchWithParams(keyword, selectedIndustry, selectedProvince);
+    // 用户输入关键词搜索时，只使用关键词
+    await handleSearchWithParams(keyword, '', selectedProvince);
   };
 
   const handleSearchWithParams = async (
@@ -197,20 +199,22 @@ export default function SearchScreen() {
     const newIndustry = industryName === '全部' ? '' : industryName;
     setSelectedIndustry(newIndustry);
     
-    // 选择行业后，用行业名称替换关键词
-    // 如果选择"全部"，清空关键词
+    // 选择行业后，用行业名称作为关键词
     setKeyword(newIndustry);
     
-    // 自动搜索
+    // 自动搜索：只用行业关键词，不叠加省份
     setTimeout(() => {
-      if (newIndustry) {
-        // 选择具体行业时，用行业作为关键词和行业筛选
-        handleSearchWithParams(newIndustry, newIndustry, selectedProvince);
-      } else {
-        // 选择"全部"时，清空关键词和行业筛选
-        handleSearchWithParams('', '', selectedProvince);
-      }
+      handleSearchWithParams(newIndustry, '', '');
     }, 50);
+  };
+
+  // 用户输入关键词时的处理
+  const handleKeywordChange = (text: string) => {
+    setKeyword(text);
+    // 用户输入关键词时，自动取消行业筛选
+    if (text.length > 0 && selectedIndustry) {
+      setSelectedIndustry('');
+    }
   };
 
   // 跳转到省份选择页面
@@ -330,15 +334,19 @@ export default function SearchScreen() {
             <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
             <TextInput
               style={styles.searchInput}
-              placeholder="输入关键词搜索..."
+              placeholder="输入关键词搜索项目名称、项目详情..."
               placeholderTextColor="#9CA3AF"
               value={keyword}
-              onChangeText={setKeyword}
+              onChangeText={handleKeywordChange}
               onSubmitEditing={handleSearch}
               returnKeyType="search"
             />
             {keyword.length > 0 && (
-              <TouchableOpacity onPress={() => setKeyword('')}>
+              <TouchableOpacity onPress={() => {
+                setKeyword('');
+                setResults([]);
+                setHasSearched(false);
+              }}>
                 <FontAwesome6 name="circle-xmark" size={14} color="#9CA3AF" />
               </TouchableOpacity>
             )}
