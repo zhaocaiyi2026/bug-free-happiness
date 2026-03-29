@@ -95,13 +95,16 @@ export default function BidListScreen() {
       // 根据类型设置筛选条件
       switch (listType) {
         case 'today': {
-          // 今日新增：发布日期为今天
-          const today = new Date().toISOString().split('T')[0];
-          queryParams.append('publishDateFrom', today);
+          // 今日新增：发布日期为今天（使用日期范围过滤）
+          const today = new Date();
+          const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().split('T')[0];
+          const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString().split('T')[0];
+          queryParams.append('publishDateFrom', todayStart);
+          queryParams.append('publishDateTo', todayEnd);
           break;
         }
         case 'urgent':
-          // 紧急招标
+          // 紧急招标：投标截止日期在4天内且未过期
           queryParams.append('isUrgent', 'true');
           break;
         case 'nearby':

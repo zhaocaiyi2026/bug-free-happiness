@@ -41,6 +41,7 @@ router.get('/', async (req, res) => {
     // 获取今日日期（UTC）
     const todayDate = new Date();
     const todayStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()).toISOString();
+    const todayEnd = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() + 1).toISOString();
 
     let query = client
       .from('win_bids')
@@ -48,9 +49,10 @@ router.get('/', async (req, res) => {
       // 按发布日期倒序排列
       .order('publish_date', { ascending: false });
 
-    // 今日中标筛选
+    // 今日中标筛选：发布日期在今天范围内
     if (today === 'true') {
       query = query.gte('publish_date', todayStart);
+      query = query.lt('publish_date', todayEnd);
     }
 
     // 应用筛选条件

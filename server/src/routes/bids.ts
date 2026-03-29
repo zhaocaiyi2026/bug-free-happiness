@@ -68,10 +68,11 @@ router.get('/', async (req, res) => {
     if (bidType) {
       query = query.eq('bid_type', bidType as string);
     }
-    // 紧急招标筛选：投标截止日期在4天内
+    // 紧急招标筛选：投标截止日期在4天内且未过期
     if (isUrgent === 'true') {
       const fourDaysLater = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
-      query = query.lte('deadline', fourDaysLater.toISOString());
+      query = query.gt('deadline', now.toISOString()); // 未过期
+      query = query.lte('deadline', fourDaysLater.toISOString()); // 4天内
     }
     if (minBudget) {
       query = query.gte('budget', Number(minBudget));
