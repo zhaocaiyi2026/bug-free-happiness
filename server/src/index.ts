@@ -15,6 +15,7 @@ import dataSourcesRouter from './routes/data-sources';
 import potentialCustomersRouter from './routes/potential-customers';
 import aiExtractRouter from './routes/ai-extract';
 import collectorRouter from './routes/collector';
+import importRouter from './routes/import';
 import { startCrawler } from './crawler';
 import { startDataSyncScheduler } from './services/data-sources';
 
@@ -48,6 +49,7 @@ app.use('/api/v1/data-sources', dataSourcesRouter);
 app.use('/api/v1/potential-customers', potentialCustomersRouter);
 app.use('/api/v1/ai-extract', aiExtractRouter);
 app.use('/api/v1/collector', collectorRouter);
+app.use('/api/v1/import', importRouter);
 
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {
