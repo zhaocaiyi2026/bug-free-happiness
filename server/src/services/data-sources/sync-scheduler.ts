@@ -17,6 +17,8 @@ import { ccgpService } from './ccgp-service';
 import { stoneDTService } from './stonedt-service';
 import { ggzyService } from './ggzy-service';
 import { cebpubService } from './cebpub-service';
+import { jilinCCGPCrawler } from './jilin-ccgp-crawler';
+import { aiParserService } from './ai-parser';
 import { SYNC_SCHEDULES, SYNC_BATCH_CONFIG, getEnabledSources } from './config';
 
 // 同步任务状态
@@ -324,6 +326,30 @@ export async function syncFromSource(
         bidsData = await ggzyService.fetchFromProvincial(provinceCode, {
           maxCount: SYNC_BATCH_CONFIG.maxRecordsPerSync,
         });
+        break;
+        
+      case 'jilin_ccgp':
+        // 吉林省政府采购网（合规爬虫）
+        console.log('[DataSync] Starting Jilin CCGP crawler (compliant mode)...');
+        const jilinBids = await jilinCCGPCrawler.fetchBatchAnnouncements({
+          maxPages: options.type === 'full' ? 10 : 3,
+        });
+        
+        // 使用AI增强解析
+        for (let i = 0; i < jilinBids.length; i++) {
+          const bid = jilinBids[i];
+          if (bid.content && (!bid.contactPhone || !bid.contactPerson)) {
+            try {
+              const enhanced = await aiParserService.enhanceBidData(bid);
+              jilinBids[i] = enhanced as UnifiedBidData;
+            } catch (error) {
+              console.error('[DataSync] AI enhancement failed:', error);
+            }
+          }
+        }
+        
+        bidsData = jilinBids;
+        console.log(`[DataSync] Jilin CCGP fetched ${bidsData.length} bids, crawler stats:`, jilinCCGPCrawler.getStats());
         break;
         
       default:

@@ -16,6 +16,7 @@ import potentialCustomersRouter from './routes/potential-customers';
 import aiExtractRouter from './routes/ai-extract';
 import collectorRouter from './routes/collector';
 import importRouter from './routes/import';
+import jilinSyncRouter from './routes/jilin-sync';
 import { startCrawler } from './crawler';
 import { startDataSyncScheduler } from './services/data-sources';
 
@@ -50,6 +51,7 @@ app.use('/api/v1/potential-customers', potentialCustomersRouter);
 app.use('/api/v1/ai-extract', aiExtractRouter);
 app.use('/api/v1/collector', collectorRouter);
 app.use('/api/v1/import', importRouter);
+app.use('/api/v1/jilin', jilinSyncRouter);
 
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {

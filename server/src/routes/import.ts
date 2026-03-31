@@ -9,7 +9,8 @@
  * 3. 采集行为需符合目标网站的 robots.txt 规则
  */
 
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
+import type { Request, Response } from 'express';
 import { getSupabaseClient } from '../storage/database/supabase-client';
 
 const router = Router();

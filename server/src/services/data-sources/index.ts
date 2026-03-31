@@ -22,6 +22,8 @@ export { CCGPService, ccgpService } from './ccgp-service';
 export { StoneDTService, stoneDTService } from './stonedt-service';
 export { GGZYService, ggzyService, PROVINCIAL_PLATFORMS } from './ggzy-service';
 export { CEBPubService, cebpubService } from './cebpub-service';
+export { JilinCCGPCrawler, jilinCCGPCrawler } from './jilin-ccgp-crawler';
+export { AIParserService, aiParserService } from './ai-parser';
 
 // 同步调度器
 export {
