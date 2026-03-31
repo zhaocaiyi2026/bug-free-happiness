@@ -1,211 +1,163 @@
 /**
- * 招标信息爬虫系统 - 配置文件
- * 
- * 法律合规配置：
- * 1. 请求间隔：3-5秒，避免对目标服务器造成压力
- * 2. 爬取频率：每4-6小时，符合招标网站更新频率
- * 3. 单次最大页数：限制爬取量
- * 4. 遵守robots.txt协议
+ * 爬虫配置
  */
 
-import type { ParserConfig } from './types';
+import type { ProvinceConfig, CrawlerConfig, AnnouncementTypeMap } from './types.js';
+import { AnnouncementType } from './types.js';
 
-// 爬虫全局配置
-export const CRAWLER_CONFIG = {
-  // 请求配置
-  request: {
-    timeout: 30000,           // 请求超时时间（毫秒）
-    retries: 3,               // 重试次数
-    retryDelay: 5000,         // 重试间隔（毫秒）
-    defaultDelay: 4000,       // 默认请求间隔（毫秒）
-  },
+// 省份配置（31个省市自治区）
+export const PROVINCES: ProvinceConfig[] = [
+  // 华北地区
+  { code: '110000', name: '北京市', shortName: '北京', baseUrl: 'https://www.ggzyfw.beijing.gov.cn', enabled: true },
+  { code: '120000', name: '天津市', shortName: '天津', baseUrl: 'https://www.tjggzy.cn', enabled: true },
+  { code: '130000', name: '河北省', shortName: '河北', baseUrl: 'http://www.hebpr.cn', enabled: true },
+  { code: '140000', name: '山西省', shortName: '山西', baseUrl: 'https://www.sxggzy.cn', enabled: true },
+  { code: '150000', name: '内蒙古自治区', shortName: '内蒙古', baseUrl: 'https://www.nmgggzyjy.cn', enabled: true },
   
-  // 调度配置
-  schedule: {
-    // 主爬取任务：每4小时执行一次
-    mainCrawl: '0 */4 * * *',
-    // 清理任务：每天凌晨3点执行
-    cleanup: '0 3 * * *',
-  },
+  // 东北地区
+  { code: '210000', name: '辽宁省', shortName: '辽宁', baseUrl: 'https://www.lnggzy.com', enabled: true },
+  { code: '220000', name: '吉林省', shortName: '吉林', baseUrl: 'http://www.ggzy.jl.gov.cn', enabled: true },
+  { code: '230000', name: '黑龙江省', shortName: '黑龙江', baseUrl: 'https://www.hljggzyjy.org.cn', enabled: true },
   
-  // 数据配置
-  data: {
-    // 去重字段
-    uniqueFields: ['title', 'sourceUrl'],
-    // 数据保留天数
-    retentionDays: 90,
-    // 批量插入大小
-    batchSize: 50,
-  },
+  // 华东地区
+  { code: '310000', name: '上海市', shortName: '上海', baseUrl: 'https://www.shggzy.com', enabled: true },
+  { code: '320000', name: '江苏省', shortName: '江苏', baseUrl: 'http://www.jszbtb.com', enabled: true },
+  { code: '330000', name: '浙江省', shortName: '浙江', baseUrl: 'https://www.zjpubservice.com', enabled: true },
+  { code: '340000', name: '安徽省', shortName: '安徽', baseUrl: 'https://www.ahggzyjy.cn', enabled: true },
+  { code: '350000', name: '福建省', shortName: '福建', baseUrl: 'https://www.fjggzyjy.com', enabled: true },
+  { code: '360000', name: '江西省', shortName: '江西', baseUrl: 'https://www.jxsggzy.cn', enabled: true },
+  { code: '370000', name: '山东省', shortName: '山东', baseUrl: 'http://ggzyjy.shandong.gov.cn', enabled: true },
   
-  // 合规配置
-  compliance: {
-    // User-Agent标识
-    userAgent: 'BidTongBot/1.0 (Compliant Crawler; Contact: admin@bidtong.com)',
-    // 是否检查robots.txt
-    checkRobotsTxt: true,
-    // 是否遵守Crawl-Delay
-    respectCrawlDelay: true,
-  },
-};
-
-// 数据源配置
-export const PARSER_CONFIGS: ParserConfig[] = [
-  // ==================== 国家级平台 ====================
-  {
-    name: '中国政府采购网',
-    baseUrl: 'http://www.ccgp.gov.cn',
-    listUrl: 'http://www.ccgp.gov.cn/cggg/dfgg/index_{page}.htm',
-    requestDelay: 5000,
-    maxPages: 3,
-    enabled: true,
-    schedule: '0 */4 * * *',  // 每4小时
-  },
-  {
-    name: '中国招标投标公共服务平台',
-    baseUrl: 'http://www.cebpubservice.com',
-    listUrl: 'http://www.cebpubservice.com/ctpsp_iiss/searchbusinesshttpaction/getStringMethod.do',
-    requestDelay: 5000,
-    maxPages: 2,
-    enabled: true,
-    schedule: '0 2,6,10,14,18,22 * * *',  // 每4小时
-  },
+  // 华中地区
+  { code: '410000', name: '河南省', shortName: '河南', baseUrl: 'http://www.hnggzyjy.cn', enabled: true },
+  { code: '420000', name: '湖北省', shortName: '湖北', baseUrl: 'https://www.hbggzyfwzh.cn', enabled: true },
+  { code: '430000', name: '湖南省', shortName: '湖南', baseUrl: 'https://www.hnggzy.com', enabled: true },
   
-  // ==================== 省级平台 ====================
-  {
-    name: '广东省政府采购网',
-    baseUrl: 'http://gdgpo.czt.gd.gov.cn',
-    listUrl: 'http://gdgpo.czt.gd.gov.cn/queryMoreInfoList.do',
-    requestDelay: 4000,
-    maxPages: 3,
-    enabled: true,
-    schedule: '5 */4 * * *',
-  },
-  {
-    name: '浙江省政府采购网',
-    baseUrl: 'https://zfcg.czt.zj.gov.cn',
-    listUrl: 'https://zfcg.czt.zj.gov.cn/site/notice/search',
-    requestDelay: 4000,
-    maxPages: 3,
-    enabled: true,
-    schedule: '10 */4 * * *',
-  },
-  {
-    name: '江苏省政府采购网',
-    baseUrl: 'http://www.ccgp-jiangsu.gov.cn',
-    listUrl: 'http://www.ccgp-jiangsu.gov.cn/cggg/dfgg/index_{page}.htm',
-    requestDelay: 4000,
-    maxPages: 3,
-    enabled: true,
-    schedule: '15 */4 * * *',
-  },
-  {
-    name: '上海市政府采购网',
-    baseUrl: 'http://www.zfcg.sh.gov.cn',
-    listUrl: 'http://www.zfcg.sh.gov.cn/front/search/category',
-    requestDelay: 4000,
-    maxPages: 3,
-    enabled: true,
-    schedule: '20 */4 * * *',
-  },
-  {
-    name: '北京政府采购网',
-    baseUrl: 'http://www.ccgp-beijing.gov.cn',
-    listUrl: 'http://www.ccgp-beijing.gov.cn/cggg/dfgg/index_{page}.htm',
-    requestDelay: 4000,
-    maxPages: 3,
-    enabled: true,
-    schedule: '25 */4 * * *',
-  },
-  {
-    name: '四川省政府采购网',
-    baseUrl: 'http://www.ccgp-sichuan.gov.cn',
-    listUrl: 'http://www.ccgp-sichuan.gov.cn/cggg/dfgg/index_{page}.htm',
-    requestDelay: 4000,
-    maxPages: 3,
-    enabled: true,
-    schedule: '30 */4 * * *',
-  },
+  // 华南地区
+  { code: '440000', name: '广东省', shortName: '广东', baseUrl: 'https://www.gdggzy.org.cn', enabled: true },
+  { code: '450000', name: '广西壮族自治区', shortName: '广西', baseUrl: 'https://www.gxggzy.cn', enabled: true },
+  { code: '460000', name: '海南省', shortName: '海南', baseUrl: 'https://www.hnggzy.com', enabled: true },
   
-  // ==================== 招标平台 ====================
-  {
-    name: '中国招标网',
-    baseUrl: 'https://www.chinabidding.cn',
-    listUrl: 'https://www.chinabidding.cn/search/searchgj/zbcg',
-    requestDelay: 5000,
-    maxPages: 2,
-    enabled: true,
-    schedule: '35 */4 * * *',
-  },
-  {
-    name: '采购与招标网',
-    baseUrl: 'https://www.chinabidding.com.cn',
-    listUrl: 'https://www.chinabidding.com.cn/zbcg/wuliu.html',
-    requestDelay: 5000,
-    maxPages: 2,
-    enabled: true,
-    schedule: '40 */4 * * *',
-  },
+  // 西南地区
+  { code: '500000', name: '重庆市', shortName: '重庆', baseUrl: 'https://www.cqggzy.com', enabled: true },
+  { code: '510000', name: '四川省', shortName: '四川', baseUrl: 'http://ggzyjy.sc.gov.cn', enabled: true },
+  { code: '520000', name: '贵州省', shortName: '贵州', baseUrl: 'https://www.ggzy.guizhou.gov.cn', enabled: true },
+  { code: '530000', name: '云南省', shortName: '云南', baseUrl: 'https://www.ynggzy.com', enabled: true },
+  { code: '540000', name: '西藏自治区', shortName: '西藏', baseUrl: 'https://www.xzggzy.gov.cn', enabled: false },
+  
+  // 西北地区
+  { code: '610000', name: '陕西省', shortName: '陕西', baseUrl: 'https://www.sxggzyjy.cn', enabled: true },
+  { code: '620000', name: '甘肃省', shortName: '甘肃', baseUrl: 'https://www.gsggzyjy.cn', enabled: true },
+  { code: '630000', name: '青海省', shortName: '青海', baseUrl: 'https://www.qhggzyjy.com', enabled: true },
+  { code: '640000', name: '宁夏回族自治区', shortName: '宁夏', baseUrl: 'https://www.nxggzyjy.org', enabled: true },
+  { code: '650000', name: '新疆维吾尔自治区', shortName: '新疆', baseUrl: 'https://www.xjggzy.com', enabled: true },
+  
+  // 港澳台（暂不启用）
+  { code: '810000', name: '香港特别行政区', shortName: '香港', baseUrl: '', enabled: false },
+  { code: '820000', name: '澳门特别行政区', shortName: '澳门', baseUrl: '', enabled: false },
+  { code: '710000', name: '台湾省', shortName: '台湾', baseUrl: '', enabled: false },
 ];
 
-// 行业分类映射
-export const INDUSTRY_MAPPING: Record<string, string> = {
-  '工程': '建筑工程',
-  '施工': '建筑工程',
-  '建设': '建筑工程',
-  '市政': '建筑工程',
-  '道路': '交通运输',
-  '交通': '交通运输',
-  '公路': '交通运输',
-  '铁路': '交通运输',
-  'IT': 'IT服务',
-  '信息化': 'IT服务',
-  '软件': 'IT服务',
-  '网络': 'IT服务',
-  '医疗': '医疗设备',
-  '器械': '医疗设备',
-  '医院': '医疗设备',
-  '教育': '教育培训',
-  '学校': '教育培训',
-  '培训': '教育培训',
-  '环保': '环保能源',
-  '能源': '环保能源',
-  '新能源': '环保能源',
-  '园林': '建筑工程',
-  '绿化': '建筑工程',
+// 平台配置
+export const PLATFORMS: Record<string, CrawlerConfig> = {
+  // 全国公共资源交易平台
+  ggzy: {
+    name: '全国公共资源交易平台',
+    baseUrl: 'https://www.ggzy.gov.cn',
+    enabled: true,
+    requestInterval: 1000,
+    timeout: 30000,
+    maxRetries: 3,
+    maxPages: 100,
+  },
+  
+  // 中国政府采购网
+  ccgp: {
+    name: '中国政府采购网',
+    baseUrl: 'http://www.ccgp.gov.cn',
+    enabled: true,
+    requestInterval: 1000,
+    timeout: 30000,
+    maxRetries: 3,
+    maxPages: 100,
+  },
+  
+  // 中国招标投标公共服务平台
+  cebpubservice: {
+    name: '中国招标投标公共服务平台',
+    baseUrl: 'https://www.cebpubservice.com',
+    enabled: true,
+    requestInterval: 1000,
+    timeout: 30000,
+    maxRetries: 3,
+    maxPages: 100,
+  },
 };
 
-// 省份映射
-export const PROVINCE_MAPPING: Record<string, string> = {
-  '广东': '广东省',
-  '浙江': '浙江省',
-  '江苏': '江苏省',
-  '上海': '上海市',
-  '北京': '北京市',
-  '四川': '四川省',
-  '山东': '山东省',
-  '河南': '河南省',
-  '湖北': '湖北省',
-  '湖南': '湖南省',
-  '福建': '福建省',
-  '安徽': '安徽省',
-  '河北': '河北省',
-  '陕西': '陕西省',
-  '辽宁': '辽宁省',
-  '江西': '江西省',
-  '重庆': '重庆市',
-  '云南': '云南省',
-  '广西': '广西壮族自治区',
-  '山西': '山西省',
-  '贵州': '贵州省',
-  '黑龙江': '黑龙江省',
-  '吉林': '吉林省',
-  '天津': '天津市',
-  '甘肃': '甘肃省',
-  '内蒙古': '内蒙古自治区',
-  '新疆': '新疆维吾尔自治区',
-  '海南': '海南省',
-  '宁夏': '宁夏回族自治区',
-  '青海': '青海省',
-  '西藏': '西藏自治区',
+// 公告类型映射 - 全国公共资源交易平台
+export const GGZY_TYPE_MAP: AnnouncementTypeMap = {
+  '1': AnnouncementType.BID_ANNOUNCEMENT,           // 招标公告
+  '2': AnnouncementType.WIN_RESULT,                 // 中标结果
+  '3': AnnouncementType.CORRECTION,                 // 更正公告
+  '4': AnnouncementType.TERMINATION,                // 终止公告
+  '5': AnnouncementType.ABANDONED_BID,              // 废标公告
+  '6': AnnouncementType.PRE_QUALIFICATION,          // 资格预审公告
+  '7': AnnouncementType.COMPETITIVE_NEGOTIATION,    // 竞争性谈判
+  '8': AnnouncementType.COMPETITIVE_CONSULTATION,   // 竞争性磋商
+  '9': AnnouncementType.INQUIRY,                    // 询价公告
+  '10': AnnouncementType.PROCUREMENT_INTENTION,     // 采购意向
+  '11': AnnouncementType.INVITATION_BID,            // 邀请招标
+  '12': AnnouncementType.RESULT_CHANGE,             // 结果变更
+};
+
+// 公告类型映射 - 中国政府采购网
+export const CCGP_TYPE_MAP: AnnouncementTypeMap = {
+  '1': AnnouncementType.BID_ANNOUNCEMENT,           // 招标公告
+  '2': AnnouncementType.COMPETITIVE_NEGOTIATION,    // 竞争性谈判公告
+  '3': AnnouncementType.COMPETITIVE_CONSULTATION,   // 竞争性磋商公告
+  '4': AnnouncementType.INQUIRY,                    // 询价公告
+  '5': AnnouncementType.WIN_RESULT,                 // 中标公告
+  '6': AnnouncementType.CORRECTION,                 // 更正公告
+  '7': AnnouncementType.TERMINATION,                // 终止公告
+  '8': AnnouncementType.ABANDONED_BID,              // 废标公告
+  '9': AnnouncementType.PROCUREMENT_INTENTION,      // 采购意向公告
+  '10': AnnouncementType.PRE_QUALIFICATION,         // 资格预审公告
+  '11': AnnouncementType.RESULT_CHANGE,             // 采购结果变更
+};
+
+// 行业分类映射
+export const INDUSTRY_MAP: Record<string, string> = {
+  'A': '农林牧渔业',
+  'B': '采矿业',
+  'C': '制造业',
+  'D': '电力热力燃气及水生产和供应业',
+  'E': '建筑业',
+  'F': '批发和零售业',
+  'G': '交通运输仓储和邮政业',
+  'H': '住宿和餐饮业',
+  'I': '信息传输软件和信息技术服务业',
+  'J': '金融业',
+  'K': '房地产业',
+  'L': '租赁和商务服务业',
+  'M': '科学研究和技术服务业',
+  'N': '水利环境和公共设施管理业',
+  'O': '居民服务修理和其他服务业',
+  'P': '教育',
+  'Q': '卫生和社会工作',
+  'R': '文化体育和娱乐业',
+  'S': '公共管理社会保障和社会组织',
+  'T': '国际组织',
+};
+
+// 采购方式映射
+export const PROCUREMENT_METHOD_MAP: Record<string, string> = {
+  '1': '公开招标',
+  '2': '邀请招标',
+  '3': '竞争性谈判',
+  '4': '竞争性磋商',
+  '5': '询价',
+  '6': '单一来源',
+  '7': '询价采购',
+  '8': '电子竞价',
+  '9': '框架协议采购',
 };

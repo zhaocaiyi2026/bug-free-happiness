@@ -1,275 +1,299 @@
 /**
- * 招标信息爬虫系统 - 定时任务调度器
+ * 定时任务调度器
  * 
- * 调度策略（符合法律法规）：
- * 1. 每4小时执行一次主爬取任务
- * 2. 各数据源错峰爬取，避免集中请求
- * 3. 每天凌晨清理过期数据
+ * 功能:
+ * 1. 定时爬取各平台数据
+ * 2. 支持按省份、类型并行爬取
+ * 3. 爬取结果入库
  */
 
-import cron, { type ScheduledTask } from 'node-cron';
-import type { CrawlResult, CrawlerStatus, CrawlLog } from './types';
-import { createParser, getAvailableParsers } from './parsers';
-import { saveBids, cleanupOldData, getCrawlerStats, clearDedupCache } from './storage';
-import { PARSER_CONFIGS, CRAWLER_CONFIG } from './config';
+import cron from 'node-cron';
+import { GgzyCrawler } from './ggzy.js';
+import { CcgpCrawler } from './ccgp.js';
+import { DataStorage } from './storage.js';
+import type { CrawlerStats } from './types.js';
+import { AnnouncementType } from './types.js';
+import { PROVINCES, PLATFORMS } from './config.js';
 
-// 爬虫状态
-let isRunning = false;
-let lastRunTime: string | undefined;
-const crawlLogs: CrawlLog[] = [];
-let totalCrawled = 0;
-let successCount = 0;
-let errorCount = 0;
+export class CrawlerScheduler {
+  private storage: DataStorage;
+  private ggzyCrawler: GgzyCrawler;
+  private ccgpCrawler: CcgpCrawler;
+  private isRunning: boolean = false;
 
-// 定时任务实例
-let mainTask: ScheduledTask | null = null;
-let cleanupTask: ScheduledTask | null = null;
-let sourceTasks: Map<string, ScheduledTask> = new Map();
-
-/**
- * 执行单个数据源的爬取
- */
-async function crawlSource(sourceName: string): Promise<CrawlResult | null> {
-  const parser = createParser(sourceName);
-  if (!parser) {
-    console.log(`[Scheduler] Parser not found: ${sourceName}`);
-    return null;
+  constructor() {
+    this.storage = new DataStorage();
+    this.ggzyCrawler = new GgzyCrawler();
+    this.ccgpCrawler = new CcgpCrawler();
   }
 
-  const logId = `${sourceName}-${Date.now()}`;
-  const log: CrawlLog = {
-    id: logId,
-    source: sourceName,
-    startTime: new Date().toISOString(),
-    status: 'running',
-    crawledCount: 0,
-    savedCount: 0,
-  };
+  /**
+   * 启动定时任务
+   */
+  start(): void {
+    console.log('\n====================================');
+    console.log('招标爬虫定时任务启动');
+    console.log('====================================\n');
 
-  crawlLogs.push(log);
+    // 每小时执行一次增量爬取
+    cron.schedule('0 * * * *', () => {
+      this.runIncremental();
+    });
 
-  try {
-    console.log(`[Scheduler] Starting crawl for ${sourceName}`);
-    
-    const result = await parser.crawl();
-    
-    log.endTime = new Date().toISOString();
-    log.status = result.success ? 'success' : 'failed';
-    log.crawledCount = result.count;
-    log.error = result.error;
+    // 每天凌晨2点执行全量爬取
+    cron.schedule('0 2 * * *', () => {
+      this.runFull();
+    });
 
-    if (result.success && result.data.length > 0) {
-      // 保存数据
-      const saveResult = await saveBids(result.data);
-      log.savedCount = saveResult.saved;
+    // 每周日凌晨3点清理过期数据
+    cron.schedule('0 3 * * 0', () => {
+      this.cleanup();
+    });
+
+    console.log('定时任务已启动:');
+    console.log('  - 增量爬取: 每小时执行');
+    console.log('  - 全量爬取: 每天凌晨2点');
+    console.log('  - 数据清理: 每周日凌晨3点');
+  }
+
+  /**
+   * 增量爬取（只爬取最新页面）
+   */
+  async runIncremental(): Promise<void> {
+    if (this.isRunning) {
+      console.log('爬虫正在运行，跳过本次增量爬取');
+      return;
+    }
+
+    this.isRunning = true;
+    console.log('\n------------------------------------');
+    console.log(`开始增量爬取: ${new Date().toLocaleString()}`);
+    console.log('------------------------------------\n');
+
+    try {
+      const allStats: CrawlerStats[] = [];
+
+      // 爬取全国公共资源交易平台 - 前3页
+      console.log('爬取全国公共资源交易平台...');
+      const ggzyResult = await this.ggzyCrawler.run({ pages: 3 });
+      allStats.push(ggzyResult);
+
+      // 爬取中国政府采购网 - 前3页
+      console.log('\n爬取中国政府采购网...');
+      const ccgpResult = await this.ccgpCrawler.run({ pages: 3 });
+      allStats.push(ccgpResult);
+
+      // 汇总统计
+      this.printSummary(allStats);
+
+    } catch (error) {
+      console.error('增量爬取失败:', error);
+    } finally {
+      this.isRunning = false;
+    }
+  }
+
+  /**
+   * 全量爬取（爬取更多页面）
+   */
+  async runFull(): Promise<void> {
+    if (this.isRunning) {
+      console.log('爬虫正在运行，跳过本次全量爬取');
+      return;
+    }
+
+    this.isRunning = true;
+    console.log('\n====================================');
+    console.log(`开始全量爬取: ${new Date().toLocaleString()}`);
+    console.log('====================================\n');
+
+    try {
+      const allStats: CrawlerStats[] = [];
+
+      // 1. 爬取全国公共资源交易平台 - 各省份
+      console.log('爬取全国公共资源交易平台...');
       
-      console.log(
-        `[Scheduler] ${sourceName} completed: ` +
-        `crawled=${result.count}, saved=${saveResult.saved}, ` +
-        `duplicates=${saveResult.duplicates}`
-      );
-      
-      totalCrawled += result.count;
-      successCount++;
-    } else if (!result.success) {
-      errorCount++;
-    }
+      const enabledProvinces = PROVINCES.filter(p => p.enabled);
+      const provinceBatches = this.chunk(enabledProvinces, 5); // 每5个省份一批
 
-    return result;
-  } catch (error) {
-    log.endTime = new Date().toISOString();
-    log.status = 'failed';
-    log.error = error instanceof Error ? error.message : 'Unknown error';
-    errorCount++;
-    
-    console.error(`[Scheduler] Error crawling ${sourceName}:`, error);
-    return null;
-  }
-}
+      for (const batch of provinceBatches) {
+        console.log(`\n爬取省份: ${batch.map(p => p.shortName).join(', ')}`);
+        
+        const promises = batch.map(async (province) => {
+          const results = await this.ggzyCrawler.crawlByProvince(province.code, 10);
+          const data = results.flatMap(r => r.data);
+          
+          if (data.length > 0) {
+            const stats = this.ggzyCrawler.getStats();
+            await this.storage.saveBatch(data, stats);
+            return stats;
+          }
+          return null;
+        });
 
-/**
- * 执行所有数据源的爬取
- */
-async function crawlAllSources(): Promise<void> {
-  if (isRunning) {
-    console.log('[Scheduler] Crawler already running, skipping...');
-    return;
-  }
+        const batchResults = await Promise.all(promises);
+        allStats.push(...batchResults.filter(Boolean) as CrawlerStats[]);
 
-  isRunning = true;
-  lastRunTime = new Date().toISOString();
-  
-  console.log('[Scheduler] Starting crawl cycle...');
-  console.log(`[Scheduler] Available parsers: ${getAvailableParsers().join(', ')}`);
-
-  const results: CrawlResult[] = [];
-  
-  // 按配置顺序爬取各数据源
-  for (const config of PARSER_CONFIGS) {
-    if (!config.enabled) {
-      continue;
-    }
-
-    const result = await crawlSource(config.name);
-    if (result) {
-      results.push(result);
-    }
-
-    // 数据源之间的延迟
-    await new Promise(resolve => setTimeout(resolve, 10000));
-  }
-
-  // 汇总结果
-  const totalCrawled = results.reduce((sum, r) => sum + r.count, 0);
-  const successSources = results.filter(r => r.success).length;
-  
-  console.log(
-    `[Scheduler] Crawl cycle completed: ` +
-    `sources=${successSources}/${results.length}, ` +
-    `total_items=${totalCrawled}`
-  );
-
-  isRunning = false;
-}
-
-/**
- * 启动定时任务
- */
-export function startScheduler(): void {
-  console.log('[Scheduler] Starting crawler scheduler...');
-  
-  // 清空去重缓存
-  clearDedupCache();
-
-  // 主爬取任务：每4小时执行
-  mainTask = cron.schedule(
-    CRAWLER_CONFIG.schedule.mainCrawl,
-    () => {
-      console.log('[Scheduler] Main crawl task triggered');
-      crawlAllSources();
-    },
-    {
-      timezone: 'Asia/Shanghai',
-    }
-  );
-
-  // 为每个数据源创建独立任务（错峰）
-  for (const config of PARSER_CONFIGS) {
-    if (!config.enabled || !config.schedule) {
-      continue;
-    }
-
-    const task = cron.schedule(
-      config.schedule,
-      () => {
-        crawlSource(config.name);
-      },
-      {
-        timezone: 'Asia/Shanghai',
+        // 批次间隔
+        await this.delay(5000);
       }
-    );
 
-    sourceTasks.set(config.name, task);
-  }
+      // 2. 爬取中国政府采购网 - 按公告类型
+      console.log('\n爬取中国政府采购网...');
+      
+      const typePromises = Object.values(AnnouncementType).map(async (type) => {
+        try {
+          const results = await this.ccgpCrawler.crawlByType(type, 5);
+          const data = results.flatMap(r => r.data);
+          
+          if (data.length > 0) {
+            const stats = this.ccgpCrawler.getStats();
+            await this.storage.saveBatch(data, stats);
+            return stats;
+          }
+        } catch (error) {
+          console.error(`爬取${type}失败:`, error);
+        }
+        return null;
+      });
 
-  // 清理任务：每天凌晨3点
-  cleanupTask = cron.schedule(
-    CRAWLER_CONFIG.schedule.cleanup,
-    async () => {
-      console.log('[Scheduler] Cleanup task triggered');
-      await cleanupOldData();
-    },
-    {
-      timezone: 'Asia/Shanghai',
+      const typeResults = await Promise.all(typePromises);
+      allStats.push(...typeResults.filter(Boolean) as CrawlerStats[]);
+
+      // 汇总统计
+      this.printSummary(allStats);
+
+    } catch (error) {
+      console.error('全量爬取失败:', error);
+    } finally {
+      this.isRunning = false;
     }
-  );
-
-  console.log('[Scheduler] Scheduler started');
-  console.log(`[Scheduler] Main task: ${CRAWLER_CONFIG.schedule.mainCrawl}`);
-  console.log(`[Scheduler] Source tasks: ${sourceTasks.size}`);
-}
-
-/**
- * 停止定时任务
- */
-export function stopScheduler(): void {
-  console.log('[Scheduler] Stopping scheduler...');
-
-  if (mainTask) {
-    mainTask.stop();
-    mainTask = null;
   }
 
-  if (cleanupTask) {
-    cleanupTask.stop();
-    cleanupTask = null;
+  /**
+   * 清理过期数据
+   */
+  async cleanup(): Promise<void> {
+    console.log('\n清理过期数据...');
+    const deleted = await this.storage.cleanup(365);
+    console.log(`已清理 ${deleted} 条过期数据`);
   }
 
-  for (const [name, task] of sourceTasks) {
-    task.stop();
-    console.log(`[Scheduler] Stopped task for ${name}`);
+  /**
+   * 手动触发爬取
+   */
+  async runManual(options?: {
+    platform?: 'ggzy' | 'ccgp' | 'all';
+    pages?: number;
+    province?: string;
+    announcementType?: string;
+  }): Promise<CrawlerStats[]> {
+    const allStats: CrawlerStats[] = [];
+    const pages = options?.pages || 10;
+
+    if (options?.platform === 'ggzy' || options?.platform === 'all' || !options?.platform) {
+      if (options?.province) {
+        const results = await this.ggzyCrawler.crawlByProvince(options.province, pages);
+        const data = results.flatMap(r => r.data);
+        const stats = this.ggzyCrawler.getStats();
+        if (data.length > 0) {
+          await this.storage.saveBatch(data, stats);
+        }
+        allStats.push(stats);
+      } else {
+        const result = await this.ggzyCrawler.run({ pages });
+        allStats.push(result);
+      }
+    }
+
+    if (options?.platform === 'ccgp' || options?.platform === 'all' || !options?.platform) {
+      if (options?.announcementType) {
+        const results = await this.ccgpCrawler.crawlByType(options.announcementType, pages);
+        const data = results.flatMap(r => r.data);
+        const stats = this.ccgpCrawler.getStats();
+        if (data.length > 0) {
+          await this.storage.saveBatch(data, stats);
+        }
+        allStats.push(stats);
+      } else {
+        const result = await this.ccgpCrawler.run({ pages });
+        allStats.push(result);
+      }
+    }
+
+    return allStats;
   }
-  sourceTasks.clear();
 
-  console.log('[Scheduler] Scheduler stopped');
-}
-
-/**
- * 手动触发爬取
- */
-export async function manualCrawl(sourceName?: string): Promise<CrawlResult | CrawlResult[] | null> {
-  if (isRunning) {
-    console.log('[Scheduler] Crawler already running');
-    return null;
+  /**
+   * 获取当前数据统计
+   */
+  async getStats(): Promise<{
+    total: number;
+    byPlatform: Record<string, number>;
+    byType: Record<string, number>;
+    byProvince: Record<string, number>;
+  }> {
+    return this.storage.getStats();
   }
 
-  if (sourceName) {
-    return crawlSource(sourceName);
-  } else {
-    await crawlAllSources();
-    return null;
+  /**
+   * 打印汇总统计
+   */
+  private printSummary(statsList: CrawlerStats[]): void {
+    console.log('\n====================================');
+    console.log('爬取完成汇总');
+    console.log('====================================');
+
+    let totalPages = 0;
+    let totalItems = 0;
+    let totalSaved = 0;
+    let totalDuplicates = 0;
+    let totalErrors = 0;
+
+    for (const stats of statsList) {
+      console.log(`\n${stats.platform}:`);
+      console.log(`  爬取页数: ${stats.totalPages}`);
+      console.log(`  获取条数: ${stats.totalItems}`);
+      console.log(`  保存条数: ${stats.savedItems}`);
+      console.log(`  重复跳过: ${stats.duplicateItems}`);
+      console.log(`  错误条数: ${stats.errorItems}`);
+      
+      if (stats.errors.length > 0) {
+        console.log(`  错误详情: ${stats.errors.slice(0, 3).join('; ')}${stats.errors.length > 3 ? '...' : ''}`);
+      }
+
+      totalPages += stats.totalPages;
+      totalItems += stats.totalItems;
+      totalSaved += stats.savedItems;
+      totalDuplicates += stats.duplicateItems;
+      totalErrors += stats.errorItems;
+    }
+
+    console.log('\n------------------------------------');
+    console.log(`总计:`);
+    console.log(`  爬取页数: ${totalPages}`);
+    console.log(`  获取条数: ${totalItems}`);
+    console.log(`  保存条数: ${totalSaved}`);
+    console.log(`  重复跳过: ${totalDuplicates}`);
+    console.log(`  错误条数: ${totalErrors}`);
+    console.log('====================================\n');
+  }
+
+  /**
+   * 延迟函数
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * 数组分块
+   */
+  private chunk<T>(array: T[], size: number): T[][] {
+    const result: T[][] = [];
+    for (let i = 0; i < array.length; i += size) {
+      result.push(array.slice(i, i + size));
+    }
+    return result;
   }
 }
-
-/**
- * 获取爬虫状态
- */
-export function getCrawlerStatus(): CrawlerStatus {
-  return {
-    isRunning,
-    lastRunTime,
-    nextRunTime: getNextRunTime(),
-    totalCrawled,
-    successCount,
-    errorCount,
-    sources: PARSER_CONFIGS.map(config => ({
-      name: config.name,
-      enabled: config.enabled,
-    })),
-  };
-}
-
-/**
- * 获取下次运行时间
- */
-function getNextRunTime(): string | undefined {
-  // 简单估算：下次整4小时
-  const now = new Date();
-  const nextHour = Math.ceil((now.getHours() + 1) / 4) * 4;
-  const next = new Date(now);
-  next.setHours(nextHour % 24, 0, 0, 0);
-  
-  return next.toISOString();
-}
-
-/**
- * 获取爬取日志
- */
-export function getCrawlLogs(limit: number = 20): CrawlLog[] {
-  return crawlLogs.slice(-limit);
-}
-
-/**
- * 导出统计函数
- */
-export { getCrawlerStats };
