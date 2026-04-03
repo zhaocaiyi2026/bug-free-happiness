@@ -24,6 +24,7 @@ import jilinCollectV2Router from './routes/jilin-collect-v2';
 import jilinCollectV3Router from './routes/jilin-collect-v3';
 import jilinCollectV4Router from './routes/jilin-collect-v4';
 import jilinCollectV5Router from './routes/jilin-collect-v5';
+import jilinAutoCollectRouter from './routes/jilin-auto-collect';
 import { startDataSyncScheduler } from './services/data-sources';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -65,6 +66,7 @@ app.use('/api/v1/jilin-collect-v2', jilinCollectV2Router);
 app.use('/api/v1/jilin-collect-v3', jilinCollectV3Router);
 app.use('/api/v1/jilin-collect-v4', jilinCollectV4Router);
 app.use('/api/v1/jilin-collect-v5', jilinCollectV5Router);
+app.use('/api/v1/jilin-auto-collect', jilinAutoCollectRouter);
 
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {
