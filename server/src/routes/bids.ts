@@ -147,24 +147,8 @@ router.get('/', async (req, res) => {
     }
 
     // 核心过滤条件：
-    // 2026年数据：只要有内容和截止日期即可显示（放宽条件）
-    // 其他年份数据：需要完整联系信息
-    const isCurrentYear = province?.includes('吉林') || 
-                          keyword?.includes('2026') || 
-                          (publishDateFrom && publishDateFrom >= '2026');
-    
-    if (isCurrentYear) {
-      // 2026年数据：只需内容和截止日期
-      query = query
-        .not('content', 'is', null)
-        .neq('content', '')
-        .not('deadline', 'is', null);
-      
-      // 不过滤过期（让用户看到所有2026年信息）
-      if (includeExpired !== 'true') {
-        query = query.gt('deadline', now.toISOString());
-      }
-    } else if (isSearch === 'true') {
+    // 必须包含完整联系信息（联系电话、联系人、项目详情）
+    if (isSearch === 'true') {
       // 搜索模式：必须有完整的联系信息
       query = query
         .not('contact_phone', 'is', null)
