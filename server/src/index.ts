@@ -29,6 +29,7 @@ import bidCleanRouter from './routes/bid-clean';
 import bidLLMCleanRouter from './routes/bid-llm-clean';
 import jilinIntelligentRouter from './routes/jilin-intelligent';
 import doubaoSearchRouter from './routes/doubao-search';
+import { createCollector, collectAndSave } from './services/compliant-collector';
 import { startDataSyncScheduler } from './services/data-sources';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -75,6 +76,32 @@ app.use('/api/v1/bids/clean', bidCleanRouter);
 app.use('/api/v1/bids/llm-clean', bidLLMCleanRouter);
 app.use('/api/v1/jilin-intelligent', jilinIntelligentRouter);
 app.use('/api/v1/doubao-search', doubaoSearchRouter);
+
+// 合规采集器路由
+app.post('/api/v1/compliant-collect', async (req, res) => {
+  try {
+    const { startDate = '2026-01-01', endDate, maxPages = 5 } = req.body;
+    const end = endDate || new Date().toISOString().split('T')[0];
+    
+    console.log(`[合规采集API] 开始采集: ${startDate} 至 ${end}, 最多 ${maxPages} 页`);
+    
+    const result = await collectAndSave(startDate, end, maxPages);
+    
+    res.json({
+      success: result.success,
+      collected: result.collected,
+      saved: result.saved,
+      message: result.message,
+    });
+  } catch (error) {
+    console.error('[合规采集API] 采集失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '采集失败',
+      details: String(error),
+    });
+  }
+});
 
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {
