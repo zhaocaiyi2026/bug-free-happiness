@@ -19,6 +19,7 @@ import importRouter from './routes/import';
 import jilinSyncRouter from './routes/jilin-sync';
 import doubaoExtractRouter from './routes/doubao-extract';
 import bidCollectRouter from './routes/bid-collect';
+import jilinCollectRouter from './routes/jilin-collect';
 import { startDataSyncScheduler } from './services/data-sources';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -55,6 +56,7 @@ app.use('/api/v1/import', importRouter);
 app.use('/api/v1/jilin', jilinSyncRouter);
 app.use('/api/v1/doubao-extract', doubaoExtractRouter);
 app.use('/api/v1/bid-collect', bidCollectRouter);
+app.use('/api/v1/jilin-collect', jilinCollectRouter);
 
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {
