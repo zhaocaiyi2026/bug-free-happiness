@@ -28,6 +28,7 @@ import jilinAutoCollectRouter from './routes/jilin-auto-collect';
 import bidCleanRouter from './routes/bid-clean';
 import bidLLMCleanRouter from './routes/bid-llm-clean';
 import jilinIntelligentRouter from './routes/jilin-intelligent';
+import doubaoSearchRouter from './routes/doubao-search';
 import { startDataSyncScheduler } from './services/data-sources';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,6 +74,7 @@ app.use('/api/v1/jilin-auto-collect', jilinAutoCollectRouter);
 app.use('/api/v1/bids/clean', bidCleanRouter);
 app.use('/api/v1/bids/llm-clean', bidLLMCleanRouter);
 app.use('/api/v1/jilin-intelligent', jilinIntelligentRouter);
+app.use('/api/v1/doubao-search', doubaoSearchRouter);
 
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {
