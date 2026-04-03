@@ -17,7 +17,7 @@ import aiExtractRouter from './routes/ai-extract';
 import collectorRouter from './routes/collector';
 import importRouter from './routes/import';
 import jilinSyncRouter from './routes/jilin-sync';
-import { startCrawler } from './crawler';
+import doubaoExtractRouter from './routes/doubao-extract';
 import { startDataSyncScheduler } from './services/data-sources';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -52,6 +52,7 @@ app.use('/api/v1/ai-extract', aiExtractRouter);
 app.use('/api/v1/collector', collectorRouter);
 app.use('/api/v1/import', importRouter);
 app.use('/api/v1/jilin', jilinSyncRouter);
+app.use('/api/v1/doubao-extract', doubaoExtractRouter);
 
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {
@@ -73,12 +74,6 @@ if (process.env.NODE_ENV === 'production') {
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}/`);
-  
-  // 自动启动爬虫服务（生产环境）
-  if (process.env.NODE_ENV === 'production' || process.env.ENABLE_CRAWLER === 'true') {
-    console.log('Auto-starting crawler service...');
-    startCrawler();
-  }
   
   // 启动数据同步调度器（官方数据源）
   if (process.env.NODE_ENV === 'production' || process.env.ENABLE_DATA_SYNC === 'true') {
