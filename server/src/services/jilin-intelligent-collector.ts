@@ -397,15 +397,35 @@ async function saveToDatabase(
     const client = getSupabaseClient();
     
     // 检查是否已存在（通过source_url）
-    const { data: existing } = await client
+    const { data: existing, error: checkError } = await client
       .from('bids')
       .select('id')
       .eq('source_url', sourceUrl)
-      .single();
+      .maybeSingle();
     
     if (existing) {
       console.log(`[Jilin智能采集] 已存在: ${sourceUrl}`);
       return false;
+    }
+    
+    // 处理日期格式 - 转换为timestamp
+    let publishDate = null;
+    let deadline = null;
+    
+    if (info.publishDate) {
+      try {
+        publishDate = new Date(info.publishDate).toISOString();
+      } catch (e) {
+        console.warn(`[Jilin智能采集] 日期格式错误: ${info.publishDate}`);
+      }
+    }
+    
+    if (info.deadline) {
+      try {
+        deadline = new Date(info.deadline).toISOString();
+      } catch (e) {
+        console.warn(`[Jilin智能采集] 截止时间格式错误: ${info.deadline}`);
+      }
     }
     
     // 插入新记录
@@ -414,17 +434,17 @@ async function saveToDatabase(
       .insert({
         title: info.projectName || info.title,
         content: info.content,
-        project_code: info.projectNumber,
-        budget: info.budget,
-        bid_type: info.bidType,
-        publish_date: info.publishDate || null,
-        deadline: info.deadline || null,
-        contact_person: info.contactPerson,
-        contact_phone: info.contactPhone,
-        province: info.province,
-        city: info.city,
-        purchaser_name: info.purchasingUnit,
-        agency_name: info.agency,
+        project_code: info.projectNumber || null,
+        budget: info.budget || null,
+        bid_type: info.bidType || '公开招标',
+        publish_date: publishDate,
+        deadline: deadline,
+        contact_person: info.contactPerson || null,
+        contact_phone: info.contactPhone || null,
+        province: info.province || '吉林省',
+        city: info.city || null,
+        purchaser_name: info.purchasingUnit || null,
+        agency_name: info.agency || null,
         source: '吉林省政府采购网',
         source_url: sourceUrl,
         announcement_type: announcementType,
