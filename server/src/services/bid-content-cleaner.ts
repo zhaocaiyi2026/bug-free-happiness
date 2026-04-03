@@ -38,12 +38,38 @@ const NOISE_PATTERNS = [
   /【分享】/g,
   /来源：\s*$/gm,
   
+  // 面包屑导航
+  /[-\d]+\s*\|\s*监督检查\s*信息公告\s*国际专栏/g,
+  /»\s*政采公告\s*»\s*地方公告\s*»\s*[^\n]*/g,
+  /»\s*[^\n]{0,50}公告/g,
+  
+  // 附件和文件信息
+  /PDF[\d.]+K/g,
+  /\.PDF[\d.]+K/gi,
+  /\.doc[\d.]+K/gi,
+  /相关公告/g,
+  /附件信息[：:][^\n]*/g,
+  
+  // 时间戳后的多余信息
+  /\d{4}年\d{2}月\d{2}日\s*\d{2}:\d{2}(?!\s*[，,])/g,
+  
   // CSS样式
+  /\/\*[^*]*\*\//g,
   /\.[a-zA-Z_][\w-]*\s*\{[^}]*\}/g,
   /th\s*,\s*td\s*\{[^}]*\}/g,
   /\.copyright_bl\{[^}]*\}/g,
+  /\.vF_cp[^}]*\}[^}]*\}/g,
+  /\.vT_cp[^}]*\}[^}]*\}/g,
   /@media[^}]*\{[^}]*\}/g,
   /document\.write\([^)]*\);?/g,
+  /float\s*:\s*(left|right);?/g,
+  /width\s*:\s*\d+px;?/g,
+  /margin[^;]*;?/g,
+  /padding[^;]*;?/g,
+  /font-[^;]*;?/g,
+  /line-height[^;]*;?/g,
+  /text-decoration[^;]*;?/g,
+  /color\s*:\s*#[0-9a-fA-F]+;?/g,
   
   // 网站链接
   /https?:\/\/www\.zcygov\.cn\/?/g,
@@ -70,10 +96,16 @@ const NOISE_PATTERNS = [
   /&nbsp;/g,
   /&copy;/g,
   /&quot;/g,
+  /&lt;/g,
+  /&gt;/g,
   
   // 其他噪音
   /unescape\([^)]*\)/g,
   /%3C[^%]*%3E/g,
+  
+  // 空括号和特殊字符
+  /\(\s*\)/g,
+  /\[\s*\]/g,
 ];
 
 /**
@@ -82,7 +114,6 @@ const NOISE_PATTERNS = [
 function filterNoise(text: string): string {
   let cleaned = text;
   
-  // 应用所有过滤模式
   for (const pattern of NOISE_PATTERNS) {
     cleaned = cleaned.replace(pattern, '');
   }
@@ -215,23 +246,37 @@ function formatContent(text: string): string {
     formatted = formatted.replace(regex, `\n\n${title}`);
   }
   
-  // 处理字段行
-  const fieldPatterns = [
-    '项目编号', '项目名称', '采购方式', '预算金额', '最高限价',
-    '采购需求', '合同履约期限', '公告时间', '获取采购文件时间',
-    '响应文件递交地点', '响应文件开启时间', '响应文件开启地点',
-    '联系人', '联系电话', '采购单位', '采购单位地址', '采购单位联系方式',
+  // 处理公告概要中的字段
+  const summaryFields = [
+    '采购项目名称', '品目', '采购单位', '行政区域', '公告时间',
+    '获取采购文件时间', '响应文件递交地点', '响应文件开启时间',
+    '响应文件开启地点', '预算金额', '联系人及联系方式',
+    '项目联系人', '项目联系电话', '采购单位地址', '采购单位联系方式',
     '代理机构名称', '代理机构地址', '代理机构联系方式',
-    '品目', '行政区域', '公告时间', '预算金额',
   ];
   
-  for (const field of fieldPatterns) {
+  for (const field of summaryFields) {
+    const regex = new RegExp(`(${field}[：:])`, 'g');
+    formatted = formatted.replace(regex, '\n$1');
+  }
+  
+  // 处理项目基本情况中的字段
+  const basicFields = [
+    '项目编号', '项目名称', '采购方式', '预算金额', '最高限价',
+    '采购需求', '标项名称', '数量', '单位', '简要规格描述', '备注',
+    '合同履约期限', '计划开工日期', '计划竣工日期',
+  ];
+  
+  for (const field of basicFields) {
     const regex = new RegExp(`([\\s])(${field}[：:])`, 'g');
     formatted = formatted.replace(regex, '$1\n$2');
   }
   
   // 清理多余空行
   formatted = formatted.replace(/\n{3,}/g, '\n\n');
+  
+  // 移除开头的空行
+  formatted = formatted.replace(/^\n+/, '');
   
   return formatted.trim();
 }
