@@ -6,6 +6,12 @@
 
 import { Router } from 'express';
 import { doubaoSearchJilinBids, reviewAndSaveData, doubaoSearchAndSave } from '../services/doubao-search.js';
+import { 
+  startScheduledSearch, 
+  stopScheduledSearch, 
+  getScheduleStatus,
+  triggerManualSearch 
+} from '../services/doubao-schedule.js';
 
 const router = Router();
 
@@ -91,6 +97,46 @@ router.post('/save', async (req, res) => {
 });
 
 /**
+ * POST /api/v1/doubao-search/approve
+ * 审核并保存豆包返回的数据（别名接口，前端调用）
+ * 
+ * Body:
+ * - data: 豆包返回的数据数组
+ */
+router.post('/approve', async (req, res) => {
+  try {
+    const { data } = req.body;
+    
+    if (!data || !Array.isArray(data)) {
+      return res.status(400).json({
+        success: false,
+        error: '请提供有效的数据数组',
+      });
+    }
+    
+    console.log(`[豆包搜索API] 开始审核入库，数据量: ${data.length}`);
+    
+    const result = await reviewAndSaveData(data);
+    
+    res.json({
+      success: result.success,
+      saved: result.saved,
+      skipped: result.skipped,
+      errors: result.errors,
+      details: result.details,
+    });
+    
+  } catch (error) {
+    console.error('[豆包搜索API] 入库失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '入库失败',
+      details: String(error),
+    });
+  }
+});
+
+/**
  * POST /api/v1/doubao-search/execute
  * 完整流程：搜索 → 审核 → 入库
  * 
@@ -133,6 +179,98 @@ router.post('/execute', async (req, res) => {
     res.status(500).json({
       success: false,
       error: '执行失败',
+      details: String(error),
+    });
+  }
+});
+
+/**
+ * POST /api/v1/doubao-search/schedule/start
+ * 启动定时搜索任务
+ * 
+ * Body:
+ * - cronExpression: cron表达式（可选，默认每4小时）
+ */
+router.post('/schedule/start', (req, res) => {
+  try {
+    const { cronExpression } = req.body;
+    startScheduledSearch(cronExpression);
+    
+    res.json({
+      success: true,
+      message: '定时任务已启动',
+      status: getScheduleStatus(),
+    });
+  } catch (error) {
+    console.error('[豆包搜索API] 启动定时任务失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '启动失败',
+      details: String(error),
+    });
+  }
+});
+
+/**
+ * POST /api/v1/doubao-search/schedule/stop
+ * 停止定时搜索任务
+ */
+router.post('/schedule/stop', (req, res) => {
+  try {
+    stopScheduledSearch();
+    
+    res.json({
+      success: true,
+      message: '定时任务已停止',
+    });
+  } catch (error) {
+    console.error('[豆包搜索API] 停止定时任务失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '停止失败',
+      details: String(error),
+    });
+  }
+});
+
+/**
+ * GET /api/v1/doubao-search/schedule/status
+ * 获取定时任务状态
+ */
+router.get('/schedule/status', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      status: getScheduleStatus(),
+    });
+  } catch (error) {
+    console.error('[豆包搜索API] 获取状态失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '获取状态失败',
+      details: String(error),
+    });
+  }
+});
+
+/**
+ * POST /api/v1/doubao-search/schedule/trigger
+ * 手动触发一次搜索
+ */
+router.post('/schedule/trigger', async (req, res) => {
+  try {
+    const result = await triggerManualSearch();
+    
+    res.json({
+      success: result.success,
+      message: result.message,
+      result: result.result,
+    });
+  } catch (error) {
+    console.error('[豆包搜索API] 手动触发失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '触发失败',
       details: String(error),
     });
   }

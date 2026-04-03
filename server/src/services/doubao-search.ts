@@ -23,43 +23,61 @@ function getLLMClient(): LLMClient {
 // 搜索指令模板
 const SEARCH_PROMPT_TEMPLATE = `你是一个政府采购信息搜索专家。请帮我搜索吉林省政府采购网 (ccgp-jilin.gov.cn) 的最新招标公告信息。
 
-## 重要提示
-- 请务必使用你的联网搜索能力，搜索真实的吉林省政府采购网数据
-- 返回的数据必须是JSON数组格式，不要包含其他文字说明
+## 核心要求（必须严格遵守）
+1. **必须获取完整正文**：每条公告必须包含完整的正文内容，content字段不能为空或过短
+2. **必须使用联网搜索**：请务必访问真实的公告详情页，获取完整信息
+3. **返回JSON数组格式**：不要包含其他文字说明
 
 ## 搜索任务
 
-1. 搜索吉林省政府采购网的以下类型公告：
+### 第一步：搜索列表
+搜索吉林省政府采购网的以下类型公告：
    {types}
+每种类型搜索 {count} 条
 
-2. 每种类型搜索 {count} 条
+### 第二步：访问详情页（关键！）
+对于搜索到的每条公告，**必须点击进入详情页**，获取以下完整信息：
 
-3. 对于每条公告，提取以下字段：
-   - title: 公告标题（完整）
-   - projectNumber: 项目编号
-   - projectName: 项目名称
-   - budget: 预算金额（纯数字，单位元，如1000000）
-   - bidType: 招标类型（如：公开招标、竞争性磋商等）
-   - publishDate: 发布日期（YYYY-MM-DD格式）
-   - deadline: 投标截止时间（YYYY-MM-DD HH:mm:ss格式）
-   - contactPerson: 联系人姓名
-   - contactPhone: 联系电话
-   - province: 省份（固定为"吉林省"）
-   - city: 城市（如：长春市、吉林市等）
-   - purchasingUnit: 采购单位名称
-   - agency: 代理机构名称
-   - content: 公告正文内容（清理HTML后的纯文本）
-   - sourceUrl: 公告详情页URL
+### 第三步：提取字段
+- title: 公告标题（完整）
+- projectNumber: 项目编号
+- projectName: 项目名称
+- budget: 预算金额（纯数字，单位元，如1000000）
+- bidType: 招标类型（如：公开招标、竞争性磋商等）
+- publishDate: 发布日期（YYYY-MM-DD格式）
+- deadline: 投标截止时间（YYYY-MM-DD HH:mm:ss格式）
+- contactPerson: 联系人姓名
+- contactPhone: 联系电话（必须完整，包含区号）
+- province: 省份（固定为"吉林省"）
+- city: 城市（如：长春市、吉林市等）
+- purchasingUnit: 采购单位名称
+- agency: 代理机构名称
+- content: **公告完整正文内容**（必须包含以下章节）：
+  - 项目概况
+  - 采购需求（详细清单）
+  - 供应商资格要求
+  - 获取招标文件的时间、地点、方式
+  - 投标截止时间、开标时间地点
+  - 联系方式（采购单位、代理机构）
+  - 其他补充事宜
+- sourceUrl: 公告详情页完整URL
 
-4. 内容清理要求：
-   - 移除HTML标签、CSS样式、JavaScript代码
-   - 移除网站导航、页脚等无关内容
-   - 按章节分段，清晰易读
-   - 必须保留完整的联系人和电话信息
+### 第四步：内容清理
+content字段必须：
+  - 移除HTML标签、CSS样式、JavaScript代码
+  - 移除网站导航、页脚、版权声明等无关内容
+  - 按章节分段，使用换行符分隔，清晰易读
+  - 保留所有关键信息（金额、时间、联系方式、技术参数等）
+  - **content字段长度至少500字符**
+
+## 数据质量要求
+- 每条记录必须包含contactPerson或contactPhone（至少一个）
+- 每条记录的content字段不能为空，且长度≥500字符
+- 预算金额必须转换为纯数字
 
 ## 返回格式
 
-直接返回JSON数组，不要有其他文字：
+直接返回JSON数组：
 [
   {
     "title": "吉林市某单位2025年设备采购公开招标公告",
@@ -75,12 +93,12 @@ const SEARCH_PROMPT_TEMPLATE = `你是一个政府采购信息搜索专家。请
     "city": "吉林市",
     "purchasingUnit": "吉林市某单位",
     "agency": "某某招标代理公司",
-    "content": "公告正文...",
-    "sourceUrl": "http://www.ccgp-jilin.gov.cn/..."
+    "content": "项目概况\\n吉林市某单位2025年设备采购项目的潜在投标人...\\n\\n一、项目基本情况\\n1. 采购需求：...\\n2. 合同履行期限：...\\n\\n二、申请人的资格要求\\n...\\n\\n三、获取招标文件\\n...\\n\\n四、提交投标文件截止时间、开标时间和地点\\n...\\n\\n五、公告期限\\n...\\n\\n六、其他补充事宜\\n...",
+    "sourceUrl": "http://www.ccgp-jilin.gov.cn/portal/..."
   }
 ]
 
-请现在开始搜索，直接返回JSON数组数据。`;
+请现在开始搜索，必须访问每条公告的详情页获取完整正文内容。`;
 
 /**
  * 让豆包搜索吉林省政府采购网信息
@@ -205,30 +223,81 @@ export async function reviewAndSaveData(
   
   for (const item of data) {
     try {
-      // 审核数据完整性
+      // 审核数据完整性 - 必须有标题和来源URL
       if (!item.title || !item.sourceUrl) {
         result.skipped++;
         result.details.push(`跳过: 缺少必要字段 - ${item.title || '未知标题'}`);
         continue;
       }
       
-      // 审核联系人信息
+      // 审核联系人信息 - 必须有联系人或电话
       if (!item.contactPerson && !item.contactPhone) {
         result.skipped++;
         result.details.push(`跳过: 缺少联系信息 - ${item.title}`);
         continue;
       }
       
-      // 检查是否已存在
-      const { data: existing } = await client
+      // 审核正文内容 - 必须有完整的正文（至少500字符）
+      const contentStr = typeof item.content === 'string' ? item.content : '';
+      if (!item.content || contentStr.length < 500) {
+        result.skipped++;
+        result.details.push(`跳过: 正文内容不完整（${contentStr.length}字符）- ${item.title}`);
+        continue;
+      }
+      
+      // 多维度去重检查
+      let isDuplicate = false;
+      let duplicateReason = '';
+      
+      // 1. 根据sourceUrl去重
+      const { data: existingByUrl } = await client
         .from('bids')
-        .select('id')
+        .select('id, title')
         .eq('source_url', item.sourceUrl)
         .maybeSingle();
       
-      if (existing) {
+      if (existingByUrl) {
+        isDuplicate = true;
+        duplicateReason = 'URL已存在';
+      }
+      
+      // 2. 根据项目编号去重（如果有）
+      if (!isDuplicate && item.projectNumber) {
+        const { data: existingByCode } = await client
+          .from('bids')
+          .select('id, title')
+          .eq('project_code', item.projectNumber)
+          .maybeSingle();
+        
+        if (existingByCode) {
+          isDuplicate = true;
+          duplicateReason = '项目编号已存在';
+        }
+      }
+      
+      // 3. 根据标题模糊匹配去重（相似度>80%）
+      if (!isDuplicate && item.title) {
+        const titleKeywords = (item.title as string).substring(0, 30);
+        const { data: existingByTitle } = await client
+          .from('bids')
+          .select('id, title')
+          .ilike('title', `%${titleKeywords}%`)
+          .limit(1)
+          .maybeSingle();
+        
+        if (existingByTitle) {
+          // 简单相似度检查：如果标题前30字符匹配，认为是重复
+          const existingTitleStart = (existingByTitle.title || '').substring(0, 30);
+          if (titleKeywords === existingTitleStart) {
+            isDuplicate = true;
+            duplicateReason = '标题相似';
+          }
+        }
+      }
+      
+      if (isDuplicate) {
         result.skipped++;
-        result.details.push(`跳过: 已存在 - ${item.title}`);
+        result.details.push(`跳过: ${duplicateReason} - ${item.title}`);
         continue;
       }
       

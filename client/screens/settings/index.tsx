@@ -124,6 +124,16 @@ export default function SettingsScreen() {
           {/* 其他设置 */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>其他</Text>
+            <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/search-admin')}>
+              <View style={[styles.settingIcon, { backgroundColor: 'rgba(147, 51, 234, 0.1)' }]}>
+                <FontAwesome6 name="robot" size={18} color="#9333EA" />
+              </View>
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>智能搜索管理</Text>
+                <Text style={styles.settingDesc}>AI搜索招标信息并入库</Text>
+              </View>
+              <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/feedback')}>
               <View style={[styles.settingIcon, { backgroundColor: 'rgba(37, 99, 235, 0.1)' }]}>
                 <FontAwesome6 name="comment-dots" size={18} color="#2563EB" />
