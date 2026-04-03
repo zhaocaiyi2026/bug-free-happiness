@@ -2,7 +2,7 @@
  * 吉林省政府采购网自动化采集服务
  * 
  * 特点：
- * 1. 使用web_fetch获取JavaScript渲染后的列表页
+ * 1. 使用FetchClient获取JavaScript渲染后的列表页
  * 2. 自动解析列表页获取所有公告URL
  * 3. 自动访问详情页获取完整内容
  * 4. 使用豆包大模型提取结构化信息
@@ -10,9 +10,8 @@
  * 合法合规：仅采集公开发布的政府采购公告信息
  */
 
-import { LLMClient, Config } from 'coze-coding-dev-sdk';
+import { LLMClient, FetchClient, Config } from 'coze-coding-dev-sdk';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 // 采集配置
@@ -47,12 +46,21 @@ interface CollectionStats {
 
 // LLM客户端
 let llmClient: LLMClient | null = null;
+// Fetch客户端
+let fetchClient: FetchClient | null = null;
 
 function getLLMClient(): LLMClient {
   if (!llmClient) {
     llmClient = new LLMClient(new Config());
   }
   return llmClient;
+}
+
+function getFetchClient(): FetchClient {
+  if (!fetchClient) {
+    fetchClient = new FetchClient(new Config());
+  }
+  return fetchClient;
 }
 
 /**
@@ -63,26 +71,45 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * 使用 axios 获取页面内容（模拟 web_fetch）
+ * 使用 FetchClient 获取页面内容（支持JavaScript渲染）
  */
 async function fetchPage(url: string): Promise<string> {
   try {
     console.log(`[JilinAuto] 获取页面: ${url.substring(0, 80)}...`);
     
-    const response = await axios.get(url, {
-      timeout: 30000,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        'Accept-Encoding': 'gzip, deflate',
-        'Connection': 'keep-alive',
-        'Cache-Control': 'no-cache',
-      },
-      decompress: true,
-    });
+    const client = getFetchClient();
+    const response = await client.fetch(url);
     
-    return response.data;
+    if (response.status_code !== 0) {
+      console.error(`[JilinAuto] 获取失败: ${response.status_message}`);
+      return '';
+    }
+    
+    // 提取文本内容
+    const textContent = response.content
+      .filter((item): item is { type: 'text'; text: string } => item.type === 'text' && !!item.text)
+      .map(item => item.text)
+      .join('\n');
+    
+    // 提取链接信息（用于获取articleId）
+    const links = response.content
+      .filter((item): item is { type: 'link'; url: string } => item.type === 'link' && !!item.url)
+      .map(item => item.url);
+    
+    // 组合成HTML格式的字符串以便cheerio解析
+    // 将文本和链接组合
+    let html = textContent;
+    
+    // 添加链接信息作为HTML链接
+    for (const link of links) {
+      if (link.includes('articleId')) {
+        html += `\n<a href="${link}">公告链接</a>`;
+      }
+    }
+    
+    console.log(`[JilinAuto] 获取成功: 标题=${response.title}, 内容长度=${html.length}, 链接数=${links.length}`);
+    
+    return html;
   } catch (error) {
     console.error(`[JilinAuto] 获取页面失败: ${url}`, error);
     return '';
@@ -90,7 +117,47 @@ async function fetchPage(url: string): Promise<string> {
 }
 
 /**
- * 解析列表页HTML获取公告列表
+ * 从FetchClient响应中提取公告链接
+ */
+function extractBidItemsFromResponse(
+  response: Awaited<ReturnType<FetchClient['fetch']>>
+): BidItem[] {
+  const items: BidItem[] = [];
+  
+  // 从链接中提取
+  for (const item of response.content) {
+    if (item.type === 'link' && item.url) {
+      const url = item.url;
+      
+      // 提取articleId
+      const articleIdMatch = url.match(/articleId=([^&]+)/);
+      if (!articleIdMatch) continue;
+      
+      const articleId = articleIdMatch[1];
+      
+      // 构造详情页URL
+      const detailUrl = `http://www.ccgp-jilin.gov.cn/site/detail?parentId=550068&articleId=${articleId}`;
+      
+      items.push({
+        articleId,
+        title: `公告-${articleId}`,
+        region: '',
+        publishDate: '',
+        detailUrl,
+      });
+    }
+  }
+  
+  // 去重
+  const uniqueItems = items.filter((item, index, self) => 
+    index === self.findIndex(i => i.articleId === item.articleId)
+  );
+  
+  return uniqueItems;
+}
+
+/**
+ * 解析列表页HTML获取公告列表（备用方法）
  */
 function parseListPage(html: string): BidItem[] {
   const items: BidItem[] = [];
@@ -372,26 +439,38 @@ async function processBidItem(
   
   try {
     // 获取详情页
-    const html = await fetchPage(item.detailUrl);
+    const client = getFetchClient();
+    const response = await client.fetch(item.detailUrl);
     
-    if (!html || html.length < 500) {
+    if (response.status_code !== 0 || !response.content) {
       stats.skipped++;
+      console.log(`[JilinAuto] 获取详情页失败: ${item.articleId}`);
       return;
     }
     
-    // 解析详情页
-    const { title, content } = parseDetailPage(html);
+    // 提取文本内容
+    const textContent = response.content
+      .filter((contentItem): contentItem is { type: 'text'; text: string } => 
+        contentItem.type === 'text' && !!contentItem.text
+      )
+      .map(contentItem => contentItem.text)
+      .join('\n');
+    
+    const content = textContent;
+    const title = response.title || item.title;
     
     if (!content || content.length < 300) {
       stats.skipped++;
+      console.log(`[JilinAuto] 内容太短: ${item.articleId}, 长度=${content.length}`);
       return;
     }
     
     // 使用AI提取结构化信息
-    const extractedInfo = await extractBidInfo(title || item.title, content);
+    const extractedInfo = await extractBidInfo(title, content);
     
     if (!extractedInfo) {
       stats.skipped++;
+      console.log(`[JilinAuto] AI提取失败: ${item.articleId}`);
       return;
     }
     
@@ -440,16 +519,17 @@ export async function collectJilinAuto(options?: {
   
   // 获取列表页
   console.log('\n[JilinAuto] 步骤1: 获取列表页...');
-  const listHtml = await fetchPage(CONFIG.listUrl);
+  const client = getFetchClient();
+  const listResponse = await client.fetch(CONFIG.listUrl);
   
-  if (!listHtml) {
-    console.error('[JilinAuto] 获取列表页失败');
+  if (listResponse.status_code !== 0) {
+    console.error('[JilinAuto] 获取列表页失败:', listResponse.status_message);
     return stats;
   }
   
-  // 解析列表页
+  // 从响应中提取公告链接
   console.log('\n[JilinAuto] 步骤2: 解析列表页获取公告链接...');
-  const items = parseListPage(listHtml);
+  const items = extractBidItemsFromResponse(listResponse);
   
   console.log(`[JilinAuto] 解析到 ${items.length} 条公告链接`);
   
@@ -464,7 +544,7 @@ export async function collectJilinAuto(options?: {
   
   for (let i = 0; i < itemsToProcess.length; i++) {
     const item = itemsToProcess[i];
-    console.log(`\n[JilinAuto] 处理 ${i + 1}/${itemsToProcess.length}: ${item.title.substring(0, 40)}...`);
+    console.log(`\n[JilinAuto] 处理 ${i + 1}/${itemsToProcess.length}: ${item.articleId}...`);
     
     await processBidItem(item, stats, processedIds);
     
@@ -494,24 +574,37 @@ export async function collectJilinAuto(options?: {
 export async function getListPageInfo(): Promise<{ total: number; items: BidItem[] }> {
   console.log('[JilinAuto] 获取列表页信息...');
   
-  const listHtml = await fetchPage(CONFIG.listUrl);
-  
-  if (!listHtml) {
+  try {
+    const client = getFetchClient();
+    const response = await client.fetch(CONFIG.listUrl);
+    
+    if (response.status_code !== 0) {
+      console.error('[JilinAuto] 获取列表页失败:', response.status_message);
+      return { total: 0, items: [] };
+    }
+    
+    const items = extractBidItemsFromResponse(response);
+    
+    // 尝试从标题或内容中提取总数
+    let total = items.length;
+    const textContent = response.content
+      .filter((item): item is { type: 'text'; text: string } => item.type === 'text' && !!item.text)
+      .map(item => item.text)
+      .join(' ');
+    
+    const totalMatch = textContent.match(/共\s*(\d+)\s*个结果/);
+    if (totalMatch) {
+      total = parseInt(totalMatch[1], 10);
+    }
+    
+    console.log(`[JilinAuto] 列表页信息: 总数=${total}, 当前页=${items.length}`);
+    console.log(`[JilinAuto] 页面标题: ${response.title}`);
+    
+    return { total, items };
+  } catch (error) {
+    console.error('[JilinAuto] 获取列表页信息失败:', error);
     return { total: 0, items: [] };
   }
-  
-  const items = parseListPage(listHtml);
-  
-  // 尝试从HTML中提取总数
-  let total = items.length;
-  const totalMatch = listHtml.match(/共\s*(\d+)\s*个结果/);
-  if (totalMatch) {
-    total = parseInt(totalMatch[1], 10);
-  }
-  
-  console.log(`[JilinAuto] 列表页信息: 总数=${total}, 当前页=${items.length}`);
-  
-  return { total, items };
 }
 
 // 导出配置
