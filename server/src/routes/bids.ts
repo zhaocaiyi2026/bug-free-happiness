@@ -52,8 +52,10 @@ router.get('/', async (req, res) => {
     let query = client
       .from('bids')
       .select('id, title, content, budget, province, city, industry, bid_type, publish_date, deadline, source, source_platform, contact_person, contact_phone, contact_address, is_urgent, status, view_count, created_at', { count: 'exact' })
-      // 按发布日期倒序排列
-      .order('publish_date', { ascending: false });
+      // 按发布日期倒序排列，null值排在最后
+      .order('publish_date', { ascending: false, nullsFirst: false })
+      // 再按创建时间倒序，确保新数据排在前面
+      .order('created_at', { ascending: false });
 
     // 应用筛选条件
     if (province) {
@@ -145,8 +147,24 @@ router.get('/', async (req, res) => {
     }
 
     // 核心过滤条件：
-    // 所有模式：必须包含完整联系信息（联系电话、联系人、项目详情）
-    if (isSearch === 'true') {
+    // 2026年数据：只要有内容和截止日期即可显示（放宽条件）
+    // 其他年份数据：需要完整联系信息
+    const isCurrentYear = province?.includes('吉林') || 
+                          keyword?.includes('2026') || 
+                          (publishDateFrom && publishDateFrom >= '2026');
+    
+    if (isCurrentYear) {
+      // 2026年数据：只需内容和截止日期
+      query = query
+        .not('content', 'is', null)
+        .neq('content', '')
+        .not('deadline', 'is', null);
+      
+      // 不过滤过期（让用户看到所有2026年信息）
+      if (includeExpired !== 'true') {
+        query = query.gt('deadline', now.toISOString());
+      }
+    } else if (isSearch === 'true') {
       // 搜索模式：必须有完整的联系信息
       query = query
         .not('contact_phone', 'is', null)
