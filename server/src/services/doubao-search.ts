@@ -21,12 +21,18 @@ function getLLMClient(): LLMClient {
 }
 
 // 搜索指令模板
-const SEARCH_PROMPT_TEMPLATE = `你是一个政府采购信息搜索专家。请帮我搜索吉林省政府采购网 (ccgp-jilin.gov.cn) 的最新招标公告信息。
+const SEARCH_PROMPT_TEMPLATE = `你是一个政府采购信息搜索专家。请帮我搜索吉林省政府采购网 (ccgp-jilin.gov.cn) 的招标公告信息。
+
+## 当前时间
+今天是2026年4月3日。
 
 ## 核心要求（必须严格遵守）
-1. **必须获取完整正文**：每条公告必须包含完整的正文内容，content字段不能为空或过短
-2. **必须使用联网搜索**：请务必访问真实的公告详情页，获取完整信息
-3. **返回JSON数组格式**：不要包含其他文字说明
+1. **必须使用联网搜索**：请务必访问吉林省政府采购网，搜索真实存在的公告
+2. **必须获取完整正文**：每条公告必须包含完整的正文内容
+3. **返回JSON数组格式**：直接返回JSON数组，不要有其他文字
+
+## 时间范围要求
+{dateRange}
 
 ## 搜索任务
 
@@ -105,11 +111,13 @@ content字段必须：
  * 
  * @param types - 公告类型列表
  * @param countPerType - 每种类型搜索数量
+ * @param dateRange - 时间范围（如："2026年1月至今"）
  * @returns 搜索结果
  */
 export async function doubaoSearchJilinBids(
   types: string[] = ['招标公告', '中标公告', '竞争性磋商'],
-  countPerType: number = 5
+  countPerType: number = 5,
+  dateRange?: string
 ): Promise<{
   success: boolean;
   message: string;
@@ -118,19 +126,26 @@ export async function doubaoSearchJilinBids(
 }> {
   try {
     console.log('[豆包搜索] 开始搜索吉林省政府采购网信息');
-    console.log(`[豆包搜索] 类型: ${types.join(', ')}, 每类数量: ${countPerType}`);
+    console.log(`[豆包搜索] 类型: ${types.join(', ')}, 每类数量: ${countPerType}, 时间范围: ${dateRange || '不限'}`);
     
     const client = getLLMClient();
     
+    // 构建时间范围说明
+    let dateRangeText = '不限制发布时间，搜索最新的公告信息。';
+    if (dateRange) {
+      dateRangeText = `**重要**：只搜索发布日期在 ${dateRange} 的公告！请确保每条公告的publishDate字段都在这个时间范围内。`;
+    }
+    
     // 构建搜索指令
     const prompt = SEARCH_PROMPT_TEMPLATE
+      .replace('{dateRange}', dateRangeText)
       .replace('{types}', types.join('、'))
       .replace('{count}', String(countPerType));
     
     const messages = [
       {
         role: 'system',
-        content: '你是一个政府采购信息搜索专家，擅长搜索和整理招标公告信息。请使用你的搜索能力搜索吉林省政府采购网的信息，并直接返回JSON格式的数据。'
+        content: '你是一个政府采购信息搜索专家，擅长搜索和整理招标公告信息。请使用你的联网搜索能力，访问吉林省政府采购网获取真实数据，并直接返回JSON格式的数据。'
       },
       {
         role: 'user',
@@ -349,13 +364,14 @@ export async function reviewAndSaveData(
  */
 export async function doubaoSearchAndSave(
   types: string[] = ['招标公告', '中标公告', '竞争性磋商'],
-  countPerType: number = 5
+  countPerType: number = 5,
+  dateRange?: string
 ): Promise<{
   searchResult: Awaited<ReturnType<typeof doubaoSearchJilinBids>>;
   saveResult?: Awaited<ReturnType<typeof reviewAndSaveData>>;
 }> {
   // 1. 豆包搜索
-  const searchResult = await doubaoSearchJilinBids(types, countPerType);
+  const searchResult = await doubaoSearchJilinBids(types, countPerType, dateRange);
   
   // 2. 如果搜索成功且有数据，审核入库
   let saveResult;

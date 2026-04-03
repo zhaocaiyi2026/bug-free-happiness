@@ -22,18 +22,19 @@ const router = Router();
  * Body:
  * - types: 公告类型数组，如 ['招标公告', '中标公告']
  * - countPerType: 每种类型搜索数量（默认5）
+ * - dateRange: 时间范围（如："2026年1月至今"）
  */
 router.post('/search', async (req, res) => {
   const startTime = Date.now();
   
   try {
-    const { types, countPerType = 5 } = req.body;
+    const { types, countPerType = 5, dateRange } = req.body;
     
     const searchTypes = types || ['招标公告', '中标公告', '竞争性磋商'];
     
-    console.log(`[豆包搜索API] 开始搜索，类型: ${searchTypes.join(', ')}`);
+    console.log(`[豆包搜索API] 开始搜索，类型: ${searchTypes.join(', ')}, 时间范围: ${dateRange || '不限'}`);
     
-    const result = await doubaoSearchJilinBids(searchTypes, countPerType);
+    const result = await doubaoSearchJilinBids(searchTypes, countPerType, dateRange);
     
     const duration = Date.now() - startTime;
     
