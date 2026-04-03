@@ -8,7 +8,8 @@
  * 4. 礼貌标识：标准浏览器UA
  */
 
-import { chromium, Browser, Page, BrowserContext } from 'playwright';
+import { chromium } from 'playwright';
+import type { Browser, Page, BrowserContext } from 'playwright';
 import { getSupabaseClient } from '@/storage/database/supabase-client.js';
 
 // 配置
