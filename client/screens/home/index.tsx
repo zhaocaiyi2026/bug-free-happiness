@@ -487,8 +487,12 @@ export default function HomeScreen() {
     }
   };
 
-  const handleBidPress = useCallback((bidId: number) => {
-    router.push('/detail', { id: bidId });
+  const handleBidPress = useCallback((bidId: number, isWinBid?: boolean) => {
+    if (isWinBid) {
+      router.push('/win-bid-detail', { id: bidId });
+    } else {
+      router.push('/detail', { id: bidId });
+    }
   }, [router]);
 
   const handleSearchPress = () => {
@@ -523,7 +527,7 @@ export default function HomeScreen() {
           item.is_urgent && styles.bidCardUrgent,
           isWinBid && styles.bidCardWin,
         ]}
-        onPress={() => handleBidPress(item.id)}
+        onPress={() => handleBidPress(item.id, isWinBid)}
         activeOpacity={0.7}
       >
         <View style={styles.cardHeader}>
