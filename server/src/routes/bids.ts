@@ -226,13 +226,10 @@ router.get('/stats', async (req, res) => {
   try {
     const client = getSupabaseClient();
 
-    // 获取今日日期范围（UTC）
-    const todayDate = new Date();
-    const todayStart = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate()).toISOString();
-    const todayEnd = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() + 1).toISOString();
-
-    // 当前时间
+    // 获取今日日期范围（使用 UTC 时间，因为数据库存储的是 UTC）
     const now = new Date();
+    const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+    const todayEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)).toISOString();
 
     // 计算紧急招标截止时间（4天内）
     const fourDaysLater = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
