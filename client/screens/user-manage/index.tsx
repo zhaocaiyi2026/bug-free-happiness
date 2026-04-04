@@ -330,9 +330,9 @@ export default function UserManageScreen() {
   // 非管理员显示无权限页面
   if (currentUser?.role !== 'admin') {
     return (
-      <Screen backgroundColor="#0F172A">
+      <Screen backgroundColor="#F8FAFC">
         <View style={styles.noPermission}>
-          <FontAwesome6 name="shield-halved" size={48} color="#475569" />
+          <FontAwesome6 name="shield-halved" size={48} color="#CBD5E1" />
           <Text style={styles.noPermissionText}>无权限访问</Text>
           <Text style={styles.noPermissionHint}>仅管理员可查看用户管理</Text>
         </View>
@@ -341,7 +341,7 @@ export default function UserManageScreen() {
   }
 
   return (
-    <Screen backgroundColor="#0F172A" safeAreaEdges={['left', 'right', 'bottom']}>
+    <Screen backgroundColor="#F8FAFC" safeAreaEdges={['left', 'right', 'bottom']}>
       <View style={styles.container}>
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.xs }]}>
@@ -432,7 +432,7 @@ export default function UserManageScreen() {
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <FontAwesome6 name="users-slash" size={40} color="#475569" />
+                <FontAwesome6 name="users-slash" size={40} color="#CBD5E1" />
                 <Text style={styles.emptyText}>暂无用户数据</Text>
               </View>
             }
