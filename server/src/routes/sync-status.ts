@@ -648,4 +648,211 @@ router.post('/complete', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/v1/sync-status/push
+ * 豆包通用推送接口 - 接收所有类型的公告数据
+ * 
+ * 支持的数据类型：
+ * - "招标" → 招标公告，存入 bids 表
+ * - "中标" → 中标公告，存入 win_bids 表
+ * - "变更" → 答疑、澄清、变更公告，存入 bids 表
+ * - "废标" → 废标公告，存入 bids 表
+ * - 其他类型 → 存入 bids 表
+ * 
+ * Body 格式：
+ * {
+ *   "type": "招标",
+ *   "title": "XX项目公开招标公告",
+ *   "area": "吉林省",
+ *   "publish_time": "2026-04-04 12:00:00",
+ *   "url": "https://xxx.gov.cn/xxx.html",
+ *   "content": "公告正文摘要...",
+ *   "source": "吉林政府采购网",
+ *   "push_time": "2026-04-04 12:00:05"
+ * }
+ */
+router.post('/push', async (req, res) => {
+  try {
+    const { type, title, area, publish_time, url, content, source, push_time } = req.body;
+    
+    // 基础校验
+    if (!title || !url) {
+      return res.status(400).json({
+        success: false,
+        action: 'rejected',
+        reason: '缺少必要字段：title 或 url',
+      });
+    }
+    
+    if (!content || content.length < 100) {
+      return res.json({
+        success: false,
+        action: 'rejected',
+        reason: `内容不完整（仅${content?.length || 0}字符，需至少100字符）`,
+        title,
+      });
+    }
+    
+    const supabase = getSupabaseClient();
+    const dataType = type || '招标';
+    
+    console.log(`[通用推送] 收到数据: type=${dataType}, title=${title}`);
+    
+    // 去重检查 - 根据 URL
+    const { data: existingByUrl } = await supabase
+      .from('bids')
+      .select('id, title')
+      .eq('source_url', url)
+      .maybeSingle();
+    
+    if (existingByUrl) {
+      console.log(`[通用推送] 去重跳过: URL已存在`);
+      return res.json({
+        success: false,
+        action: 'duplicate',
+        reason: 'URL已存在',
+        title,
+      });
+    }
+    
+    // 解析地区
+    let province = area || '';
+    let city = '';
+    if (area) {
+      // 解析省份和城市
+      const areaParts = area.split(/[省市区县]/);
+      if (areaParts.length >= 1) {
+        province = areaParts[0] + (area.includes('省') ? '省' : '');
+      }
+      if (areaParts.length >= 2) {
+        city = areaParts[1].replace(/^[市区县]/, '');
+        if (area.includes('市')) city += '市';
+        else if (area.includes('区')) city += '区';
+        else if (area.includes('县')) city += '县';
+      }
+    }
+    
+    // 根据 type 分别处理
+    if (dataType === '中标') {
+      // 存入 win_bids 表
+      const insertData = {
+        title,
+        source_url: url,
+        content,
+        province,
+        city,
+        source: source || '豆包采集',
+        source_platform: source || '豆包采集',
+        publish_date: publish_time || null,
+        // 中标表特有字段
+        win_company: '',  // 豆包推送的格式中没有中标单位，需要从content中提取
+        win_amount: null,
+      };
+      
+      const { data: savedData, error: saveError } = await supabase
+        .from('win_bids')
+        .insert(insertData)
+        .select()
+        .single();
+      
+      if (saveError) {
+        console.error('[通用推送] 中标入库失败:', saveError);
+        return res.status(500).json({
+          success: false,
+          action: 'error',
+          reason: '入库失败',
+          details: saveError.message,
+          title,
+        });
+      }
+      
+      console.log(`[通用推送] 中标入库成功: ID=${savedData.id}`);
+      
+      return res.json({
+        success: true,
+        action: 'saved',
+        type: '中标',
+        data: {
+          id: savedData.id,
+          title: savedData.title,
+          province: savedData.province,
+        },
+      });
+      
+    } else {
+      // 存入 bids 表（招标、变更、废标等）
+      const insertData = {
+        title,
+        source_url: url,
+        content,
+        province,
+        city,
+        source: source || '豆包采集',
+        source_platform: source || '豆包采集',
+        publish_date: publish_time || null,
+        bid_type: getBidType(dataType),
+        announcement_type: dataType,
+        data_type: dataType,
+      };
+      
+      const { data: savedData, error: saveError } = await supabase
+        .from('bids')
+        .insert(insertData)
+        .select()
+        .single();
+      
+      if (saveError) {
+        console.error('[通用推送] 入库失败:', saveError);
+        return res.status(500).json({
+          success: false,
+          action: 'error',
+          reason: '入库失败',
+          details: saveError.message,
+          title,
+        });
+      }
+      
+      console.log(`[通用推送] 入库成功: type=${dataType}, ID=${savedData.id}`);
+      
+      return res.json({
+        success: true,
+        action: 'saved',
+        type: dataType,
+        data: {
+          id: savedData.id,
+          title: savedData.title,
+          province: savedData.province,
+          city: savedData.city,
+          bid_type: savedData.bid_type,
+        },
+      });
+    }
+    
+  } catch (error) {
+    console.error('[通用推送] 处理异常:', error);
+    res.status(500).json({
+      success: false,
+      error: '处理异常',
+      details: String(error),
+    });
+  }
+});
+
+/**
+ * 根据公告类型获取招标类型
+ */
+function getBidType(announcementType: string): string {
+  const typeMap: Record<string, string> = {
+    '招标': '公开招标',
+    '中标': '中标公告',
+    '变更': '更正公告',
+    '废标': '废标公告',
+    '采购意向': '采购意向',
+    '竞争性磋商': '竞争性磋商',
+    '竞争性谈判': '竞争性谈判',
+    '询价': '询价公告',
+  };
+  return typeMap[announcementType] || '招标公告';
+}
+
 export default router;
