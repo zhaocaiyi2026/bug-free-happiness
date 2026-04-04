@@ -1,6 +1,7 @@
 {
-  "name": "expo-app",
-  "description": "my-expo-app",
+  "name": "zhao-cai-yi",
+  "displayName": "招采易",
+  "description": "招采易 - 一站式招标采购信息平台",
   "main": "expo-router/entry",
   "private": true,
   "scripts": {
