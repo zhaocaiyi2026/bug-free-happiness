@@ -47,8 +47,8 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// 禁用 API 响应缓存，确保前端始终获取最新数据
-app.use('/api', (req, res, next) => {
+// 全局禁用缓存 - 确保手机端实时刷新
+app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
@@ -138,8 +138,8 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}/`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server listening at http://0.0.0.0:${port}/`);
   
   // 启动数据同步调度器（官方数据源）
   if (process.env.NODE_ENV === 'production' || process.env.ENABLE_DATA_SYNC === 'true') {
