@@ -10,11 +10,9 @@ import { Spacing } from '@/constants/theme';
 interface DisclaimerProps {
   /** 显示模式：compact（紧凑，用于详情页底部）或 full（完整，用于关于页面） */
   mode?: 'compact' | 'full';
-  /** 信息来源 */
-  source?: string | null;
 }
 
-export function Disclaimer({ mode = 'compact', source }: DisclaimerProps) {
+export function Disclaimer({ mode = 'compact' }: DisclaimerProps) {
   const { theme } = useTheme();
 
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -32,12 +30,6 @@ export function Disclaimer({ mode = 'compact', source }: DisclaimerProps) {
           <Text style={styles.bulletText}>• 信息来源于官方公开渠道，仅供参考，请以官方原文为准</Text>
           <Text style={styles.bulletText}>• 平台原样展示，不篡改、不伪造，不对信息真实性承担担保责任</Text>
         </View>
-        {source && (
-          <View style={styles.sourceWrap}>
-            <Text style={styles.sourceLabel}>信息来源：</Text>
-            <Text style={styles.sourceText}>{source}</Text>
-          </View>
-        )}
       </View>
     );
   }
@@ -59,12 +51,6 @@ export function Disclaimer({ mode = 'compact', source }: DisclaimerProps) {
         <Text style={styles.bulletText}>转载或引用本平台内容请注明来源，禁止倒卖、非法传播。</Text>
         <Text style={styles.bulletText}>如有侵权或信息错误，请联系平台核实处理。</Text>
       </View>
-      {source && (
-        <View style={styles.sourceWrap}>
-          <Text style={styles.sourceLabel}>信息来源示例：</Text>
-          <Text style={styles.sourceText}>{source}</Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -72,13 +58,13 @@ export function Disclaimer({ mode = 'compact', source }: DisclaimerProps) {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     container: {
-      backgroundColor: '#FFFFFF', // 白色背景，与详情页卡片一致
+      backgroundColor: '#FFFFFF',
       borderRadius: 12,
       padding: Spacing.md,
       borderWidth: 1,
-      borderColor: '#E5E7EB', // 浅灰边框
-      borderLeftWidth: 4, // 左侧加粗边框
-      borderLeftColor: '#3B82F6', // 蓝色左边框，与详情页主题色呼应
+      borderColor: '#E5E7EB',
+      borderLeftWidth: 4,
+      borderLeftColor: '#3B82F6',
     },
     titleRow: {
       flexDirection: 'row',
@@ -102,31 +88,14 @@ const createStyles = (theme: any) =>
     title: {
       fontSize: 14,
       fontWeight: '600',
-      color: '#1F2937', // 深灰色标题
+      color: '#1F2937',
     },
     contentWrap: {
       gap: 6,
     },
     bulletText: {
       fontSize: 13,
-      color: '#4B5563', // 中灰色文字
-      lineHeight: 20,
-    },
-    sourceWrap: {
-      flexDirection: 'row',
-      marginTop: Spacing.sm,
-      paddingTop: Spacing.sm,
-      borderTopWidth: 1,
-      borderTopColor: '#E5E7EB',
-    },
-    sourceLabel: {
-      fontSize: 12,
-      color: '#6B7280',
-      fontWeight: '500',
-    },
-    sourceText: {
-      fontSize: 12,
       color: '#4B5563',
-      flex: 1,
+      lineHeight: 20,
     },
   });

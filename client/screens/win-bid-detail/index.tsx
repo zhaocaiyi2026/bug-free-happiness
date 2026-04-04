@@ -330,7 +330,7 @@ export default function WinBidDetailScreen() {
 
         {/* 免责声明 */}
         <View style={styles.sectionCard}>
-          <Disclaimer mode="compact" source={winBid.source} />
+          <Disclaimer mode="compact" />
         </View>
       </ScrollView>
 

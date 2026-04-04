@@ -314,6 +314,12 @@ export default function DetailScreen() {
               <Text style={styles.sectionTitle}>招标详情</Text>
             </View>
             <Text style={styles.docContent}>{bid.formatted_content}</Text>
+            
+            {/* 来源 */}
+            <View style={styles.sourceRow}>
+              <Text style={styles.sourceLabel}>信息来源</Text>
+              <Text style={styles.sourceValue}>{bid.source || '官方渠道'}</Text>
+            </View>
           </View>
         )}
 
@@ -383,7 +389,7 @@ export default function DetailScreen() {
 
         {/* 免责声明 */}
         <View style={styles.sectionCard}>
-          <Disclaimer mode="compact" source={bid.source} />
+          <Disclaimer mode="compact" />
         </View>
       </ScrollView>
 

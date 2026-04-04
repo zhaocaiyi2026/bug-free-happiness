@@ -175,7 +175,7 @@ export default function SettingsScreen() {
 
           {/* 免责声明 */}
           <View style={{ paddingHorizontal: Spacing.md, marginTop: Spacing.lg }}>
-            <Disclaimer mode="full" source="中国政府采购网、全国公共资源交易平台" />
+            <Disclaimer mode="full" />
           </View>
         </ScrollView>
       </View>
