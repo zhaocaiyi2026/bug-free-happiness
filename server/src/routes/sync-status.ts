@@ -25,6 +25,38 @@ import {
 const router = Router();
 
 /**
+ * 记录推送错误到数据库
+ * 供用户查看并通知豆包修正
+ */
+async function logPushError(params: {
+  requestType?: string;
+  requestTitle?: string;
+  requestSource?: string;
+  requestBody: Record<string, unknown>;
+  httpStatus: number;
+  errorType: 'validation' | 'duplicate' | 'format' | 'database' | 'unknown';
+  errorReason: string;
+  missingFields?: string[];
+}): Promise<void> {
+  try {
+    const supabase = getSupabaseClient();
+    await supabase.from('push_errors').insert({
+      request_type: params.requestType,
+      request_title: params.requestTitle,
+      request_source: params.requestSource,
+      request_body: params.requestBody,
+      http_status: params.httpStatus,
+      error_type: params.errorType,
+      error_reason: params.errorReason,
+      missing_fields: params.missingFields || null,
+    });
+    console.log(`[错误日志] 已记录: ${params.errorType} - ${params.errorReason}`);
+  } catch (err) {
+    console.error('[错误日志] 记录失败:', err);
+  }
+}
+
+/**
  * POST /api/v1/sync-status/update
  * 豆包调用此接口更新同步状态
  * 
@@ -711,6 +743,19 @@ router.post('/push', async (req, res) => {
     // 审核失败：返回 400 错误，不入库，不更新状态表
     if (!reviewResult.passed) {
       console.log(`[数据处理] 审核不通过: ${reviewResult.reason}`);
+      
+      // 记录错误日志
+      await logPushError({
+        requestType: pushedData.type,
+        requestTitle: pushedData.title,
+        requestSource: pushedData.source,
+        requestBody: req.body,
+        httpStatus: 400,
+        errorType: 'validation',
+        errorReason: reviewResult.reason,
+        missingFields: reviewResult.missingFields,
+      });
+      
       return res.status(400).json({
         success: false,
         action: 'rejected',
@@ -733,6 +778,18 @@ router.post('/push', async (req, res) => {
     
     if (existingByUrl) {
       console.log(`[数据处理] 去重跳过: URL已存在`);
+      
+      // 记录重复错误（但不阻断，仅记录）
+      await logPushError({
+        requestType: pushedData.type,
+        requestTitle: pushedData.title,
+        requestSource: pushedData.source,
+        requestBody: req.body,
+        httpStatus: 200,
+        errorType: 'duplicate',
+        errorReason: 'URL已存在，跳过入库',
+      });
+      
       return res.json({
         success: false,
         action: 'duplicate',
@@ -837,6 +894,18 @@ router.post('/push', async (req, res) => {
       
       if (saveError) {
         console.error('[数据处理] 中标入库失败:', saveError);
+        
+        // 记录数据库错误
+        await logPushError({
+          requestType: pushedData.type,
+          requestTitle: pushedData.title,
+          requestSource: pushedData.source,
+          requestBody: req.body,
+          httpStatus: 500,
+          errorType: 'database',
+          errorReason: `入库失败: ${saveError.message}`,
+        });
+        
         return res.status(500).json({
           success: false,
           action: 'error',
@@ -926,6 +995,18 @@ router.post('/push', async (req, res) => {
       
       if (saveError) {
         console.error('[数据处理] 入库失败:', saveError);
+        
+        // 记录数据库错误
+        await logPushError({
+          requestType: pushedData.type,
+          requestTitle: pushedData.title,
+          requestSource: pushedData.source,
+          requestBody: req.body,
+          httpStatus: 500,
+          errorType: 'database',
+          errorReason: `入库失败: ${saveError.message}`,
+        });
+        
         return res.status(500).json({
           success: false,
           action: 'error',
@@ -962,6 +1043,18 @@ router.post('/push', async (req, res) => {
     
   } catch (error) {
     console.error('[通用推送] 处理异常:', error);
+    
+    // 记录异常错误
+    await logPushError({
+      requestType: req.body?.type || '未知',
+      requestTitle: req.body?.title || '未知标题',
+      requestSource: req.body?.source || '未知来源',
+      requestBody: req.body,
+      httpStatus: 500,
+      errorType: 'unknown',
+      errorReason: `处理异常: ${String(error)}`,
+    });
+    
     res.status(500).json({
       success: false,
       error: '处理异常',
@@ -1240,5 +1333,120 @@ function getBidType(announcementType: string): string {
   };
   return typeMap[normalized] || normalized || '招标公告';
 }
+
+/**
+ * GET /api/v1/sync-status/push-errors
+ * 查询推送错误日志
+ * 
+ * Query:
+ * - resolved: 是否已解决 (true/false/all，默认false)
+ * - limit: 返回条数 (默认50)
+ * - errorType: 错误类型筛选
+ */
+router.get('/push-errors', async (req, res) => {
+  try {
+    const { resolved = 'false', limit = 50, errorType } = req.query;
+    const supabase = getSupabaseClient();
+    
+    let query = supabase
+      .from('push_errors')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(Number(limit));
+    
+    // 筛选已解决/未解决
+    if (resolved !== 'all') {
+      query = query.eq('resolved', resolved === 'true');
+    }
+    
+    // 筛选错误类型
+    if (errorType) {
+      query = query.eq('error_type', errorType);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        error: '查询失败',
+        details: error.message,
+      });
+    }
+    
+    // 统计各类型错误数量
+    const { data: stats } = await supabase
+      .from('push_errors')
+      .select('error_type, resolved');
+    
+    const errorStats = {
+      total: stats?.length || 0,
+      unresolved: stats?.filter(s => !s.resolved).length || 0,
+      validation: stats?.filter(s => s.error_type === 'validation' && !s.resolved).length || 0,
+      duplicate: stats?.filter(s => s.error_type === 'duplicate' && !s.resolved).length || 0,
+      database: stats?.filter(s => s.error_type === 'database' && !s.resolved).length || 0,
+    };
+    
+    res.json({
+      success: true,
+      stats: errorStats,
+      data,
+    });
+    
+  } catch (error) {
+    console.error('[错误日志] 查询异常:', error);
+    res.status(500).json({
+      success: false,
+      error: '查询异常',
+      details: String(error),
+    });
+  }
+});
+
+/**
+ * POST /api/v1/sync-status/push-errors/:id/resolve
+ * 标记错误为已解决
+ */
+router.post('/push-errors/:id/resolve', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { note, resolvedBy = '用户' } = req.body;
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from('push_errors')
+      .update({
+        resolved: true,
+        resolved_at: new Date().toISOString(),
+        resolved_by: resolvedBy,
+        note: note || null,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        error: '更新失败',
+        details: error.message,
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: '已标记为已解决',
+      data,
+    });
+    
+  } catch (error) {
+    console.error('[错误日志] 更新异常:', error);
+    res.status(500).json({
+      success: false,
+      error: '更新异常',
+      details: String(error),
+    });
+  }
+});
 
 export default router;
