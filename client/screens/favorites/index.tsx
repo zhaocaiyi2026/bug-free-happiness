@@ -138,13 +138,8 @@ export default function FavoritesScreen() {
           </Text>
         </View>
         <View style={styles.typeTag}>
-          <Text style={styles.typeTagText} numberOfLines={1}>{item.bids.bid_type || '招标'}</Text>
+          <Text style={styles.typeTagText}>{item.bids.bid_type || '招标'}</Text>
         </View>
-        {item.bids.is_urgent && (
-          <View style={styles.urgentTag}>
-            <Text style={styles.urgentTagText}>紧急</Text>
-          </View>
-        )}
         <TouchableOpacity
           style={styles.removeButton}
           onPress={() => handleRemoveFavorite(item.bids.id, item.bids.title)}

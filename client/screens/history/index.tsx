@@ -90,11 +90,6 @@ function HistoryItemCard({ item, styles, onPress }: HistoryItemCardProps) {
             {item.industry?.slice(0, 4) || '项目'}
           </Text>
         </View>
-        {item.is_urgent && (
-          <View style={styles.urgentTag}>
-            <Text style={styles.urgentTagText}>紧急</Text>
-          </View>
-        )}
       </View>
       <Text style={styles.bidTitle} numberOfLines={2}>
         {item.title}

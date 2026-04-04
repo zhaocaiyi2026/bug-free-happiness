@@ -284,17 +284,15 @@ export const createStyles = (theme: Theme) => {
       color: '#2563EB',
       fontWeight: '600',
     },
-    tagRow: {
+    typeTagContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
     },
     typeTag: {
       backgroundColor: 'rgba(37, 99, 235, 0.12)',
       paddingHorizontal: Spacing.sm,
       paddingVertical: 4,
       borderRadius: 6,
-      maxWidth: 80,  // 限制最大宽度，防止溢出
     },
     typeTagWin: {
       backgroundColor: 'rgba(5, 150, 105, 0.15)',
@@ -306,17 +304,6 @@ export const createStyles = (theme: Theme) => {
     },
     typeTagTextWin: {
       color: '#059669',
-    },
-    urgentTag: {
-      backgroundColor: '#DC2626',
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: 4,
-      borderRadius: 6,
-    },
-    urgentTagText: {
-      fontSize: 10,
-      color: '#FFFFFF',
-      fontWeight: '700',
     },
     bidTitle: {
       fontSize: 14,

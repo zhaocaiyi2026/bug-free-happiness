@@ -241,12 +241,6 @@ export default function DetailScreen() {
               <View style={styles.categoryTag}>
                 <Text style={styles.categoryTagText}>{bid.industry?.slice(0, 4) || '项目'}</Text>
               </View>
-              {bid.is_urgent && (
-                <View style={styles.urgentTag}>
-                  <FontAwesome6 name="bolt" size={9} color="#FFFFFF" />
-                  <Text style={styles.urgentTagText}>紧急</Text>
-                </View>
-              )}
             </View>
             <Text style={styles.title}>{bid.title}</Text>
           </View>

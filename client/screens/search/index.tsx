@@ -448,15 +448,10 @@ export default function SearchScreen() {
             <Text style={styles.categoryTagText}>{item.industry || '综合'}</Text>
           </View>
           <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
-            <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]} numberOfLines={1}>
+            <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]}>
               {item.bid_type || (isWinBid ? '中标' : '招标')}
             </Text>
           </View>
-          {item.is_urgent && (
-            <View style={styles.urgentTag}>
-              <Text style={styles.urgentTagText}>紧急</Text>
-            </View>
-          )}
         </View>
         <Text style={styles.bidTitle} numberOfLines={2}>{item.title}</Text>
         <Text style={[styles.bidBudget, isWinBid && styles.bidBudgetWin]}>{formatBudget(item.budget)}</Text>

@@ -96,17 +96,6 @@ export const createStyles = (theme: Theme) => {
       color: '#2563EB',
       fontWeight: '600',
     },
-    urgentTag: {
-      backgroundColor: '#C8102E',
-      paddingHorizontal: Spacing.xs + 2,
-      paddingVertical: 1,
-      borderRadius: 3,
-    },
-    urgentTagText: {
-      fontSize: 9,
-      color: '#FFFFFF',
-      fontWeight: '700',
-    },
     bidTitle: {
       fontSize: 13,
       fontWeight: '600',

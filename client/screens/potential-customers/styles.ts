@@ -202,7 +202,6 @@ export const createStyles = (theme: Theme) => {
       paddingVertical: 2,
       borderRadius: BorderRadius.sm,
       backgroundColor: '#EFF6FF',
-      maxWidth: 60,  // 限制最大宽度
     },
     typeTagWinner: {
       backgroundColor: '#ECFDF5',

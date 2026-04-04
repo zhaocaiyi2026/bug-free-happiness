@@ -70,20 +70,6 @@ export const createStyles = (theme: Theme) => {
       color: '#FFFFFF',
       fontWeight: '600',
     },
-    urgentTag: {
-      backgroundColor: '#C8102E',
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: 2,
-      borderRadius: 4,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    urgentTagText: {
-      fontSize: 10,
-      color: '#FFFFFF',
-      fontWeight: '700',
-      marginLeft: 2,
-    },
     title: {
       fontSize: 18,
       fontWeight: '700',

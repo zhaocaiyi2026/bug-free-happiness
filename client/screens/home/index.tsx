@@ -538,14 +538,9 @@ export default function HomeScreen() {
               {item.industry?.slice(0, 4) || '项目'}
             </Text>
           </View>
-          <View style={styles.tagRow}>
-            {item.is_urgent && (
-              <View style={styles.urgentTag}>
-                <Text style={styles.urgentTagText}>紧急</Text>
-              </View>
-            )}
+          <View style={styles.typeTagContainer}>
             <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
-              <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]} numberOfLines={1}>
+              <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]}>
                 {displayType}
               </Text>
             </View>

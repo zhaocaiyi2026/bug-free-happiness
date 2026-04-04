@@ -96,23 +96,10 @@ export const createStyles = (theme: Theme) => {
       paddingVertical: 2,
       borderRadius: 3,
       marginRight: Spacing.xs,
-      maxWidth: 60,  // 限制最大宽度
     },
     typeTagText: {
       fontSize: 10,
       color: '#2563EB',
-      fontWeight: '700',
-    },
-    urgentTag: {
-      backgroundColor: '#C8102E',
-      paddingHorizontal: Spacing.xs + 2,
-      paddingVertical: 1,
-      borderRadius: 3,
-      marginRight: Spacing.xs,
-    },
-    urgentTagText: {
-      fontSize: 9,
-      color: '#FFFFFF',
       fontWeight: '700',
     },
     removeButton: {
