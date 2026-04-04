@@ -770,32 +770,52 @@ router.post('/push', async (req, res) => {
     // ========== 步骤2：去重检查 ==========
     const supabase = getSupabaseClient();
     
-    const { data: existingByUrl } = await supabase
-      .from('bids')
-      .select('id, title')
-      .eq('source_url', pushedData.url)
-      .maybeSingle();
-    
-    if (existingByUrl) {
-      console.log(`[数据处理] 去重跳过: URL已存在`);
+    // 只有URL非空时才做去重检查
+    if (pushedData.url && pushedData.url.trim() !== '') {
+      const { data: existingByUrl } = await supabase
+        .from('bids')
+        .select('id, title')
+        .eq('source_url', pushedData.url)
+        .maybeSingle();
       
-      // 记录重复错误（但不阻断，仅记录）
-      await logPushError({
-        requestType: pushedData.type,
-        requestTitle: pushedData.title,
-        requestSource: pushedData.source,
-        requestBody: req.body,
-        httpStatus: 200,
-        errorType: 'duplicate',
-        errorReason: 'URL已存在，跳过入库',
-      });
+      if (existingByUrl) {
+        console.log(`[数据处理] 去重跳过: URL已存在`);
+        
+        // 记录重复错误（但不阻断，仅记录）
+        await logPushError({
+          requestType: pushedData.type,
+          requestTitle: pushedData.title,
+          requestSource: pushedData.source,
+          requestBody: req.body,
+          httpStatus: 200,
+          errorType: 'duplicate',
+          errorReason: 'URL已存在，跳过入库',
+        });
+        
+        return res.json({
+          success: false,
+          action: 'duplicate',
+          reason: 'URL已存在',
+          title: pushedData.title,
+        });
+      }
+    } else {
+      // 没有URL时，用标题去重
+      const { data: existingByTitle } = await supabase
+        .from('bids')
+        .select('id, title')
+        .eq('title', pushedData.title)
+        .maybeSingle();
       
-      return res.json({
-        success: false,
-        action: 'duplicate',
-        reason: 'URL已存在',
-        title: pushedData.title,
-      });
+      if (existingByTitle) {
+        console.log(`[数据处理] 去重跳过: 标题已存在`);
+        return res.json({
+          success: false,
+          action: 'duplicate',
+          reason: '标题已存在',
+          title: pushedData.title,
+        });
+      }
     }
     
     // ========== 步骤3：调用豆包大模型格式化处理 ==========

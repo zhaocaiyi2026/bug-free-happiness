@@ -101,13 +101,15 @@ function getLLMClient(): LLMClient {
  * 步骤1：数据审核
  * 检查是否符合入库要求
  * 
- * 必填字段（缺一不可）：
+ * 必填字段：
  * - type: 公告类型（招标 / 中标）
  * - title: 公告标题
- * - contact_person: 联系人（从content提取）
- * - contact_phone: 联系电话（从content提取）
- * - address: 项目地址（从content提取或area字段）
- * - content: 项目详细信息
+ * - content: 项目概况/详情
+ * - 联系人: 从content提取
+ * - 联系电话: 从content提取
+ * 
+ * 可选字段：
+ * - 地址、时间等（不影响入库）
  */
 export function reviewPushedData(data: PushedBidData): ReviewResult {
   const missingFields: string[] = [];
@@ -125,10 +127,10 @@ export function reviewPushedData(data: PushedBidData): ReviewResult {
     reasons.push('标题缺失或过短(title)');
   }
 
-  // 3. 必须有正文内容（至少200字符）
-  if (!data.content || data.content.length < 200) {
-    missingFields.push('项目详细信息');
-    reasons.push(`正文内容不足(content)：仅${data.content?.length || 0}字符，需至少200字符`);
+  // 3. 必须有正文内容（至少50字符，包含项目概况即可）
+  if (!data.content || data.content.length < 50) {
+    missingFields.push('项目详情');
+    reasons.push(`正文内容不足(content)：仅${data.content?.length || 0}字符，需至少50字符`);
     // 内容不足时直接返回，不再检查其他字段
     return {
       passed: false,
@@ -142,22 +144,16 @@ export function reviewPushedData(data: PushedBidData): ReviewResult {
   
   if (!contactInfo.contactPerson) {
     missingFields.push('联系人');
-    reasons.push('正文无法提取联系人(contact_person)');
+    reasons.push('正文无法提取联系人');
   }
 
   // 5. 从正文中提取联系电话
   if (!contactInfo.contactPhone) {
     missingFields.push('联系电话');
-    reasons.push('正文无法提取联系电话(contact_phone)');
+    reasons.push('正文无法提取联系电话');
   }
 
-  // 6. 必须有项目地址（从content提取或area字段）
-  const addressInfo = extractAddress(data.content, data.area);
-  if (!addressInfo) {
-    missingFields.push('项目地址');
-    reasons.push('正文无法提取地址信息(address)');
-  }
-
+  // 地址和时间不再强制要求，作为可选字段
   const passed = missingFields.length === 0;
 
   return {
