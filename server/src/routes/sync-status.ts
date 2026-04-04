@@ -761,6 +761,9 @@ router.post('/push', async (req, res) => {
     // 根据 type 分别处理
     if (isWinBidType(dataType)) {
       // 存入 win_bids 表
+      // 自动从content中提取联系信息
+      const { contactPerson, contactPhone } = extractContactInfo(content);
+      
       const insertData = {
         title,
         source_url: url,
@@ -775,6 +778,8 @@ router.post('/push', async (req, res) => {
         // 中标表特有字段
         win_company: '',  // 豆包推送的格式中没有中标单位，需要从content中提取
         win_amount: null,
+        // 联系信息（自动提取）
+        win_company_phone: contactPhone,
       };
       
       const { data: savedData, error: saveError } = await supabase
@@ -811,6 +816,9 @@ router.post('/push', async (req, res) => {
       
     } else {
       // 存入 bids 表（招标、变更、废标等）
+      // 自动从content中提取联系信息
+      const { contactPerson, contactPhone } = extractContactInfo(content);
+      
       const insertData = {
         title,
         source_url: url,
@@ -823,6 +831,9 @@ router.post('/push', async (req, res) => {
         bid_type: getBidType(dataType),  // 简称，如"竞争性谈判"
         announcement_type: dataType,      // 规范化后的名称
         data_type: dataType,
+        // 联系信息（自动提取）
+        contact_person: contactPerson,
+        contact_phone: contactPhone,
       };
       
       const { data: savedData, error: saveError } = await supabase
@@ -887,6 +898,209 @@ function normalizeAnnouncementType(typeName: string): string {
   normalized = normalized.trim();
   
   return normalized || '招标';
+}
+
+/**
+ * POST /api/v1/sync-status/fix-contact-info
+ * 批量修复招标数据的联系信息
+ * 从content字段中提取联系人和联系电话
+ */
+router.post('/fix-contact-info', async (req, res) => {
+  try {
+    const { limit = 100, dryRun = false } = req.body;
+    
+    const supabase = getSupabaseClient();
+    
+    // 查询缺少联系信息的数据
+    const { data: bidsWithoutContact, error: queryError } = await supabase
+      .from('bids')
+      .select('id, title, content, contact_person, contact_phone')
+      .or('contact_person.is.null,contact_phone.is.null')
+      .not('content', 'is', null)
+      .limit(limit);
+    
+    if (queryError) {
+      return res.status(500).json({
+        success: false,
+        error: '查询失败',
+        details: queryError.message,
+      });
+    }
+    
+    if (!bidsWithoutContact || bidsWithoutContact.length === 0) {
+      return res.json({
+        success: true,
+        message: '没有需要修复的数据',
+        fixedCount: 0,
+      });
+    }
+    
+    console.log(`[批量修复] 发现 ${bidsWithoutContact.length} 条需要修复的数据`);
+    
+    // 统计结果
+    const results = {
+      total: bidsWithoutContact.length,
+      fixed: 0,
+      skipped: 0,
+      errors: 0,
+      details: [] as Array<{ id: number; title: string; action: string; contactPerson?: string; contactPhone?: string }>,
+    };
+    
+    // 逐条处理
+    for (const bid of bidsWithoutContact) {
+      try {
+        const { contactPerson, contactPhone } = extractContactInfo(bid.content || '');
+        
+        // 如果没有提取到任何联系信息，跳过
+        if (!contactPerson && !contactPhone) {
+          results.skipped++;
+          results.details.push({
+            id: bid.id,
+            title: bid.title,
+            action: 'skipped',
+          });
+          continue;
+        }
+        
+        // 是否是模拟运行
+        if (dryRun) {
+          results.fixed++;
+          results.details.push({
+            id: bid.id,
+            title: bid.title,
+            action: 'would_fix',
+            contactPerson,
+            contactPhone,
+          });
+          continue;
+        }
+        
+        // 更新数据库
+        const updateData: Record<string, string | null> = {};
+        if (contactPerson && !bid.contact_person) {
+          updateData.contact_person = contactPerson;
+        }
+        if (contactPhone && !bid.contact_phone) {
+          updateData.contact_phone = contactPhone;
+        }
+        
+        if (Object.keys(updateData).length > 0) {
+          const { error: updateError } = await supabase
+            .from('bids')
+            .update(updateData)
+            .eq('id', bid.id);
+          
+          if (updateError) {
+            console.error(`[批量修复] 更新失败 ID=${bid.id}:`, updateError);
+            results.errors++;
+            results.details.push({
+              id: bid.id,
+              title: bid.title,
+              action: 'error',
+            });
+          } else {
+            results.fixed++;
+            results.details.push({
+              id: bid.id,
+              title: bid.title,
+              action: 'fixed',
+              contactPerson,
+              contactPhone,
+            });
+            console.log(`[批量修复] 成功 ID=${bid.id}: 联系人=${contactPerson}, 电话=${contactPhone}`);
+          }
+        } else {
+          results.skipped++;
+        }
+      } catch (err) {
+        console.error(`[批量修复] 处理异常 ID=${bid.id}:`, err);
+        results.errors++;
+      }
+    }
+    
+    res.json({
+      success: true,
+      dryRun,
+      ...results,
+      details: results.details.slice(0, 20),  // 只返回前20条详情
+    });
+    
+  } catch (error) {
+    console.error('[批量修复] 处理异常:', error);
+    res.status(500).json({
+      success: false,
+      error: '处理异常',
+      details: String(error),
+    });
+  }
+});
+
+/**
+ * 从content中提取联系人和联系电话
+ * 支持多种格式的联系人信息提取
+ */
+function extractContactInfo(content: string): { contactPerson: string | null; contactPhone: string | null } {
+  if (!content) return { contactPerson: null, contactPhone: null };
+  
+  let contactPerson: string | null = null;
+  let contactPhone: string | null = null;
+  
+  // 提取联系人
+  // 格式1: 联系人：张三
+  // 格式2: 联系人: 张三
+  // 格式3: 采购人联系人：张三
+  // 格式4: 联系人姓名：张三
+  const personPatterns = [
+    /(?:采购人)?联系人[姓]?\s*[：:]\s*([^\s,，。；;\n]+)/,
+    /(?:项目)?负责人\s*[：:]\s*([^\s,，。；;\n]+)/,
+    /联系人员\s*[：:]\s*([^\s,，。；;\n]+)/,
+  ];
+  
+  for (const pattern of personPatterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      contactPerson = match[1].trim();
+      // 清理可能带上的电话号码（如果联系人后面紧跟电话）
+      contactPerson = contactPerson.replace(/[\d\-()（）]+$/, '').trim();
+      if (contactPerson && contactPerson.length >= 2 && contactPerson.length <= 10) {
+        break;
+      }
+    }
+  }
+  
+  // 提取联系电话
+  // 格式1: 联系电话：0431-12345678
+  // 格式2: 电话：0431-12345678
+  // 格式3: 电话: 0431-12345678
+  // 格式4: 手机：13812345678
+  const phonePatterns = [
+    /(?:联系)?电话\s*[：:]\s*([\d\-()（）\s]{7,20})/,
+    /手机\s*[：:]\s*([\d\-()（）\s]{11,20})/,
+    /联系电话[：:]\s*([\d\-()（）\s]{7,20})/,
+    /(\d{3,4}[-－]\d{7,8})/,  // 座机格式：0431-12345678
+    /(\d{11})/,  // 手机号格式
+  ];
+  
+  for (const pattern of phonePatterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      let phone = match[1].trim();
+      // 清理多余空格
+      phone = phone.replace(/\s+/g, '');
+      // 标准化分隔符
+      phone = phone.replace(/[-－]/g, '-');
+      
+      // 验证电话号码格式
+      if (phone.length >= 7 && phone.length <= 20) {
+        contactPhone = phone;
+        break;
+      }
+    }
+  }
+  
+  console.log(`[提取联系信息] 联系人=${contactPerson}, 电话=${contactPhone}`);
+  
+  return { contactPerson, contactPhone };
 }
 
 /**

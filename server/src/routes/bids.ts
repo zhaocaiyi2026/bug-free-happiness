@@ -230,7 +230,8 @@ router.get('/', async (req, res) => {
       
       // 过滤过期招标（搜索时也可以选择是否包含）
       if (includeExpired !== 'true') {
-        query = query.gt('deadline', now.toISOString());
+        // deadline IS NULL OR deadline > now（允许没有截止日期的招标）
+        query = query.or(`deadline.is.null,deadline.gt.${now.toISOString()}`);
       }
     } else {
       // 主页模式：必须包含完整联系信息
@@ -240,11 +241,11 @@ router.get('/', async (req, res) => {
         .not('contact_person', 'is', null)
         .neq('contact_person', '')
         .not('content', 'is', null)
-        .neq('content', '')
-        .not('deadline', 'is', null);
+        .neq('content', '');
 
-      // 主页不显示过期招标
-      query = query.gt('deadline', now.toISOString());
+      // 主页不显示过期招标（但允许没有截止日期的招标）
+      // deadline IS NULL OR deadline > now
+      query = query.or(`deadline.is.null,deadline.gt.${now.toISOString()}`);
     }
 
     // 分页
