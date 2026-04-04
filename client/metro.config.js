@@ -31,7 +31,7 @@ config.resolver.blockList = [
   /.*node_modules\/\.pnpm\/.*_tmp_\d+.*/,
 ];
 
-const BACKEND_TARGET = 'http://localhost:9091';
+const BACKEND_TARGET = 'https://4dedb0b5-952a-4a4c-a211-0bf5165689d2.dev.coze.site';
 
 const apiProxy = createProxyMiddleware({
   target: BACKEND_TARGET,

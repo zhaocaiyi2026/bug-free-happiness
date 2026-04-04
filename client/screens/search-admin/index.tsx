@@ -17,8 +17,7 @@ import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
 import { createStyles } from './styles';
-
-const EXPO_PUBLIC_BACKEND_BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+import { API_BASE_URL } from '@/constants/api';
 
 // 公告类型选项
 const BID_TYPES = [
@@ -94,7 +93,7 @@ export default function SearchAdminScreen() {
        * 接口：POST /api/v1/doubao-search/search
        * Body 参数：types: string[], countPerType: number
        */
-      const response = await fetch(`${EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/doubao-search/search`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/doubao-search/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -141,7 +140,7 @@ export default function SearchAdminScreen() {
                * 接口：POST /api/v1/doubao-search/approve
                * Body 参数：data: BidData[]
                */
-              const response = await fetch(`${EXPO_PUBLIC_BACKEND_BASE_URL}/api/v1/doubao-search/approve`, {
+              const response = await fetch(`${API_BASE_URL}/api/v1/doubao-search/approve`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ data: searchResult.data }),
