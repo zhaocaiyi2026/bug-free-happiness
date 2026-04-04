@@ -336,12 +336,12 @@ export default function HomeScreen() {
     // 如果点击的是当前已选中的标签，不做任何操作
     if (filterKey === activeFilter) return;
     
-    // 先切换标签，显示缓存数据（如果有）
+    // 先切换标签
     setActiveFilter(filterKey);
     activeFilterRef.current = filterKey;
     
-    // 如果已经加载过数据，直接显示缓存，不刷新
-    if (hasLoaded[filterKey] && bidsCache[filterKey].length > 0) {
+    // 如果已经加载过数据且有缓存，直接显示缓存，不刷新
+    if (hasLoaded[filterKey] && bidsCache[filterKey]?.length > 0) {
       return;
     }
     
@@ -352,20 +352,29 @@ export default function HomeScreen() {
         fetchData(1, filterKey, selectedProvince.name);
         return;
       }
+      // 未选择省份，弹出地区选择
+      if (provinces.length === 0) {
+        Alert.alert('提示', '正在加载地区数据，请稍候');
+        return;
+      }
+      setLocationStep('province');
+      setLocationModalVisible(true);
+      return;
     }
     
     if (filterKey === 'city') {
       if (selectedProvince && selectedCity) {
+        // 已选择城市，获取该市数据
         fetchData(1, filterKey, selectedProvince.name, selectedCity.name);
         return;
       } else if (selectedProvince && !selectedCity) {
+        // 只选了省份，获取该省数据
         fetchData(1, 'province', selectedProvince.name);
+        setActiveFilter('province');
+        activeFilterRef.current = 'province';
         return;
       }
-    }
-    
-    // 没有选择地区，弹出选择弹窗
-    if (filterKey !== 'all') {
+      // 未选择地区，弹出地区选择
       if (provinces.length === 0) {
         Alert.alert('提示', '正在加载地区数据，请稍候');
         return;
@@ -391,30 +400,48 @@ export default function HomeScreen() {
     setLocationStep('city');
   };
 
-  // 选择城市后的处理
+  // 选择城市后的处理 - 只保存选择，不跳转标签不加载数据
   const handleCitySelect = (city: City) => {
     setSelectedCity(city);
+    
+    // 清除地区相关缓存（因为地区变了）
+    setBidsCache(prev => ({
+      ...prev,
+      province: [],
+      city: [],
+      provinceWin: [],
+    }));
+    setHasLoaded(prev => ({
+      ...prev,
+      province: false,
+      city: false,
+      provinceWin: false,
+    }));
+    
     setLocationModalVisible(false);
-    
-    // 切换到城市标签并获取数据
-    setActiveFilter('city');
-    activeFilterRef.current = 'city';
-    
-    // 获取城市数据
-    fetchData(1, 'city', selectedProvince?.name, city.name);
+    // 不再自动跳转到城市标签，不再自动获取数据
   };
 
-  // 不选择城市，只按省份筛选
+  // 不选择城市，只按省份筛选 - 只保存选择，关闭弹窗
   const handleConfirmProvince = () => {
     if (!selectedProvince) return;
     
+    // 清除地区相关缓存（因为地区变了）
+    setBidsCache(prev => ({
+      ...prev,
+      province: [],
+      city: [],
+      provinceWin: [],
+    }));
+    setHasLoaded(prev => ({
+      ...prev,
+      province: false,
+      city: false,
+      provinceWin: false,
+    }));
+    
     setLocationModalVisible(false);
-    
-    const filterKey = activeFilter === 'provinceWin' ? 'provinceWin' : 'province';
-    setActiveFilter(filterKey);
-    activeFilterRef.current = filterKey;
-    
-    fetchData(1, filterKey, selectedProvince.name);
+    // 不再自动跳转标签，不再自动获取数据
   };
 
   // 清除地区选择
@@ -423,9 +450,20 @@ export default function HomeScreen() {
     setSelectedCity(null);
     setCities([]);
     
-    // 切换到全部招标标签
-    setActiveFilter('all');
-    activeFilterRef.current = 'all';
+    // 清除地区相关缓存
+    setBidsCache(prev => ({
+      ...prev,
+      province: [],
+      city: [],
+      provinceWin: [],
+    }));
+    setHasLoaded(prev => ({
+      ...prev,
+      province: false,
+      city: false,
+      provinceWin: false,
+    }));
+    // 不再自动切换到全部招标标签
   };
 
   const handleRefresh = () => {
