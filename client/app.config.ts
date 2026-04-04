@@ -35,6 +35,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     "extra": {
       expoPublicBackendBaseUrl: backendBaseUrl,
+      eas: {
+        projectId: "7622121045184577562"
+      }
     },
     "plugins": [
       process.env.EXPO_PUBLIC_BACKEND_BASE_URL ? [
