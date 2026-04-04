@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
@@ -77,9 +78,12 @@ export default function BidListScreen() {
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
 
-  useEffect(() => {
-    fetchData(1);
-  }, [listType, params.keyword, params.industry]);
+  // 页面聚焦时刷新数据
+  useFocusEffect(
+    useCallback(() => {
+      fetchData(1);
+    }, [listType, params.keyword, params.industry])
+  );
 
   const fetchData = async (pageNum: number) => {
     try {

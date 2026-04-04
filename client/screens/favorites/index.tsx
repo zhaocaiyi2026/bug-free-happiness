@@ -10,6 +10,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
@@ -46,9 +47,12 @@ export default function FavoritesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [userId] = useState(1);
 
-  useEffect(() => {
-    fetchFavorites();
-  }, []);
+  // 页面聚焦时刷新数据
+  useFocusEffect(
+    useCallback(() => {
+      fetchFavorites();
+    }, [])
+  );
 
   const fetchFavorites = async () => {
     try {

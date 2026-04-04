@@ -319,17 +319,19 @@ export default function HomeScreen() {
     }
   };
 
-  // 首次加载时获取数据，返回时不刷新
+  // 页面聚焦时获取数据
   useFocusEffect(
     useCallback(() => {
-      // 只在首次加载时获取数据
+      // 首次加载：获取所有数据
+      // 后续进入：刷新统计数据，招标数据保持缓存（用户可下拉刷新）
+      fetchStats();
+      fetchProvinces();
+      
+      // 只在首次加载时获取招标数据
       if (!hasLoaded.all) {
         fetchData(1, 'all');
-        fetchStats();
-        fetchProvinces();
       }
-      // 返回时不刷新任何数据
-    }, [])
+    }, [hasLoaded.all])
   );
 
   const handleFilterPress = async (filterKey: string) => {
