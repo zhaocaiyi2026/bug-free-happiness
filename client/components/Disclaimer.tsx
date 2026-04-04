@@ -28,7 +28,6 @@ export function Disclaimer({ mode = 'compact', source }: DisclaimerProps) {
           </View>
           <Text style={styles.title}>版权与免责声明</Text>
         </View>
-        <View style={styles.divider} />
         <View style={styles.contentWrap}>
           <Text style={styles.bulletText}>• 信息来源于官方公开渠道，仅供参考，请以官方原文为准</Text>
           <Text style={styles.bulletText}>• 平台原样展示，不篡改、不伪造，不对信息真实性承担担保责任</Text>
@@ -52,7 +51,6 @@ export function Disclaimer({ mode = 'compact', source }: DisclaimerProps) {
         </View>
         <Text style={styles.title}>版权与免责声明</Text>
       </View>
-      <View style={styles.divider} />
       <View style={styles.contentWrap}>
         <Text style={styles.bulletText}>本平台免费展示政府采购、公共资源交易、央企及行业公开招标信息，信息均来源于官方公开渠道。</Text>
         <Text style={styles.bulletText}>所有公开信息不收取任何费用，VIP 会员仅针对增值分析服务收费。</Text>
@@ -74,13 +72,13 @@ export function Disclaimer({ mode = 'compact', source }: DisclaimerProps) {
 const createStyles = (theme: any) =>
   StyleSheet.create({
     container: {
-      backgroundColor: '#FFF8E1', // 淡黄色背景，更醒目
+      backgroundColor: '#FFFFFF', // 白色背景，与详情页卡片一致
       borderRadius: 12,
       padding: Spacing.md,
       borderWidth: 1,
-      borderColor: '#FFD54F', // 金色边框
+      borderColor: '#E5E7EB', // 浅灰边框
       borderLeftWidth: 4, // 左侧加粗边框
-      borderLeftColor: '#FF9800', // 橙色左边框
+      borderLeftColor: '#3B82F6', // 蓝色左边框，与详情页主题色呼应
     },
     titleRow: {
       flexDirection: 'row',
@@ -88,52 +86,47 @@ const createStyles = (theme: any) =>
       marginBottom: Spacing.sm,
     },
     iconWrap: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: '#FF9800',
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: '#3B82F6',
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: Spacing.xs,
     },
     iconText: {
       color: '#FFFFFF',
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: 'bold',
     },
     title: {
       fontSize: 14,
       fontWeight: '600',
-      color: '#E65100', // 深橙色标题
-    },
-    divider: {
-      height: 1,
-      backgroundColor: '#FFE082',
-      marginBottom: Spacing.sm,
+      color: '#1F2937', // 深灰色标题
     },
     contentWrap: {
       gap: 6,
     },
     bulletText: {
-      fontSize: 12,
-      color: '#5D4037', // 深棕色文字，清晰可读
-      lineHeight: 18,
+      fontSize: 13,
+      color: '#4B5563', // 中灰色文字
+      lineHeight: 20,
     },
     sourceWrap: {
       flexDirection: 'row',
       marginTop: Spacing.sm,
       paddingTop: Spacing.sm,
       borderTopWidth: 1,
-      borderTopColor: '#FFE082',
+      borderTopColor: '#E5E7EB',
     },
     sourceLabel: {
       fontSize: 12,
-      color: '#8D6E63',
+      color: '#6B7280',
       fontWeight: '500',
     },
     sourceText: {
       fontSize: 12,
-      color: '#5D4037',
+      color: '#4B5563',
       flex: 1,
     },
   });
