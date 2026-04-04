@@ -352,13 +352,8 @@ export default function HomeScreen() {
         fetchData(1, filterKey, selectedProvince.name);
         return;
       }
-      // 未选择省份，弹出地区选择
-      if (provinces.length === 0) {
-        Alert.alert('提示', '正在加载地区数据，请稍候');
-        return;
-      }
-      setLocationStep('province');
-      setLocationModalVisible(true);
+      // 未选择省份，提示用户先选择地区
+      Alert.alert('提示', '请先在顶部选择地区，或点击地区图标设置您的关注地区');
       return;
     }
     
@@ -368,19 +363,12 @@ export default function HomeScreen() {
         fetchData(1, filterKey, selectedProvince.name, selectedCity.name);
         return;
       } else if (selectedProvince && !selectedCity) {
-        // 只选了省份，获取该省数据
-        fetchData(1, 'province', selectedProvince.name);
-        setActiveFilter('province');
-        activeFilterRef.current = 'province';
+        // 只选了省份但未选城市，提示用户选择城市
+        Alert.alert('提示', '您已选择省份，请点击顶部地区图标选择具体城市，或使用"本省招标"查看全省数据');
         return;
       }
-      // 未选择地区，弹出地区选择
-      if (provinces.length === 0) {
-        Alert.alert('提示', '正在加载地区数据，请稍候');
-        return;
-      }
-      setLocationStep('province');
-      setLocationModalVisible(true);
+      // 未选择地区，提示用户
+      Alert.alert('提示', '请先在顶部选择地区，或点击地区图标设置您的关注地区');
       return;
     }
     
