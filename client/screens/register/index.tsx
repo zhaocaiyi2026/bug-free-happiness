@@ -193,7 +193,7 @@ export default function RegisterScreen() {
                 <FontAwesome6 name="gavel" size={32} color="#FFFFFF" />
               </View>
               <Text style={styles.appName}>招采易</Text>
-              <Text style={styles.appSlogan}>创建账号，开启专业招标采购服务</Text>
+              <Text style={styles.appSlogan}>创建账号，开启招标采购服务</Text>
             </View>
 
             {/* 表单 */}

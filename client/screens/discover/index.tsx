@@ -246,8 +246,8 @@ export default function DiscoverScreen() {
                 <FontAwesome6 name="gavel" size={18} color="#FFFFFF" />
               </View>
               <View style={styles.appTitleContainer}>
-                <Text style={styles.appTitle}>招标</Text>
-                <Text style={[styles.appTitle, styles.appTitleAccent]}>通</Text>
+                <Text style={styles.appTitle}>招采</Text>
+                <Text style={[styles.appTitle, styles.appTitleAccent]}>易</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>
@@ -274,8 +274,8 @@ export default function DiscoverScreen() {
                 <FontAwesome6 name="gavel" size={18} color="#FFFFFF" />
               </View>
               <View style={styles.appTitleContainer}>
-                <Text style={styles.appTitle}>招标</Text>
-                <Text style={[styles.appTitle, styles.appTitleAccent]}>通</Text>
+                <Text style={styles.appTitle}>招采</Text>
+                <Text style={[styles.appTitle, styles.appTitleAccent]}>易</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>

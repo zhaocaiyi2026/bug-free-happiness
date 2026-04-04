@@ -131,7 +131,7 @@ export default function ProfileScreen() {
         }
         break;
       case 'about':
-        Alert.alert('关于招采易', '招采易 v1.0.0\n\n专业的招标采购信息聚合平台\n\n整合20,000+数据源\n提供实时招标、中标信息\n助力企业把握商机');
+        Alert.alert('关于招采易', '招采易 v1.0.0\n\n一站式招标采购信息平台\n\n整合全国公共资源交易平台\n提供实时招标、中标信息\n助力企业把握商机');
         break;
     }
   };
