@@ -27,101 +27,76 @@ export default function AgreementScreen() {
       
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
-          一、服务条款的确认和接纳
+          一、服务说明
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          1.1 招标通的各项服务的所有权和运营权归招标通平台所有。
+          本 APP 向用户免费提供各级政府采购、公共资源交易、央企及行业公开招标公告信息，信息均来源于官方公开渠道。
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          1.2 用户在使用招标通提供的各项服务之前，应仔细阅读本服务协议。用户一旦注册使用招标通的服务，即视为用户已了解并完全同意本服务协议各项内容。
-        </ThemedText>
-        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          1.3 招标通有权在必要时修改本服务协议条款，用户若不同意修改后的条款，可以选择停止使用本服务。用户继续使用本服务，则视为已接受修改后的协议条款。
+          VIP 会员收费仅针对商业项目分析、潜在客户挖掘、数据整理、精准推送等增值服务，不针对公开信息本身。
         </ThemedText>
 
         <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
-          二、用户注册
+          二、信息来源与版权
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          2.1 用户注册成功后，招标通将给予每个用户一个用户账号及相应的密码，该用户账号和密码由用户负责保管；用户应当对以其用户账号进行的所有活动和事件负法律责任。
+          平台展示的公开招标、采购、中标信息均来自政府及官方采购平台，属于依法公开信息。
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          2.2 用户须对在招标通注册时所提供的个人资料的真实性、合法性负责，并对由此产生的后果负责。
+          平台对信息进行原样展示、不篡改、不编造，每条信息均标注来源。
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          2.3 用户不应将其账号、密码转让、出售或出借予他人使用，若用户授权他人使用账户，应对被授权人在该账户下实施所有行为负全部责任。
+          平台对整理、聚合、分析、推送等增值服务成果享有合法权益。
         </ThemedText>
 
         <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
-          三、使用规则
+          三、会员与付费
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          3.1 用户在使用招标通服务过程中，必须遵循以下原则：
+          VIP 会员为增值服务，用户自愿购买。
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          （1）遵守中国有关的法律和法规；
+          费用仅对应数据分析、商机挖掘、定制推送等服务，不含任何公开信息查阅费。
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          （2）不得为任何非法目的而使用网络服务系统；
-        </ThemedText>
-        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          （3）遵守所有与网络服务有关的网络协议、规定和程序；
-        </ThemedText>
-        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          （4）不得利用招标通服务进行任何可能对互联网正常运转造成不利影响的行为；
-        </ThemedText>
-        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          （5）不得利用招标通服务传输任何骚扰性的、中伤他人的、辱骂性的、恐吓性的、庸俗淫秽的或其他任何非法的信息资料。
+          订阅规则、自动续费与退款以支付页面及平台说明为准。
         </ThemedText>
 
         <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
-          四、服务内容
+          四、用户义务
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          4.1 招标通为用户提供招标信息聚合、搜索、筛选、收藏等服务。
+          不得利用本 APP 信息从事违法违规、商业欺诈、恶意营销、骚扰他人等行为。
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          4.2 招标通提供的招标信息来源于公开渠道，仅供参考，不构成任何投资建议或决策依据。
-        </ThemedText>
-        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          4.3 VIP会员服务：用户可通过付费开通VIP会员，享受更多高级功能和服务。VIP服务的具体内容和价格以平台公示为准。
+          不得批量爬取、倒卖平台展示的公开信息。
         </ThemedText>
 
         <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
           五、免责声明
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          5.1 用户明确同意其使用招标通网络服务所存在的风险将完全由其自己承担。
+          平台仅提供公开信息聚合展示与增值分析服务，不保证信息绝对实时、完整、无误，请以官方原文为准。
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          5.2 招标通不保证网络服务一定能满足用户的要求，也不保证网络服务不会中断，对网络服务的及时性、安全性、准确性也都不作保证。
+          平台不对用户依据信息作出的商业决策、投标行为承担任何法律责任。
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          5.3 招标通不保证为向用户提供便利而设置的外部链接的准确性和完整性，同时，对于该等外部链接指向的不由招标通实际控制的任何网页上的内容，招标通不承担任何责任。
+          因网络故障、官方网站更新、第三方接口调整等导致服务异常，平台不承担赔偿责任。
+        </ThemedText>
+        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
+          平台仅展示公开信息，不涉及涉密、内部、受限内容，用户不得违规获取非公开信息。
         </ThemedText>
 
         <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
-          六、知识产权
+          六、协议修改
         </ThemedText>
         <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          6.1 招标通平台的所有内容，包括但不限于文字、图片、音频、视频、软件、程序、版面设计等的知识产权归招标通所有。
-        </ThemedText>
-        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          6.2 未经招标通书面许可，任何人不得擅自复制、转载、链接、传播或用于其他商业用途。
-        </ThemedText>
-
-        <ThemedText variant="h4" color={theme.textPrimary} style={styles.sectionTitle}>
-          七、协议修改
-        </ThemedText>
-        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          7.1 招标通有权随时修改本协议的任何条款，一旦本协议的内容发生变动，招标通将会在平台上公布修改之后的协议内容。
-        </ThemedText>
-        <ThemedText variant="body" color={theme.textSecondary} style={styles.paragraph}>
-          7.2 如果不同意招标通对本协议相关条款所做的修改，用户有权停止使用网络服务。如果用户继续使用网络服务，则视为用户接受招标通对本协议相关条款所做的修改。
+          平台有权依法更新协议，更新后公布即生效，用户继续使用视为接受新版协议。
         </ThemedText>
 
         <ThemedText variant="body" color={theme.textMuted} style={styles.updateTime}>
-          最后更新日期：2024年1月1日
+          最后更新日期：2025年4月4日
         </ThemedText>
       </ScrollView>
     </Screen>
