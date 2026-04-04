@@ -9,13 +9,14 @@ import {
   RefreshControl,
   Modal,
   Alert,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
-import { Spacing, BorderRadius } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { API_BASE_URL } from '@/constants/api';
 import { createStyles } from './styles';
 
@@ -153,7 +154,6 @@ export default function UserManageScreen() {
       const data = await res.json();
 
       if (data.success) {
-        // 更新本地数据
         setUsers((prev) =>
           prev.map((u) =>
             u.id === selectedUser.id
@@ -182,53 +182,74 @@ export default function UserManageScreen() {
       return;
     }
 
-    Alert.alert(
-      '确认操作',
-      `确定将 ${user.nickname} ${newRole === 'admin' ? '设为管理员' : '取消管理员权限'}？`,
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '确定',
-          onPress: async () => {
-            try {
-              const res = await fetch(`${API_BASE_URL}/api/v1/admin/users/${user.id}/role`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-user-id': String(currentUser?.id),
-                },
-                body: JSON.stringify({ role: newRole }),
-              });
-              const data = await res.json();
+    const confirmMsg = newRole === 'admin' ? '设为管理员' : '取消管理员权限';
+    
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`确定将 ${user.nickname} ${confirmMsg}？`);
+      if (!confirmed) return;
+    } else {
+      return new Promise((resolve) => {
+        Alert.alert(
+          '确认操作',
+          `确定将 ${user.nickname} ${confirmMsg}？`,
+          [
+            { text: '取消', style: 'cancel', onPress: () => resolve(false) },
+            { text: '确定', onPress: () => resolve(true) },
+          ]
+        );
+      }).then(async (confirmed) => {
+        if (!confirmed) return;
+        await executeRoleUpdate(user, newRole);
+      });
+    }
+    
+    await executeRoleUpdate(user, newRole);
+  };
 
-              if (data.success) {
-                setUsers((prev) =>
-                  prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u))
-                );
-                fetchStats();
-                Alert.alert('成功', '角色已更新');
-              } else {
-                Alert.alert('错误', data.message || '更新失败');
-              }
-            } catch (error) {
-              console.error('更新角色失败:', error);
-              Alert.alert('错误', '更新失败');
-            }
-          },
+  const executeRoleUpdate = async (user: User, newRole: 'admin' | 'user') => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/admin/users/${user.id}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': String(currentUser?.id),
         },
-      ]
-    );
+        body: JSON.stringify({ role: newRole }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u))
+        );
+        fetchStats();
+        Alert.alert('成功', '角色已更新');
+      } else {
+        Alert.alert('错误', data.message || '更新失败');
+      }
+    } catch (error) {
+      console.error('更新角色失败:', error);
+      Alert.alert('错误', '更新失败');
+    }
   };
 
   const getVipLabel = (level: number) => {
-    const option = VIP_OPTIONS.find((o) => o.value === level);
-    return option?.label || '普通用户';
+    if (level === 999) return '永久';
+    if (level === 2) return '年费';
+    if (level === 1) return '月度';
+    return '';
   };
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  };
+
+  const getAvatarStyle = (user: User) => {
+    if (user.vip_level > 0) return styles.avatarVip;
+    if (user.role === 'admin') return styles.avatarAdmin;
+    return styles.avatar;
   };
 
   const renderUserItem = useCallback(
@@ -237,61 +258,68 @@ export default function UserManageScreen() {
 
       return (
         <View style={styles.userCard}>
-          <View style={styles.userInfo}>
-            <View style={styles.userHeader}>
-              <View style={[styles.avatar, item.vip_level > 0 && styles.avatarVip]}>
-                <Text style={styles.avatarText}>
-                  {item.nickname?.charAt(0) || item.phone.slice(-2)}
+          <View style={styles.userRow}>
+            {/* 头像 */}
+            <View style={getAvatarStyle(item)}>
+              <Text style={styles.avatarText}>
+                {item.nickname?.charAt(0) || item.phone.slice(-2)}
+              </Text>
+            </View>
+
+            {/* 用户信息 */}
+            <View style={styles.userMain}>
+              <View style={styles.userTopRow}>
+                <Text style={styles.userNickname} numberOfLines={1} ellipsizeMode="tail">
+                  {item.nickname || `用户${item.phone.slice(-4)}`}
                 </Text>
-              </View>
-              <View style={styles.userMain}>
-                <View style={styles.userNameRow}>
-                  <Text style={styles.userNickname}>{item.nickname}</Text>
+                <View style={styles.badgesRow}>
                   {item.role === 'admin' && (
                     <View style={styles.adminBadge}>
-                      <Text style={styles.adminBadgeText}>管理员</Text>
+                      <Text style={styles.adminBadgeText}>管理</Text>
                     </View>
                   )}
                   {item.vip_level > 0 && (
                     <View style={styles.vipBadge}>
-                      <FontAwesome6 name="crown" size={10} color="#FFFFFF" />
+                      <FontAwesome6 name="crown" size={8} color="#FFFFFF" />
                       <Text style={styles.vipBadgeText}>{getVipLabel(item.vip_level)}</Text>
                     </View>
                   )}
                 </View>
+              </View>
+              <View style={styles.userMeta}>
                 <Text style={styles.userPhone}>{item.phone}</Text>
-                <Text style={styles.userDate}>注册于 {formatDate(item.created_at)}</Text>
+                <Text style={styles.userDate}>{formatDate(item.created_at)}</Text>
               </View>
             </View>
-          </View>
 
-          <View style={styles.userActions}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => {
-                setSelectedUser(item);
-                setVipModalVisible(true);
-              }}
-            >
-              <FontAwesome6 name="crown" size={14} color="#F59E0B" />
-              <Text style={styles.actionButtonText}>会员</Text>
-            </TouchableOpacity>
-
-            {!isCurrentUser && (
+            {/* 操作按钮 */}
+            <View style={styles.userActions}>
               <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => handleUpdateRole(item, item.role === 'admin' ? 'user' : 'admin')}
+                style={[styles.actionBtn, styles.actionBtnVip]}
+                onPress={() => {
+                  setSelectedUser(item);
+                  setVipModalVisible(true);
+                }}
               >
-                <FontAwesome6
-                  name={item.role === 'admin' ? 'user-slash' : 'user-shield'}
-                  size={14}
-                  color={item.role === 'admin' ? '#EF4444' : '#2563EB'}
-                />
-                <Text style={styles.actionButtonText}>
-                  {item.role === 'admin' ? '取消管理' : '设为管理'}
-                </Text>
+                <FontAwesome6 name="crown" size={14} color="#D97706" />
               </TouchableOpacity>
-            )}
+
+              {!isCurrentUser && (
+                <TouchableOpacity
+                  style={[
+                    styles.actionBtn,
+                    item.role === 'admin' ? styles.actionBtnRemove : styles.actionBtnAdmin,
+                  ]}
+                  onPress={() => handleUpdateRole(item, item.role === 'admin' ? 'user' : 'admin')}
+                >
+                  <FontAwesome6
+                    name={item.role === 'admin' ? 'user-minus' : 'user-plus'}
+                    size={14}
+                    color={item.role === 'admin' ? '#DC2626' : '#2563EB'}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
       );
@@ -302,9 +330,9 @@ export default function UserManageScreen() {
   // 非管理员显示无权限页面
   if (currentUser?.role !== 'admin') {
     return (
-      <Screen backgroundColor={theme.backgroundRoot}>
+      <Screen backgroundColor="#0F172A">
         <View style={styles.noPermission}>
-          <FontAwesome6 name="shield-halved" size={48} color="#CBD5E1" />
+          <FontAwesome6 name="shield-halved" size={48} color="#475569" />
           <Text style={styles.noPermissionText}>无权限访问</Text>
           <Text style={styles.noPermissionHint}>仅管理员可查看用户管理</Text>
         </View>
@@ -313,34 +341,32 @@ export default function UserManageScreen() {
   }
 
   return (
-    <Screen backgroundColor={theme.backgroundRoot} safeAreaEdges={['left', 'right', 'bottom']}>
+    <Screen backgroundColor="#0F172A" safeAreaEdges={['left', 'right', 'bottom']}>
       <View style={styles.container}>
         {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-          <Text style={styles.headerTitle}>用户管理</Text>
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.xs }]}>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>用户管理</Text>
+          </View>
           <Text style={styles.headerSubtitle}>管理系统用户和会员权限</Text>
         </View>
 
         {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <FontAwesome6 name="users" size={16} color="#2563EB" />
             <Text style={styles.statValue}>{stats.total}</Text>
             <Text style={styles.statLabel}>总用户</Text>
           </View>
           <View style={styles.statCard}>
-            <FontAwesome6 name="crown" size={16} color="#F59E0B" />
-            <Text style={styles.statValue}>{stats.vips}</Text>
+            <Text style={[styles.statValue, { color: '#F59E0B' }]}>{stats.vips}</Text>
             <Text style={styles.statLabel}>会员</Text>
           </View>
           <View style={styles.statCard}>
-            <FontAwesome6 name="shield-halved" size={16} color="#10B981" />
-            <Text style={styles.statValue}>{stats.admins}</Text>
+            <Text style={[styles.statValue, { color: '#10B981' }]}>{stats.admins}</Text>
             <Text style={styles.statLabel}>管理员</Text>
           </View>
           <View style={styles.statCard}>
-            <FontAwesome6 name="user-plus" size={16} color="#8B5CF6" />
-            <Text style={styles.statValue}>{stats.todayNew}</Text>
+            <Text style={[styles.statValue, { color: '#8B5CF6' }]}>{stats.todayNew}</Text>
             <Text style={styles.statLabel}>今日新增</Text>
           </View>
         </View>
@@ -354,7 +380,7 @@ export default function UserManageScreen() {
               onPress={() => setFilterRole(role)}
             >
               <Text style={[styles.filterTabText, filterRole === role && styles.filterTabTextActive]}>
-                {role === 'all' ? '全部' : role === 'admin' ? '管理员' : '普通用户'}
+                {role === 'all' ? '全部' : role === 'admin' ? '管理员' : '普通'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -362,11 +388,11 @@ export default function UserManageScreen() {
 
         {/* Search */}
         <View style={styles.searchContainer}>
-          <FontAwesome6 name="magnifying-glass" size={14} color="#94A3B8" style={styles.searchIcon} />
+          <FontAwesome6 name="magnifying-glass" size={12} color="#64748B" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="搜索手机号/昵称"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor="#64748B"
             value={keyword}
             onChangeText={setKeyword}
             onSubmitEditing={handleSearch}
@@ -380,7 +406,7 @@ export default function UserManageScreen() {
         {/* User List */}
         {loading && page === 1 ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.primary} />
+            <ActivityIndicator size="large" color="#2563EB" />
           </View>
         ) : (
           <FlatList
@@ -393,20 +419,20 @@ export default function UserManageScreen() {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
-                colors={[theme.primary]}
-                tintColor={theme.primary}
+                colors={['#2563EB']}
+                tintColor="#2563EB"
               />
             }
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
               loading && page > 1 ? (
-                <ActivityIndicator size="small" color={theme.primary} style={{ marginVertical: Spacing.md }} />
+                <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: Spacing.sm }} />
               ) : null
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <FontAwesome6 name="users-slash" size={48} color="#CBD5E1" />
+                <FontAwesome6 name="users-slash" size={40} color="#475569" />
                 <Text style={styles.emptyText}>暂无用户数据</Text>
               </View>
             }
@@ -421,16 +447,16 @@ export default function UserManageScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>设置会员等级</Text>
               <TouchableOpacity onPress={() => setVipModalVisible(false)}>
-                <FontAwesome6 name="xmark" size={20} color={theme.textSecondary} />
+                <FontAwesome6 name="xmark" size={18} color="#94A3B8" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.modalBody}>
               <Text style={styles.modalUserInfo}>
-                用户：{selectedUser?.nickname} ({selectedUser?.phone})
+                {selectedUser?.nickname} ({selectedUser?.phone})
               </Text>
               <Text style={styles.modalCurrentVip}>
-                当前等级：{getVipLabel(selectedUser?.vip_level || 0)}
+                当前：{VIP_OPTIONS.find(o => o.value === selectedUser?.vip_level)?.label || '普通用户'}
               </Text>
 
               <View style={styles.vipOptions}>
@@ -446,7 +472,7 @@ export default function UserManageScreen() {
                   >
                     <FontAwesome6
                       name={option.value === 0 ? 'user' : 'crown'}
-                      size={18}
+                      size={16}
                       color={selectedUser?.vip_level === option.value ? '#FFFFFF' : '#F59E0B'}
                     />
                     <Text
@@ -464,7 +490,7 @@ export default function UserManageScreen() {
 
             {actionLoading && (
               <View style={styles.modalLoading}>
-                <ActivityIndicator size="small" color={theme.primary} />
+                <ActivityIndicator size="small" color="#2563EB" />
               </View>
             )}
           </View>

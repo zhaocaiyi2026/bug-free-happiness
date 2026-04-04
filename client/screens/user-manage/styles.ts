@@ -5,126 +5,118 @@ export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: '#0F172A',
     },
 
-    // Header
+    // Header - 更紧凑
     header: {
-      paddingHorizontal: Spacing.lg,
-      paddingBottom: Spacing.md,
-      backgroundColor: theme.primary,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      backgroundColor: '#1E293B',
+      borderBottomWidth: 1,
+      borderBottomColor: '#334155',
     },
     headerTitle: {
-      fontSize: 24,
+      fontSize: 18,
       fontWeight: '700',
-      color: '#FFFFFF',
+      color: '#F8FAFC',
     },
     headerSubtitle: {
-      fontSize: 14,
-      color: 'rgba(255,255,255,0.8)',
-      marginTop: Spacing.xs,
-    },
-
-    // Stats
-    statsContainer: {
-      flexDirection: 'row',
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md,
-      gap: Spacing.sm,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.lg,
-      padding: Spacing.md,
-      alignItems: 'center',
-      ...Platform.select({
-        ios: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-        },
-        android: {
-          elevation: 2,
-        },
-      }),
-    },
-    statValue: {
-      fontSize: 20,
-      fontWeight: '700',
-      color: theme.textPrimary,
-      marginTop: Spacing.xs,
-    },
-    statLabel: {
-      fontSize: 11,
-      color: theme.textMuted,
+      fontSize: 12,
+      color: '#94A3B8',
       marginTop: 2,
     },
 
-    // Filter
-    filterContainer: {
+    // Stats - 紧凑的横向排列
+    statsContainer: {
       flexDirection: 'row',
-      paddingHorizontal: Spacing.lg,
-      gap: Spacing.sm,
-      marginBottom: Spacing.md,
-    },
-    filterTab: {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm,
-      borderRadius: BorderRadius.full,
-      backgroundColor: '#FFFFFF',
-      borderWidth: 1,
-      borderColor: theme.border,
+      gap: Spacing.xs,
+      backgroundColor: '#1E293B',
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: '#334155',
+      borderRadius: 10,
+      paddingVertical: Spacing.sm,
+      paddingHorizontal: Spacing.xs,
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#F8FAFC',
+    },
+    statLabel: {
+      fontSize: 10,
+      color: '#94A3B8',
+      marginTop: 2,
+    },
+
+    // Filter - 更紧凑
+    filterContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      gap: Spacing.xs,
+      backgroundColor: '#1E293B',
+    },
+    filterTab: {
+      flex: 1,
+      paddingVertical: Spacing.xs,
+      borderRadius: 8,
+      backgroundColor: '#334155',
+      alignItems: 'center',
     },
     filterTabActive: {
-      backgroundColor: theme.primary,
-      borderColor: theme.primary,
+      backgroundColor: '#2563EB',
     },
     filterTabText: {
-      fontSize: 13,
-      color: theme.textSecondary,
+      fontSize: 12,
+      color: '#94A3B8',
       fontWeight: '500',
     },
     filterTabTextActive: {
       color: '#FFFFFF',
     },
 
-    // Search
+    // Search - 紧凑
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginHorizontal: Spacing.lg,
-      marginBottom: Spacing.md,
-      backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.lg,
-      paddingHorizontal: Spacing.md,
+      marginHorizontal: Spacing.md,
+      marginVertical: Spacing.sm,
+      backgroundColor: '#1E293B',
+      borderRadius: 10,
+      paddingHorizontal: Spacing.sm,
       borderWidth: 1,
-      borderColor: theme.border,
+      borderColor: '#334155',
     },
     searchIcon: {
-      marginRight: Spacing.sm,
+      marginRight: Spacing.xs,
     },
     searchInput: {
       flex: 1,
-      height: 40,
-      fontSize: 14,
-      color: theme.textPrimary,
+      height: 36,
+      fontSize: 13,
+      color: '#F8FAFC',
     },
     searchButton: {
-      backgroundColor: theme.primary,
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xs,
-      borderRadius: BorderRadius.md,
+      backgroundColor: '#2563EB',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 6,
+      borderRadius: 6,
     },
     searchButtonText: {
       color: '#FFFFFF',
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: '600',
     },
 
     // List
     listContainer: {
-      paddingHorizontal: Spacing.lg,
+      paddingHorizontal: Spacing.md,
       paddingBottom: Spacing['2xl'],
     },
     loadingContainer: {
@@ -136,77 +128,75 @@ export const createStyles = (theme: Theme) => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingVertical: Spacing['5xl'],
+      paddingVertical: Spacing['3xl'],
     },
     emptyText: {
-      fontSize: 14,
-      color: theme.textMuted,
-      marginTop: Spacing.md,
+      fontSize: 13,
+      color: '#64748B',
+      marginTop: Spacing.sm,
     },
 
-    // User Card
+    // User Card - 紧凑的单行设计
     userCard: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.lg,
-      padding: Spacing.md,
-      marginBottom: Spacing.sm,
-      ...Platform.select({
-        ios: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-        },
-        android: {
-          elevation: 2,
-        },
-      }),
+      backgroundColor: '#1E293B',
+      borderRadius: 12,
+      padding: Spacing.sm,
+      marginBottom: Spacing.xs,
+      borderWidth: 1,
+      borderColor: '#334155',
     },
-    userInfo: {
-      marginBottom: Spacing.sm,
-    },
-    userHeader: {
+    userRow: {
       flexDirection: 'row',
       alignItems: 'center',
     },
     avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: theme.primary,
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: '#2563EB',
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: Spacing.md,
     },
     avatarVip: {
       backgroundColor: '#F59E0B',
     },
+    avatarAdmin: {
+      backgroundColor: '#10B981',
+    },
     avatarText: {
       color: '#FFFFFF',
-      fontSize: 18,
+      fontSize: 15,
       fontWeight: '600',
     },
     userMain: {
       flex: 1,
+      marginLeft: Spacing.sm,
+      marginRight: Spacing.sm,
     },
-    userNameRow: {
+    userTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: Spacing.xs,
     },
     userNickname: {
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: '600',
-      color: theme.textPrimary,
+      color: '#F8FAFC',
+      maxWidth: 100,
+    },
+    badgesRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: Spacing.xs,
+      gap: 4,
     },
     adminBadge: {
       backgroundColor: '#10B981',
-      paddingHorizontal: Spacing.xs,
+      paddingHorizontal: 6,
       paddingVertical: 2,
-      borderRadius: BorderRadius.xs,
+      borderRadius: 4,
     },
     adminBadgeText: {
-      fontSize: 10,
+      fontSize: 9,
       color: '#FFFFFF',
       fontWeight: '600',
     },
@@ -214,47 +204,49 @@ export const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: '#F59E0B',
-      paddingHorizontal: Spacing.xs,
+      paddingHorizontal: 6,
       paddingVertical: 2,
-      borderRadius: BorderRadius.xs,
+      borderRadius: 4,
       gap: 2,
     },
     vipBadgeText: {
-      fontSize: 10,
+      fontSize: 9,
       color: '#FFFFFF',
       fontWeight: '600',
     },
-    userPhone: {
-      fontSize: 13,
-      color: theme.textSecondary,
+    userMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
       marginTop: 2,
     },
-    userDate: {
+    userPhone: {
       fontSize: 11,
-      color: theme.textMuted,
-      marginTop: 2,
+      color: '#94A3B8',
+    },
+    userDate: {
+      fontSize: 10,
+      color: '#64748B',
+      marginLeft: Spacing.sm,
     },
     userActions: {
       flexDirection: 'row',
-      gap: Spacing.sm,
-      marginTop: Spacing.sm,
-      paddingTop: Spacing.sm,
-      borderTopWidth: 1,
-      borderTopColor: theme.borderLight,
+      gap: 6,
     },
-    actionButton: {
-      flexDirection: 'row',
+    actionBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
-      borderRadius: BorderRadius.md,
-      backgroundColor: theme.backgroundTertiary,
-      gap: Spacing.xs,
     },
-    actionButtonText: {
-      fontSize: 12,
-      color: theme.textSecondary,
-      fontWeight: '500',
+    actionBtnVip: {
+      backgroundColor: '#FEF3C7',
+    },
+    actionBtnAdmin: {
+      backgroundColor: '#DBEAFE',
+    },
+    actionBtnRemove: {
+      backgroundColor: '#FEE2E2',
     },
 
     // No Permission
@@ -263,76 +255,79 @@ export const createStyles = (theme: Theme) => {
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: Spacing['2xl'],
+      backgroundColor: '#0F172A',
     },
     noPermissionText: {
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: '600',
-      color: theme.textPrimary,
-      marginTop: Spacing.lg,
+      color: '#F8FAFC',
+      marginTop: Spacing.md,
     },
     noPermissionHint: {
-      fontSize: 14,
-      color: theme.textMuted,
+      fontSize: 13,
+      color: '#64748B',
       marginTop: Spacing.xs,
     },
 
-    // Modal
+    // Modal - 保持深色风格
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: 'rgba(0,0,0,0.7)',
       justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: Spacing['2xl'],
     },
     modalContent: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.xl,
+      backgroundColor: '#1E293B',
+      borderRadius: 16,
       width: '100%',
-      maxWidth: 340,
+      maxWidth: 320,
+      borderWidth: 1,
+      borderColor: '#334155',
     },
     modalHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: Spacing.lg,
+      padding: Spacing.md,
       borderBottomWidth: 1,
-      borderBottomColor: theme.borderLight,
+      borderBottomColor: '#334155',
     },
     modalTitle: {
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '600',
-      color: theme.textPrimary,
+      color: '#F8FAFC',
     },
     modalBody: {
-      padding: Spacing.lg,
+      padding: Spacing.md,
     },
     modalUserInfo: {
-      fontSize: 14,
-      color: theme.textPrimary,
+      fontSize: 13,
+      color: '#F8FAFC',
       marginBottom: Spacing.xs,
     },
     modalCurrentVip: {
-      fontSize: 12,
-      color: theme.textSecondary,
+      fontSize: 11,
+      color: '#94A3B8',
       marginBottom: Spacing.md,
     },
     vipOptions: {
-      gap: Spacing.sm,
+      gap: Spacing.xs,
     },
     vipOption: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: Spacing.md,
-      borderRadius: BorderRadius.lg,
-      backgroundColor: theme.backgroundTertiary,
+      padding: Spacing.sm,
+      borderRadius: 10,
+      backgroundColor: '#334155',
       gap: Spacing.sm,
     },
     vipOptionActive: {
-      backgroundColor: theme.primary,
+      backgroundColor: '#2563EB',
     },
     vipOptionText: {
-      fontSize: 14,
-      color: theme.textPrimary,
+      fontSize: 13,
+      color: '#F8FAFC',
       fontWeight: '500',
     },
     vipOptionTextActive: {
@@ -346,8 +341,22 @@ export const createStyles = (theme: Theme) => {
       bottom: 0,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: 'rgba(255,255,255,0.8)',
-      borderRadius: BorderRadius.xl,
+      backgroundColor: 'rgba(30,41,59,0.9)',
+      borderRadius: 16,
+    },
+
+    // 返回按钮
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: '#334155',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
   });
 };
