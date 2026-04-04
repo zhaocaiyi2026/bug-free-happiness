@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
@@ -50,6 +51,7 @@ export default function UserManageScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { user: currentUser } = useAuth();
+  const router = useSafeRouter();
   const insets = useSafeAreaInsets();
 
   const [users, setUsers] = useState<User[]>([]);
@@ -346,6 +348,9 @@ export default function UserManageScreen() {
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.xs }]}>
           <View style={styles.headerRow}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <FontAwesome6 name="arrow-left" size={14} color="#FFFFFF" />
+            </TouchableOpacity>
             <Text style={styles.headerTitle}>用户管理</Text>
           </View>
           <Text style={styles.headerSubtitle}>管理系统用户和会员权限</Text>

@@ -354,12 +354,13 @@ export const createStyles = (theme: Theme) => {
 
     // Header row
     backButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+      width: 32,
+      height: 32,
+      borderRadius: 8,
       backgroundColor: 'rgba(255,255,255,0.2)',
       justifyContent: 'center',
       alignItems: 'center',
+      marginRight: Spacing.sm,
     },
     headerRow: {
       flexDirection: 'row',
