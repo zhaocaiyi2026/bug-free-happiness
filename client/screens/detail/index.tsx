@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
+import { Disclaimer } from '@/components/Disclaimer';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
@@ -379,6 +380,11 @@ export default function DetailScreen() {
             </View>
           </View>
         )}
+
+        {/* 免责声明 */}
+        <View style={styles.sectionCard}>
+          <Disclaimer mode="compact" source={bid.source} />
+        </View>
       </ScrollView>
 
       {/* 底部操作栏 */}

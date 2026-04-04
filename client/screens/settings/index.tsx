@@ -13,6 +13,7 @@ import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { Screen } from '@/components/Screen';
+import { Disclaimer } from '@/components/Disclaimer';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
 import { createStyles } from './styles';
@@ -171,6 +172,11 @@ export default function SettingsScreen() {
             <FontAwesome6 name="right-from-bracket" size={16} color="#C8102E" />
             <Text style={styles.logoutText}>退出登录</Text>
           </TouchableOpacity>
+
+          {/* 免责声明 */}
+          <View style={{ paddingHorizontal: Spacing.md, marginTop: Spacing.lg }}>
+            <Disclaimer mode="full" source="中国政府采购网、全国公共资源交易平台" />
+          </View>
         </ScrollView>
       </View>
     </Screen>
