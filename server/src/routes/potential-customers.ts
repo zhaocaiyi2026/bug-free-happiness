@@ -288,7 +288,7 @@ router.get('/company/:name', async (req, res) => {
     // 1. 查询招标信息（作为招标方）
     const { data: bids, error: bidError } = await client
       .from('bids')
-      .select('id, title, budget, province, city, industry, deadline, publish_date, contact_person, contact_phone, contact_address, project_location')
+      .select('id, title, budget, province, city, industry, deadline, publish_date, contact_person, contact_phone, contact_address, project_location, content')
       .or(`contact_address.ilike.%${companyName}%,project_location.ilike.%${companyName}%`)
       .order('publish_date', { ascending: false });
     
@@ -309,6 +309,8 @@ router.get('/company/:name', async (req, res) => {
         publish_date: bid.publish_date,
         contact_person: bid.contact_person,
         contact_phone: bid.contact_phone,
+        address: bid.contact_address || bid.project_location,
+        content: bid.content,
         role: '招标方',
       });
     });
@@ -316,7 +318,7 @@ router.get('/company/:name', async (req, res) => {
     // 2. 查询中标信息（作为中标方）
     const { data: winBids, error: winBidError } = await client
       .from('win_bids')
-      .select('id, title, win_amount, province, city, industry, win_date, publish_date, win_company, win_company_phone, win_company_address')
+      .select('id, title, win_amount, province, city, industry, win_date, publish_date, win_company, win_company_phone, win_company_address, content')
       .ilike('win_company', `%${companyName}%`)
       .order('publish_date', { ascending: false });
     
@@ -337,6 +339,8 @@ router.get('/company/:name', async (req, res) => {
         publish_date: winBid.publish_date,
         contact_person: null,
         contact_phone: winBid.win_company_phone,
+        address: winBid.win_company_address,
+        content: winBid.content,
         role: '中标方',
       });
     });
