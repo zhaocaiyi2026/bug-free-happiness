@@ -6,10 +6,12 @@ import {
   ScrollView,
   Switch,
   Alert,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/contexts/AuthContext';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
@@ -20,6 +22,7 @@ export default function SettingsScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
+  const { logout } = useAuth();
 
   const [settings, setSettings] = useState({
     notification: true,
@@ -46,16 +49,23 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert('退出登录', '确定要退出当前账号吗？', [
-      { text: '取消', style: 'cancel' },
-      {
-        text: '退出',
-        style: 'destructive',
-        onPress: () => {
-          router.replace('/');
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('确定要退出当前账号吗？');
+      if (confirmed) {
+        logout();
+      }
+    } else {
+      Alert.alert('退出登录', '确定要退出当前账号吗？', [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '退出',
+          style: 'destructive',
+          onPress: () => {
+            logout();
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const renderSwitchItem = (
