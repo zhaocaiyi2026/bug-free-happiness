@@ -91,7 +91,7 @@ router.get('/', async (req, res) => {
     
     // 关键词搜索：智能分词匹配
     // 1. 先识别地名（省/市），转为精确筛选条件
-    // 2. 剩余关键词使用模糊匹配（OR逻辑，匹配任意一个关键词）
+    // 2. 剩余关键词保持完整，多个关键词用空格分隔，需要全部匹配（AND逻辑）
     if (keyword) {
       const keywordStr = keyword as string;
       
@@ -128,12 +128,9 @@ router.get('/', async (req, res) => {
       // 优先匹配城市（因为城市更具体）
       for (const city of cities) {
         if (remainingKeyword.includes(city)) {
-          // 保持原样，不去掉"市"后缀，因为数据库存储格式可能是"深圳市"
           extractedCity = city;
-          // 同时生成不带"市"的版本用于匹配
           const cityWithoutSuffix = city.endsWith('市') ? city.slice(0, -1) : city;
           remainingKeyword = remainingKeyword.replace(city, '').trim();
-          // 如果剩余关键词中还有不带"市"的版本，也去掉
           remainingKeyword = remainingKeyword.replace(cityWithoutSuffix, '').trim();
           break;
         }
@@ -142,18 +139,15 @@ router.get('/', async (req, res) => {
       // 匹配省份
       for (const prov of provinces) {
         if (remainingKeyword.includes(prov)) {
-          // 保持原样
           extractedProvince = prov;
-          // 同时生成不带"省"的版本用于匹配
           const provWithoutSuffix = prov.endsWith('省') ? prov.slice(0, -1) : prov;
           remainingKeyword = remainingKeyword.replace(prov, '').trim();
-          // 如果剩余关键词中还有不带"省"的版本，也去掉
           remainingKeyword = remainingKeyword.replace(provWithoutSuffix, '').trim();
           break;
         }
       }
       
-      // 如果提取到了地名，添加到筛选条件
+      // 如果提取到了地名，添加到筛选条件（精确匹配）
       if (extractedProvince && !province) {
         query = query.eq('province', extractedProvince);
       }
@@ -161,51 +155,52 @@ router.get('/', async (req, res) => {
         query = query.eq('city', extractedCity);
       }
       
-      // 对剩余关键词进行分词处理
-      // 如果没有空格分隔，对中文进行智能分词（提取有意义的词汇）
-      const tokenizeKeyword = (text: string): string[] => {
-        // 先按空格分词
-        const spaceTokens = text.split(/\s+/).filter(k => k.length > 0);
-        const result: string[] = [];
+      // 剩余关键词处理：提取核心关键词，过滤通用词
+      // 多个关键词之间是AND关系（所有关键词都必须匹配）
+      const keywords = remainingKeyword.split(/\s+/).filter(k => k.length > 0);
+      
+      // 通用词列表（这些词太常见，不适合作为搜索关键词）
+      const commonWords = ['项目', '工程', '采购', '建设', '公告', '中标', '招标', '采购项目', '建设项目', '工程项目'];
+      
+      // 提取核心关键词
+      const extractCoreKeywords = (text: string): string[] => {
+        const coreWords: string[] = [];
         
-        for (const token of spaceTokens) {
-          if (/^[\u4e00-\u9fa5]+$/.test(token)) {
-            // 纯中文：提取2-4字的有意义词汇
-            // 但保留完整的词（如果长度<=4）
-            if (token.length <= 4) {
-              result.push(token);
-            } else {
-              // 较长的词，提取主要词汇
-              // 例如"实验室项目" -> "实验室"、"项目"
-              for (let len = 2; len <= Math.min(4, token.length); len++) {
-                for (let i = 0; i <= token.length - len; i++) {
-                  const subToken = token.substring(i, i + len);
-                  // 只添加有意义的词（避免添加无意义的字组合）
-                  if (subToken.length >= 2) {
-                    result.push(subToken);
-                  }
-                }
-              }
-            }
-          } else {
-            // 非中文或混合，直接使用
-            result.push(token);
+        // 先检查是否包含通用词，如果有则拆分
+        let processedText = text;
+        for (const cw of commonWords) {
+          if (processedText.includes(cw)) {
+            processedText = processedText.replace(cw, ' ');
+          }
+        }
+        
+        // 按空格分割，过滤掉通用词和空字符串
+        const parts = processedText.split(/\s+/).filter(p => p.length > 0 && !commonWords.includes(p));
+        
+        if (parts.length > 0) {
+          coreWords.push(...parts);
+        } else {
+          // 如果拆分后没有有效词，检查原始词是否是通用词
+          if (!commonWords.includes(text)) {
+            coreWords.push(text);
           }
         }
         
         // 去重
-        return [...new Set(result)];
+        return [...new Set(coreWords)];
       };
       
-      const keywords = tokenizeKeyword(remainingKeyword);
+      // 提取所有核心关键词
+      const coreKeywords: string[] = [];
+      for (const kw of keywords) {
+        coreKeywords.push(...extractCoreKeywords(kw));
+      }
       
-      // 使用单个 OR 条件匹配所有关键词
-      if (keywords.length > 0) {
-        // 构建条件：每个关键词匹配 title 或 content
-        const conditions = keywords.map(k => 
-          `title.ilike.%${k}%,content.ilike.%${k}%`
-        ).join(',');
-        query = query.or(conditions);
+      if (coreKeywords.length > 0) {
+        // 对每个核心关键词，都需要匹配 title 或 content（AND逻辑）
+        for (const kw of coreKeywords) {
+          query = query.or(`title.ilike.%${kw}%,content.ilike.%${kw}%`);
+        }
       }
     }
     
