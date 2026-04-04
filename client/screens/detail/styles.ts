@@ -190,6 +190,15 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '600',
       color: '#1C1917',
     },
+    cachedBadge: {
+      fontSize: 10,
+      color: '#059669',
+      marginLeft: Spacing.sm,
+      backgroundColor: 'rgba(5,150,105,0.1)',
+      paddingHorizontal: Spacing.xs,
+      paddingVertical: 1,
+      borderRadius: 4,
+    },
     contentText: {
       fontSize: 13,
       lineHeight: 22,

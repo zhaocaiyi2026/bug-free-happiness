@@ -21,14 +21,8 @@ interface FormattedDetail {
   id: number;
   title: string;
   formattedContent: string;
-  projectOverview: string;
-  basicInfo: string;
-  qualificationRequirements: string;
-  getBidDocuments: string;
-  bidSubmission: string;
-  announcementPeriod: string;
-  otherMatters: string;
-  contactInfo: string;
+  rawContent: string;
+  fromCache?: boolean;
 }
 
 interface Bid {
@@ -367,32 +361,19 @@ export default function DetailScreen() {
         )}
 
         {/* 格式化后的内容 */}
-        {formattedDetail && !formatting && (
-          <>
-            {/* 项目概况 */}
-            {renderSection('项目概况', formattedDetail.projectOverview, 'info-circle')}
-            
-            {/* 项目基本情况 */}
-            {renderSection('一、项目基本情况', formattedDetail.basicInfo, 'building')}
-            
-            {/* 申请人资格要求 */}
-            {renderSection('二、申请人的资格要求', formattedDetail.qualificationRequirements, 'clipboard-check')}
-            
-            {/* 获取招标文件 */}
-            {renderSection('三、获取招标文件', formattedDetail.getBidDocuments, 'file-arrow-down')}
-            
-            {/* 投标截止时间 */}
-            {renderSection('四、提交投标文件截止时间、开标时间和地点', formattedDetail.bidSubmission, 'clock')}
-            
-            {/* 公告期限 */}
-            {renderSection('五、公告期限', formattedDetail.announcementPeriod, 'calendar-days')}
-            
-            {/* 其他补充事宜 */}
-            {renderSection('六、其他补充事宜', formattedDetail.otherMatters, 'circle-info')}
-            
-            {/* 联系方式 */}
-            {renderSection('七、联系方式', formattedDetail.contactInfo, 'address-book')}
-          </>
+        {formattedDetail && !formatting && formattedDetail.formattedContent && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIcon}>
+                <FontAwesome6 name="file-lines" size={11} color="#2563EB" />
+              </View>
+              <Text style={styles.sectionTitle}>招标详情</Text>
+              {formattedDetail.fromCache && (
+                <Text style={styles.cachedBadge}>已缓存</Text>
+              )}
+            </View>
+            <Text style={styles.docContent}>{formattedDetail.formattedContent}</Text>
+          </View>
         )}
 
         {/* 如果没有格式化内容，显示原始内容 */}

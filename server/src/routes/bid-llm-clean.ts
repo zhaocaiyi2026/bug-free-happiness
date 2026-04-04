@@ -28,85 +28,6 @@ import {
 const router = Router();
 
 /**
- * POST /api/v1/bids/llm-clean/:id
- * 清理单条招标信息
- * 
- * @param id - 招标信息ID
- * @returns 清理结果
- */
-router.post('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    console.log(`[LLM-Clean] 开始清理单条数据: ${id}`);
-    
-    const client = getSupabaseClient();
-    
-    // 查询数据
-    const { data: bid, error } = await client
-      .from('bids')
-      .select('id, title, content')
-      .eq('id', id)
-      .single();
-    
-    if (error || !bid) {
-      return res.status(404).json({ error: '数据不存在' });
-    }
-    
-    // 执行清理
-    const result = await cleanBidContentWithLLM(bid.title, bid.content);
-    
-    // 更新数据库
-    const updateData: Record<string, unknown> = {
-      content: result.content,
-      updated_at: new Date().toISOString(),
-    };
-    
-    // 如果提取到了关键信息，也更新到数据库
-    if (result.projectName) {
-      updateData.title = result.projectName;
-    }
-    if (result.budget) {
-      updateData.budget = result.budget;
-    }
-    if (result.publishDate) {
-      updateData.publish_date = result.publishDate;
-    }
-    if (result.deadline) {
-      updateData.deadline = result.deadline;
-    }
-    if (result.contactPerson) {
-      updateData.contact_person = result.contactPerson;
-    }
-    if (result.contactPhone) {
-      updateData.contact_phone = result.contactPhone;
-    }
-    
-    const { error: updateError } = await client
-      .from('bids')
-      .update(updateData)
-      .eq('id', id);
-    
-    if (updateError) {
-      console.error(`[LLM-Clean] 更新失败:`, updateError);
-      return res.status(500).json({ error: '更新失败', details: updateError });
-    }
-    
-    console.log(`[LLM-Clean] 清理完成: ${id}`);
-    
-    res.json({ 
-      success: true, 
-      id: parseInt(id), 
-      result 
-    });
-    
-  } catch (error) {
-    console.error('[LLM-Clean] 清理失败:', error);
-    res.status(500).json({ error: '清理失败', details: String(error) });
-  }
-});
-
-/**
  * POST /api/v1/bids/llm-clean
  * 批量清理招标信息
  * 
@@ -290,6 +211,85 @@ router.post('/auto', async (req, res) => {
   } catch (error) {
     console.error('[LLM-Clean] 自动清理失败:', error);
     res.status(500).json({ error: '自动清理失败', details: String(error) });
+  }
+});
+
+/**
+ * POST /api/v1/bids/llm-clean/:id
+ * 清理单条招标信息
+ * 
+ * @param id - 招标信息ID
+ * @returns 清理结果
+ */
+router.post('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`[LLM-Clean] 开始清理单条数据: ${id}`);
+    
+    const client = getSupabaseClient();
+    
+    // 查询数据
+    const { data: bid, error } = await client
+      .from('bids')
+      .select('id, title, content')
+      .eq('id', id)
+      .single();
+    
+    if (error || !bid) {
+      return res.status(404).json({ error: '数据不存在' });
+    }
+    
+    // 执行清理
+    const result = await cleanBidContentWithLLM(bid.title, bid.content);
+    
+    // 更新数据库
+    const updateData: Record<string, unknown> = {
+      content: result.content,
+      updated_at: new Date().toISOString(),
+    };
+    
+    // 如果提取到了关键信息，也更新到数据库
+    if (result.projectName) {
+      updateData.title = result.projectName;
+    }
+    if (result.budget) {
+      updateData.budget = result.budget;
+    }
+    if (result.publishDate) {
+      updateData.publish_date = result.publishDate;
+    }
+    if (result.deadline) {
+      updateData.deadline = result.deadline;
+    }
+    if (result.contactPerson) {
+      updateData.contact_person = result.contactPerson;
+    }
+    if (result.contactPhone) {
+      updateData.contact_phone = result.contactPhone;
+    }
+    
+    const { error: updateError } = await client
+      .from('bids')
+      .update(updateData)
+      .eq('id', id);
+    
+    if (updateError) {
+      console.error(`[LLM-Clean] 更新失败:`, updateError);
+      return res.status(500).json({ error: '更新失败', details: updateError });
+    }
+    
+    console.log(`[LLM-Clean] 清理完成: ${id}`);
+    
+    res.json({ 
+      success: true, 
+      id: parseInt(id), 
+      result 
+    });
+    
+  } catch (error) {
+    console.error('[LLM-Clean] 清理失败:', error);
+    res.status(500).json({ error: '清理失败', details: String(error) });
   }
 });
 
