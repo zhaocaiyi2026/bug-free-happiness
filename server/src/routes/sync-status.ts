@@ -694,7 +694,12 @@ router.post('/push', async (req, res) => {
     }
     
     const supabase = getSupabaseClient();
-    const dataType = type || '招标';
+    let dataType = type || '招标';
+    
+    // 名称规范化：单一来源采购 -> 单一来源公告
+    if (dataType === '单一来源采购') {
+      dataType = '单一来源公告';
+    }
     
     console.log(`[通用推送] 收到数据: type=${dataType}, title=${title}`);
     
@@ -884,6 +889,7 @@ function getBidType(announcementType: string): string {
     '询价/竞价公告': '询价/竞价',
     '封闭式征集公告': '封闭式征集',
     '开放式征集公告': '开放式征集',
+    '单一来源公告': '单一来源',
     // 简称映射
     '招标': '公开招标',
     '变更': '更正公告',
@@ -895,6 +901,7 @@ function getBidType(announcementType: string): string {
     '竞争性磋商': '竞争性磋商',
     '竞争性谈判': '竞争性谈判',
     '询价': '询价',
+    '单一来源采购': '单一来源',  // 旧名称兼容
   };
   return typeMap[announcementType] || '招标公告';
 }
