@@ -102,32 +102,33 @@ function getLLMClient(): LLMClient {
  * 检查是否符合入库要求
  * 
  * 必填字段：
- * - type: 公告类型（招标 / 中标）
- * - title: 公告标题
- * - content: 项目概况/详情
+ * - type: 公告类型（任意文字，如招标/采购/中标/变更等）
+ * - title: 公告标题（任意标题）
+ * - content: 项目概况/详情（≥50字符，需包含联系人和电话）
  * - 联系人: 从content提取
  * - 联系电话: 从content提取
+ * - 时间: publish_time字段 或 从content提取
  * 
  * 可选字段：
- * - 地址、时间等（不影响入库）
+ * - 地址、预算等（不影响入库）
  */
 export function reviewPushedData(data: PushedBidData): ReviewResult {
   const missingFields: string[] = [];
   const reasons: string[] = [];
 
-  // 1. 必须有公告类型
+  // 1. 必须有公告类型（不限制具体内容）
   if (!data.type || data.type.trim() === '') {
     missingFields.push('公告类型');
     reasons.push('缺少公告类型(type)');
   }
 
-  // 2. 必须有标题（至少5字符）
-  if (!data.title || data.title.trim().length < 5) {
+  // 2. 必须有标题（至少2字符）
+  if (!data.title || data.title.trim().length < 2) {
     missingFields.push('公告标题');
     reasons.push('标题缺失或过短(title)');
   }
 
-  // 3. 必须有正文内容（至少50字符，包含项目概况即可）
+  // 3. 必须有正文内容（至少50字符）
   if (!data.content || data.content.length < 50) {
     missingFields.push('项目详情');
     reasons.push(`正文内容不足(content)：仅${data.content?.length || 0}字符，需至少50字符`);
@@ -151,6 +152,16 @@ export function reviewPushedData(data: PushedBidData): ReviewResult {
   if (!contactInfo.contactPhone) {
     missingFields.push('联系电话');
     reasons.push('正文无法提取联系电话');
+  }
+
+  // 6. 必须有时间（publish_time字段 或 从content提取）
+  if (!data.publish_time) {
+    // 尝试从content中提取时间
+    const extractedTime = extractTime(data.content);
+    if (!extractedTime) {
+      missingFields.push('时间');
+      reasons.push('缺少时间信息(publish_time)');
+    }
   }
 
   // 地址和时间不再强制要求，作为可选字段
@@ -282,6 +293,40 @@ export function extractAddress(content: string, area?: string): string | null {
     // 检查 area 是否包含省市组合
     if (/(省|市).*(市|区|县)/.test(area)) {
       return area.trim();
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * 从content中提取时间信息
+ * 支持多种格式的时间提取
+ */
+export function extractTime(content: string): string | null {
+  if (!content) return null;
+  
+  // 时间提取模式
+  const timePatterns = [
+    // 发布时间：2025年1月15日
+    /发布时间[：:]\s*(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})/,
+    // 公告日期：2025-01-15
+    /公告日期[：:]\s*(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})/,
+    // 报名时间：2025年1月15日至...
+    /报名时间[：:]\s*(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})/,
+    // 开标时间：2025年1月15日
+    /开标时间[：:]\s*(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})/,
+    // 通用日期格式：2025年1月15日 或 2025-01-15
+    /(\d{4})[年\-\/](\d{1,2})[月\-\/](\d{1,2})/,
+  ];
+  
+  for (const pattern of timePatterns) {
+    const match = content.match(pattern);
+    if (match) {
+      const year = match[1];
+      const month = match[2].padStart(2, '0');
+      const day = match[3].padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
   }
   
