@@ -189,6 +189,21 @@ export const createStyles = (theme: Theme) => {
       color: '#D97706',
       fontWeight: '500',
     },
+    vipTag: {
+      backgroundColor: '#FEF3C7',
+      paddingHorizontal: Spacing.xs,
+      paddingVertical: 1,
+      borderRadius: BorderRadius.sm,
+      marginLeft: Spacing.xs,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
+    vipTagText: {
+      fontSize: 9,
+      color: '#D97706',
+      fontWeight: '600',
+    },
     // 筛选
     filterContainer: {
       flexDirection: 'row',

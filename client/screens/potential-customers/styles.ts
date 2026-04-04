@@ -299,5 +299,36 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.sm,
       paddingBottom: Spacing.xl,
     },
+    // 无权限提示
+    noPermission: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: Spacing['2xl'],
+    },
+    noPermissionTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#1E293B',
+      marginTop: Spacing.md,
+    },
+    noPermissionText: {
+      fontSize: 14,
+      color: '#64748B',
+      marginTop: Spacing.xs,
+      textAlign: 'center',
+    },
+    upgradeButton: {
+      backgroundColor: '#F59E0B',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.lg,
+      marginTop: Spacing.lg,
+    },
+    upgradeButtonText: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      fontWeight: '600',
+    },
   });
 };

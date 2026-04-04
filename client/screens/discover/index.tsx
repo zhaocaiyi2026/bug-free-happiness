@@ -7,10 +7,12 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useAuth } from '@/contexts/AuthContext';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
@@ -75,11 +77,28 @@ export default function DiscoverScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
   const router = useSafeRouter();
+  const { user } = useAuth();
 
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [recommendBids, setRecommendBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // VIP权限检查
+  const checkVipAccess = () => {
+    if (user?.vip_level && user.vip_level > 0) {
+      return true;
+    }
+    Alert.alert(
+      'VIP专属功能',
+      '该功能需要开通VIP会员才能使用，是否前往开通？',
+      [
+        { text: '取消', style: 'cancel' },
+        { text: '立即开通', onPress: () => router.navigate('/profile') },
+      ]
+    );
+    return false;
+  };
 
   useEffect(() => {
     fetchData();
@@ -313,14 +332,24 @@ export default function DiscoverScreen() {
               {/* 潜在客户 */}
               <TouchableOpacity
                 style={styles.featureCard}
-                onPress={() => router.push('/potential-customers')}
+                onPress={() => {
+                  if (checkVipAccess()) {
+                    router.push('/potential-customers');
+                  }
+                }}
                 activeOpacity={0.7}
               >
                 <View style={[styles.featureIcon, { backgroundColor: '#EFF6FF' }]}>
                   <FontAwesome6 name="address-book" size={24} color="#2563EB" />
                 </View>
                 <View style={styles.featureContent}>
-                  <Text style={styles.featureTitle}>潜在客户</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={styles.featureTitle}>潜在客户</Text>
+                    <View style={styles.vipTag}>
+                      <FontAwesome6 name="crown" size={8} color="#D97706" />
+                      <Text style={styles.vipTagText}>VIP</Text>
+                    </View>
+                  </View>
                   <Text style={styles.featureDesc}>查找招标方/中标方联系方式</Text>
                 </View>
                 <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
@@ -329,7 +358,11 @@ export default function DiscoverScreen() {
               {/* 前期项目 */}
               <TouchableOpacity
                 style={[styles.featureCard, { opacity: 0.6 }]}
-                onPress={() => console.log('前期项目功能开发中')}
+                onPress={() => {
+                  if (checkVipAccess()) {
+                    console.log('前期项目功能开发中');
+                  }
+                }}
                 activeOpacity={0.7}
               >
                 <View style={[styles.featureIcon, { backgroundColor: '#FEF3C7' }]}>
@@ -338,8 +371,9 @@ export default function DiscoverScreen() {
                 <View style={styles.featureContent}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={styles.featureTitle}>前期项目</Text>
-                    <View style={styles.comingSoonTag}>
-                      <Text style={styles.comingSoonText}>即将上线</Text>
+                    <View style={styles.vipTag}>
+                      <FontAwesome6 name="crown" size={8} color="#D97706" />
+                      <Text style={styles.vipTagText}>VIP</Text>
                     </View>
                   </View>
                   <Text style={styles.featureDesc}>筹建/备案项目信息查询</Text>

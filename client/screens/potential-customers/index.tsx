@@ -11,10 +11,12 @@ import {
   RefreshControl,
   Linking,
   Platform,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/contexts/AuthContext';
 import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -43,6 +45,10 @@ export default function PotentialCustomersScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  
+  // VIP权限检查
+  const hasVipAccess = user?.vip_level && user.vip_level > 0;
   
   // 接收页面参数
   const params = useSafeSearchParams<{
@@ -385,6 +391,34 @@ export default function PotentialCustomersScreen() {
       </View>
     );
   }, [styles, handleCall]);
+
+  // 非VIP用户显示提示
+  if (!hasVipAccess) {
+    return (
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <FontAwesome6 name="arrow-left" size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>潜在客户</Text>
+            <View style={styles.headerRight} />
+          </View>
+        </View>
+        <View style={styles.noPermission}>
+          <FontAwesome6 name="crown" size={48} color="#F59E0B" />
+          <Text style={styles.noPermissionTitle}>VIP专属功能</Text>
+          <Text style={styles.noPermissionText}>开通VIP会员即可使用潜在客户查询功能</Text>
+          <TouchableOpacity 
+            style={styles.upgradeButton}
+            onPress={() => router.replace('/(tabs)')}
+          >
+            <Text style={styles.upgradeButtonText}>立即开通</Text>
+          </TouchableOpacity>
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
