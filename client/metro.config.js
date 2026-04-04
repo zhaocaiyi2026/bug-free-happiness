@@ -31,9 +31,8 @@ config.resolver.blockList = [
   /.*node_modules\/\.pnpm\/.*_tmp_\d+.*/,
 ];
 
-// Metro代理目标：开发环境代理到本地后端
-// 注意：前端代码中的API_BASE_URL仍使用公网地址（APP运行在手机上需要公网访问）
-const BACKEND_TARGET = 'http://localhost:9091';
+// Metro代理目标：公网地址（cpolar内网穿透）
+const BACKEND_TARGET = 'https://zhaocaiyiapi.cpolar.cn';
 
 const apiProxy = createProxyMiddleware({
   target: BACKEND_TARGET,
