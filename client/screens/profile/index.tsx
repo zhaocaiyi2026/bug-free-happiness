@@ -131,13 +131,13 @@ export default function ProfileScreen() {
         }
         break;
       case 'about':
-        Alert.alert('关于招标通', '招标通 v1.0.0\n\n专业的招标信息聚合平台\n\n整合20,000+数据源\n提供实时招标、中标信息\n助力企业把握商机');
+        Alert.alert('关于招采通', '招采通 v1.0.0\n\n专业的招标采购信息聚合平台\n\n整合20,000+数据源\n提供实时招标、中标信息\n助力企业把握商机');
         break;
     }
   };
 
   const handleUpgradeVIP = () => {
-    Alert.alert('VIP会员服务', '开通VIP会员，解锁全部高级功能\n\n• 实时推送招标信息\n• 智能数据分析报告\n• 专属客服优先响应\n• 历史数据无限制查看', [
+    Alert.alert('VIP会员服务', '开通VIP会员，解锁全部高级功能\n\n• 实时推送招标采购信息\n• 智能数据分析报告\n• 专属客服优先响应\n• 历史数据无限制查看', [
       { text: '暂不需要', style: 'cancel' },
       { text: '立即开通', onPress: () => console.log('开通VIP') },
     ]);
@@ -354,7 +354,7 @@ export default function ProfileScreen() {
               <View style={[styles.menuIcon, { backgroundColor: '#F5F5F5' }]}>
                 <FontAwesome6 name="circle-info" size={18} color="#6B7280" />
               </View>
-              <Text style={styles.menuText}>关于招标通</Text>
+              <Text style={styles.menuText}>关于招采通</Text>
               <Text style={{ fontSize: 13, color: '#9CA3AF', marginRight: Spacing.sm }}>v1.0.0</Text>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
             </View>

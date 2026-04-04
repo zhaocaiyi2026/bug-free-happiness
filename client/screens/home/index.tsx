@@ -595,8 +595,8 @@ export default function HomeScreen() {
                   <FontAwesome6 name="gavel" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.appTitleRow}>
-                  <Text style={styles.appTitle}>招标通</Text>
-                  <Text style={styles.appSubtitle}>专业招标信息平台</Text>
+                  <Text style={styles.appTitle}>招采通</Text>
+                  <Text style={styles.appSubtitle}>专业招标采购信息平台</Text>
                 </View>
               </View>
               <View style={styles.headerActions}>
@@ -635,7 +635,7 @@ export default function HomeScreen() {
             {/* Search Bar */}
             <TouchableOpacity style={styles.searchContainer} onPress={handleSearchPress}>
               <FontAwesome6 name="magnifying-glass" size={16} color="#64748B" style={styles.searchIcon} />
-              <Text style={styles.searchPlaceholder}>搜索招标信息、行业、地区...</Text>
+              <Text style={styles.searchPlaceholder}>搜索招标采购信息、行业、地区...</Text>
               <View style={styles.searchButton}>
                 <Text style={styles.searchButtonText}>搜索</Text>
               </View>

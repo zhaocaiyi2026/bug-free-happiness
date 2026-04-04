@@ -141,7 +141,7 @@ export default function SettingsScreen() {
               </View>
               <View style={styles.settingContent}>
                 <Text style={styles.settingTitle}>智能搜索管理</Text>
-                <Text style={styles.settingDesc}>AI搜索招标信息并入库</Text>
+                <Text style={styles.settingDesc}>AI搜索招标采购信息并入库</Text>
               </View>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
             </TouchableOpacity>
@@ -155,12 +155,12 @@ export default function SettingsScreen() {
               </View>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('关于', '招标通 v1.0.0\n\n专业招标信息聚合平台\n整合全国公共资源交易平台等官方数据源\n提供实时招标、中标信息\n助力企业把握商机')}>
+            <TouchableOpacity style={styles.settingItem} onPress={() => Alert.alert('关于', '招采通 v1.0.0\n\n专业招标采购信息聚合平台\n整合全国公共资源交易平台等官方数据源\n提供实时招标、中标信息\n助力企业把握商机')}>
               <View style={[styles.settingIcon, { backgroundColor: 'rgba(107, 114, 128, 0.1)' }]}>
                 <FontAwesome6 name="circle-info" size={18} color="#6B7280" />
               </View>
               <View style={styles.settingContent}>
-                <Text style={styles.settingTitle}>关于招标通</Text>
+                <Text style={styles.settingTitle}>关于招采通</Text>
                 <Text style={styles.settingDesc}>版本 1.0.0</Text>
               </View>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />

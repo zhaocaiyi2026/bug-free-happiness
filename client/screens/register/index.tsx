@@ -192,8 +192,8 @@ export default function RegisterScreen() {
               <View style={styles.logo}>
                 <FontAwesome6 name="gavel" size={32} color="#FFFFFF" />
               </View>
-              <Text style={styles.appName}>招标通</Text>
-              <Text style={styles.appSlogan}>创建账号，开启专业招标服务</Text>
+              <Text style={styles.appName}>招采通</Text>
+              <Text style={styles.appSlogan}>创建账号，开启专业招标采购服务</Text>
             </View>
 
             {/* 表单 */}

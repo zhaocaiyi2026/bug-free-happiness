@@ -216,8 +216,8 @@ export default function LoginScreen() {
               <View style={styles.logo}>
                 <FontAwesome6 name="gavel" size={32} color="#FFFFFF" />
               </View>
-              <Text style={styles.appName}>招标通</Text>
-              <Text style={styles.appSlogan}>专业的招标信息聚合平台</Text>
+              <Text style={styles.appName}>招采通</Text>
+              <Text style={styles.appSlogan}>专业的招标采购信息聚合平台</Text>
             </View>
 
             {/* 登录方式切换 */}
