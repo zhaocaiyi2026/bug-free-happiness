@@ -1084,6 +1084,175 @@ router.post('/push', async (req, res) => {
 });
 
 /**
+ * POST /api/v1/sync-status/batch-push
+ * 批量推送招标数据（供豆包/用户直接传递JSON数组）
+ * 
+ * Body: { data: [...] }
+ * 每条数据结构同 /push 接口
+ */
+router.post('/batch-push', async (req, res) => {
+  try {
+    const { data } = req.body;
+    
+    if (!Array.isArray(data) || data.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'data字段必须是非空数组',
+      });
+    }
+    
+    console.log(`[批量推送] 收到 ${data.length} 条数据`);
+    
+    const results = {
+      total: data.length,
+      saved: 0,
+      failed: 0,
+      duplicates: 0,
+      details: [] as any[],
+    };
+    
+    // 逐条处理（复用 /push 接口的逻辑）
+    for (const item of data) {
+      try {
+        // 构建推送数据
+        const pushedData: PushedBidData = {
+          type: item.type || '招标',
+          title: item.title || '',
+          area: item.area || '',
+          publish_time: item.publish_time || '',
+          url: item.url || '',
+          content: item.content || '',
+          source: item.source || '豆包采集',
+          push_time: item.push_time || new Date().toISOString(),
+        };
+        
+        // 审核数据
+        const reviewResult = reviewPushedData(pushedData);
+        
+        if (!reviewResult.passed) {
+          results.failed++;
+          results.details.push({
+            title: item.title,
+            status: 'rejected',
+            reason: reviewResult.reason,
+          });
+          continue;
+        }
+        
+        // 去重检查
+        const supabase = getSupabaseClient();
+        const { data: existingByUrl } = await supabase
+          .from('bids')
+          .select('id')
+          .eq('source_url', pushedData.url)
+          .maybeSingle();
+        
+        if (existingByUrl) {
+          results.duplicates++;
+          results.details.push({
+            title: item.title,
+            status: 'duplicate',
+          });
+          continue;
+        }
+        
+        // 格式化处理
+        let formattedData: any = null;
+        try {
+          formattedData = await formatBidData(pushedData, false);
+        } catch (err) {
+          console.warn(`[批量推送] 格式化失败: ${item.title}`);
+        }
+        
+        // 入库
+        const insertData = formattedData ? {
+          title: formattedData.title,
+          source_url: formattedData.source_url,
+          content: formattedData.content,
+          formatted_content: formattedData.formatted_content,
+          province: formattedData.province || item.area,
+          city: formattedData.city,
+          industry: formattedData.industry,
+          source: formattedData.source_platform || item.source,
+          source_platform: formattedData.source_platform || item.source,
+          publish_date: formattedData.publish_date || item.publish_time || new Date().toISOString(),
+          deadline: formattedData.deadline,
+          bid_type: formattedData.bid_type || item.type,
+          announcement_type: formattedData.announcement_type || item.type,
+          data_type: formattedData.announcement_type || item.type,
+          budget: formattedData.budget,
+          contact_person: formattedData.contact_person,
+          contact_phone: formattedData.contact_phone,
+          contact_address: formattedData.contact_address,
+        } : {
+          title: item.title,
+          source_url: item.url,
+          content: item.content,
+          province: item.area,
+          source: item.source,
+          source_platform: item.source,
+          publish_date: item.publish_time || new Date().toISOString(),
+          bid_type: item.type,
+          announcement_type: item.type,
+          data_type: item.type,
+          contact_person: extractContactInfo(item.content).contactPerson,
+          contact_phone: extractContactInfo(item.content).contactPhone,
+        };
+        
+        const { data: savedData, error: saveError } = await supabase
+          .from('bids')
+          .insert(insertData)
+          .select()
+          .single();
+        
+        if (saveError) {
+          results.failed++;
+          results.details.push({
+            title: item.title,
+            status: 'error',
+            reason: saveError.message,
+          });
+          continue;
+        }
+        
+        results.saved++;
+        results.details.push({
+          title: item.title,
+          status: 'saved',
+          id: savedData.id,
+        });
+        
+        // 更新同步状态
+        await updateSyncStatus(insertData.province || '吉林省', savedData.id);
+        
+      } catch (err) {
+        results.failed++;
+        results.details.push({
+          title: item.title,
+          status: 'error',
+          reason: String(err),
+        });
+      }
+    }
+    
+    console.log(`[批量推送] 完成: 保存${results.saved}, 失败${results.failed}, 重复${results.duplicates}`);
+    
+    res.json({
+      success: true,
+      ...results,
+    });
+    
+  } catch (error) {
+    console.error('[批量推送] 处理异常:', error);
+    res.status(500).json({
+      success: false,
+      error: '处理异常',
+      details: String(error),
+    });
+  }
+});
+
+/**
  * 规范化公告类型名称
  * 1. 去掉金额等后缀（如"竞争性谈判290万元" -> "竞争性谈判"）
  * 2. 统一名称格式
