@@ -319,7 +319,11 @@ export default function PotentialCustomersScreen() {
     const isWinner = item.customer_type === 'winner';
     
     return (
-      <View style={[styles.customerCard, isWinner && styles.customerCardWinner]}>
+      <TouchableOpacity 
+        style={[styles.customerCard, isWinner && styles.customerCardWinner]}
+        onPress={() => router.push('/company-detail', { company: item.company_name })}
+        activeOpacity={0.7}
+      >
         <View style={styles.cardHeader}>
           <Text style={styles.companyName} numberOfLines={2}>
             {item.company_name}
@@ -381,16 +385,19 @@ export default function PotentialCustomersScreen() {
           {item.contact_phone && (
             <TouchableOpacity 
               style={styles.callButton}
-              onPress={() => handleCall(item.contact_phone!)}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleCall(item.contact_phone!);
+              }}
             >
               <FontAwesome6 name="phone" size={12} color="#FFFFFF" />
               <Text style={styles.callButtonText}>一键拨打</Text>
             </TouchableOpacity>
           )}
         </View>
-      </View>
+      </TouchableOpacity>
     );
-  }, [styles, handleCall]);
+  }, [styles, handleCall, router]);
 
   // 非VIP用户显示提示
   if (!hasVipAccess) {

@@ -265,4 +265,114 @@ function deduplicateCustomers(customers: any[]): any[] {
   return Array.from(seen.values());
 }
 
+/**
+ * GET /api/v1/potential-customers/company/:name
+ * 根据公司名称查询相关招标和中标信息
+ */
+router.get('/company/:name', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const { name } = req.params;
+    const { page = 1, pageSize = 20 } = req.query;
+    
+    const pageNum = Number(page);
+    const sizeNum = Number(pageSize);
+    const start = (pageNum - 1) * sizeNum;
+    const end = start + sizeNum - 1;
+    
+    // 解码公司名称
+    const companyName = decodeURIComponent(name);
+    
+    const results: any[] = [];
+    
+    // 1. 查询招标信息（作为招标方）
+    const { data: bids, error: bidError } = await client
+      .from('bids')
+      .select('id, title, budget, province, city, industry, deadline, publish_date, contact_person, contact_phone, contact_address, project_location')
+      .or(`contact_address.ilike.%${companyName}%,project_location.ilike.%${companyName}%`)
+      .order('publish_date', { ascending: false });
+    
+    if (bidError) {
+      console.error('查询招标信息失败:', bidError);
+    }
+    
+    bids?.forEach((bid: any) => {
+      results.push({
+        id: `bid_${bid.id}`,
+        type: '招标',
+        title: bid.title,
+        budget: bid.budget,
+        province: bid.province,
+        city: bid.city,
+        industry: bid.industry,
+        deadline: bid.deadline,
+        publish_date: bid.publish_date,
+        contact_person: bid.contact_person,
+        contact_phone: bid.contact_phone,
+        role: '招标方',
+      });
+    });
+    
+    // 2. 查询中标信息（作为中标方）
+    const { data: winBids, error: winBidError } = await client
+      .from('win_bids')
+      .select('id, title, win_amount, province, city, industry, win_date, publish_date, win_company, win_company_phone, win_company_address')
+      .ilike('win_company', `%${companyName}%`)
+      .order('publish_date', { ascending: false });
+    
+    if (winBidError) {
+      console.error('查询中标信息失败:', winBidError);
+    }
+    
+    winBids?.forEach((winBid: any) => {
+      results.push({
+        id: `winbid_${winBid.id}`,
+        type: '中标',
+        title: winBid.title,
+        budget: winBid.win_amount,
+        province: winBid.province,
+        city: winBid.city,
+        industry: winBid.industry,
+        deadline: winBid.win_date,
+        publish_date: winBid.publish_date,
+        contact_person: null,
+        contact_phone: winBid.win_company_phone,
+        role: '中标方',
+      });
+    });
+    
+    // 3. 按发布日期排序
+    results.sort((a, b) => {
+      const dateA = new Date(a.publish_date || 0).getTime();
+      const dateB = new Date(b.publish_date || 0).getTime();
+      return dateB - dateA;
+    });
+    
+    // 4. 分页
+    const total = results.length;
+    const totalPages = Math.ceil(total / sizeNum);
+    const paginatedResults = results.slice(start, end + 1);
+    
+    res.json({
+      success: true,
+      data: {
+        company_name: companyName,
+        list: paginatedResults,
+        total,
+        page: pageNum,
+        pageSize: sizeNum,
+        totalPages,
+        bidCount: bids?.length || 0,
+        winBidCount: winBids?.length || 0,
+      },
+    });
+  } catch (error) {
+    console.error('查询公司信息失败:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : '查询公司信息失败',
+    });
+  }
+});
+
 export default router;
