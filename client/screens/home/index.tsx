@@ -326,9 +326,10 @@ export default function HomeScreen() {
       // 只在首次加载时获取数据
       if (!hasLoaded.all) {
         fetchData(1, 'all');
+        fetchStats();
+        fetchProvinces();
       }
-      fetchStats();
-      fetchProvinces();
+      // 返回时不刷新任何数据
     }, [])
   );
 
