@@ -15,9 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
-import { useRealtimeData } from '@/hooks/useRealtimeData';
 import { Screen } from '@/components/Screen';
-import { NewDataAlert } from '@/components/NewDataAlert';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
@@ -125,20 +123,6 @@ export default function HomeScreen() {
   
   const activeFilterRef = useRef<string>('all');
   const loadingRef = useRef(false);
-  
-  // ========== 实时数据检测 ==========
-  const {
-    hasNewData,
-    syncStatus,
-    markAsRead,
-    refresh: refreshSyncStatus,
-  } = useRealtimeData({
-    interval: 30000, // 30秒检测一次
-    enabled: true,
-    onNewData: (status) => {
-      console.log('[首页] 检测到新数据:', status);
-    },
-  });
   
   // 当前标签的数据
   const bids = bidsCache[activeFilter] || [];
@@ -489,9 +473,6 @@ export default function HomeScreen() {
     if (loadingRef.current) return;
     setRefreshing(true);
     
-    // 标记新数据已读
-    markAsRead();
-    
     // 重置当前标签的缓存
     setPageCache(prev => ({ ...prev, [activeFilter]: 1 }));
     setHasMoreCache(prev => ({ ...prev, [activeFilter]: true }));
@@ -507,12 +488,6 @@ export default function HomeScreen() {
     } else {
       fetchData(1, activeFilter, undefined, undefined, true);
     }
-  };
-  
-  // 处理新数据提示点击
-  const handleNewDataPress = () => {
-    markAsRead();
-    handleRefresh();
   };
 
   const handleLoadMore = () => {
@@ -801,14 +776,6 @@ export default function HomeScreen() {
           }
         />
       </View>
-
-      {/* 新数据提示 */}
-      <NewDataAlert
-        visible={hasNewData}
-        onPress={handleNewDataPress}
-        onClose={markAsRead}
-        autoHideDuration={15000}
-      />
 
       {/* 地区选择弹窗 */}
       <Modal
