@@ -131,7 +131,7 @@ export default function ProfileScreen() {
         }
         break;
       case 'about':
-        Alert.alert('关于招采通', '招采通 v1.0.0\n\n专业的招标采购信息聚合平台\n\n整合20,000+数据源\n提供实时招标、中标信息\n助力企业把握商机');
+        Alert.alert('关于招采易', '招采易 v1.0.0\n\n专业的招标采购信息聚合平台\n\n整合20,000+数据源\n提供实时招标、中标信息\n助力企业把握商机');
         break;
     }
   };
@@ -354,7 +354,7 @@ export default function ProfileScreen() {
               <View style={[styles.menuIcon, { backgroundColor: '#F5F5F5' }]}>
                 <FontAwesome6 name="circle-info" size={18} color="#6B7280" />
               </View>
-              <Text style={styles.menuText}>关于招采通</Text>
+              <Text style={styles.menuText}>关于招采易</Text>
               <Text style={{ fontSize: 13, color: '#9CA3AF', marginRight: Spacing.sm }}>v1.0.0</Text>
               <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
             </View>

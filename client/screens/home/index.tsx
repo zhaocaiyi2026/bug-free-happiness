@@ -595,7 +595,7 @@ export default function HomeScreen() {
                   <FontAwesome6 name="gavel" size={20} color="#FFFFFF" />
                 </View>
                 <View style={styles.appTitleRow}>
-                  <Text style={styles.appTitle}>招采通</Text>
+                  <Text style={styles.appTitle}>招采易</Text>
                   <Text style={styles.appSubtitle}>专业招标采购信息平台</Text>
                 </View>
               </View>
