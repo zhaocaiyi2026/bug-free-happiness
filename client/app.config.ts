@@ -4,8 +4,8 @@ const appName = '招采易';  // 固定应用名称
 const projectId = process.env.COZE_PROJECT_ID || process.env.EXPO_PUBLIC_COZE_PROJECT_ID;
 const slugAppName = projectId ? `app${projectId}` : 'myapp';
 
-// 后端API地址：优先使用环境变量，否则使用默认值
-const backendBaseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'http://127.0.0.1:9091';
+// 后端API地址：优先使用环境变量，否则使用公网地址
+const backendBaseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'https://4dedb0b5-952a-4a4c-a211-0bf5165689d2.dev.coze.site';
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   return {
