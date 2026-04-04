@@ -187,6 +187,24 @@ export const createStyles = (theme: Theme) => {
       lineHeight: 22,
       color: '#4B5563',
     },
+    // 文档内容样式
+    docContent: {
+      fontSize: 14,
+      lineHeight: 24,
+      color: '#374151',
+    },
+    // 格式化加载样式
+    loadingFormatContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.md,
+    },
+    loadingFormatText: {
+      fontSize: 13,
+      color: '#6B7280',
+      marginLeft: Spacing.sm,
+    },
     // 联系人信息列表
     contactList: {
       marginTop: Spacing.xs,

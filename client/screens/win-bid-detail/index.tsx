@@ -37,6 +37,12 @@ interface WinBid {
   view_count: number;
 }
 
+interface FormattedWinBidDetail {
+  id: number;
+  title: string;
+  formattedContent: string;
+}
+
 export default function WinBidDetailScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -45,7 +51,9 @@ export default function WinBidDetailScreen() {
   const insets = useSafeAreaInsets();
 
   const [winBid, setWinBid] = useState<WinBid | null>(null);
+  const [formattedContent, setFormattedContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [formatting, setFormatting] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -62,6 +70,10 @@ export default function WinBidDetailScreen() {
 
       if (data.success) {
         setWinBid(data.data);
+        // 获取详情后，自动格式化内容
+        if (data.data.content && data.data.content.length >= 50) {
+          fetchFormattedDetail();
+        }
       } else {
         Alert.alert('错误', data.message || '获取中标详情失败');
         router.back();
@@ -72,6 +84,24 @@ export default function WinBidDetailScreen() {
       router.back();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFormattedDetail = async () => {
+    try {
+      setFormatting(true);
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/win-bids/${params.id}/format`
+      );
+      const data = await res.json();
+
+      if (data.success && data.data.formattedContent) {
+        setFormattedContent(data.data.formattedContent);
+      }
+    } catch (error) {
+      console.error('获取格式化详情失败:', error);
+    } finally {
+      setFormatting(false);
     }
   };
 
@@ -91,7 +121,6 @@ export default function WinBidDetailScreen() {
     return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
   };
 
-  // 拨打电话
   const handleCall = (phone: string) => {
     if (!phone || phone === '暂无') {
       Alert.alert('提示', '暂无联系电话');
@@ -222,83 +251,120 @@ export default function WinBidDetailScreen() {
           </View>
         </View>
 
-        {/* 中标单位信息卡片 */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIcon}>
-              <FontAwesome6 name="building" size={11} color="#059669" />
+        {/* 格式化加载中 */}
+        {formatting && (
+          <View style={styles.sectionCard}>
+            <View style={styles.loadingFormatContainer}>
+              <ActivityIndicator size="small" color="#059669" />
+              <Text style={styles.loadingFormatText}>正在智能排版...</Text>
             </View>
-            <Text style={styles.sectionTitle}>中标单位</Text>
           </View>
-          
-          <View style={styles.contactList}>
-            {/* 单位名称 */}
-            <View style={styles.contactRow}>
-              <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="briefcase" size={12} color="#6B7280" />
-              </View>
-              <Text style={styles.contactLabel}>单位名称</Text>
-              <Text style={styles.contactValue}>{winBid.win_company || '暂无'}</Text>
-            </View>
+        )}
 
-            {/* 联系电话 - 可点击拨打 */}
-            <TouchableOpacity 
-              style={styles.contactRow}
-              onPress={() => handleCall(winBid.win_company_phone || '')}
-              activeOpacity={0.7}
-            >
-              <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="phone" size={12} color="#059669" />
+        {/* 格式化后的内容 */}
+        {formattedContent && !formatting && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIcon}>
+                <FontAwesome6 name="file-lines" size={11} color="#059669" />
               </View>
-              <Text style={styles.contactLabel}>联系电话</Text>
-              <Text style={[styles.contactValue, styles.contactPhone]}>
-                {winBid.win_company_phone || '暂无'}
-              </Text>
+              <Text style={styles.sectionTitle}>项目详情</Text>
+            </View>
+            <Text style={styles.docContent}>{formattedContent}</Text>
+            
+            {/* 来源 */}
+            <View style={styles.sourceRow}>
+              <Text style={styles.sourceLabel}>信息来源</Text>
+              <Text style={styles.sourceValue}>{winBid.source || '官方渠道'}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* 如果没有格式化内容，显示原始内容 */}
+        {!formattedContent && !formatting && winBid.content && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIcon}>
+                <FontAwesome6 name="file-lines" size={11} color="#059669" />
+              </View>
+              <Text style={styles.sectionTitle}>项目详情</Text>
+            </View>
+            <Text style={styles.contentText}>
+              {winBid.content || '暂无详细信息。'}
+            </Text>
+            
+            {/* 来源 */}
+            <View style={styles.sourceRow}>
+              <Text style={styles.sourceLabel}>信息来源</Text>
+              <Text style={styles.sourceValue}>{winBid.source || '官方渠道'}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* 中标单位信息卡片 */}
+        {winBid.win_company && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIcon}>
+                <FontAwesome6 name="building" size={11} color="#059669" />
+              </View>
+              <Text style={styles.sectionTitle}>中标单位</Text>
+            </View>
+            
+            <View style={styles.contactList}>
+              {/* 单位名称 */}
+              <View style={styles.contactRow}>
+                <View style={styles.contactIconWrap}>
+                  <FontAwesome6 name="briefcase" size={12} color="#6B7280" />
+                </View>
+                <Text style={styles.contactLabel}>单位名称</Text>
+                <Text style={styles.contactValue}>{winBid.win_company}</Text>
+              </View>
+
+              {/* 联系电话 */}
               {winBid.win_company_phone && (
-                <View style={styles.callButton}>
-                  <FontAwesome6 name="phone-volume" size={12} color="#FFFFFF" />
+                <TouchableOpacity 
+                  style={styles.contactRow}
+                  onPress={() => handleCall(winBid.win_company_phone || '')}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.contactIconWrap}>
+                    <FontAwesome6 name="phone" size={12} color="#059669" />
+                  </View>
+                  <Text style={styles.contactLabel}>联系电话</Text>
+                  <Text style={[styles.contactValue, styles.contactPhone]}>
+                    {winBid.win_company_phone}
+                  </Text>
+                  <View style={styles.callButton}>
+                    <FontAwesome6 name="phone-volume" size={12} color="#FFFFFF" />
+                  </View>
+                </TouchableOpacity>
+              )}
+
+              {/* 单位地址 */}
+              {winBid.win_company_address && (
+                <View style={styles.contactRow}>
+                  <View style={styles.contactIconWrap}>
+                    <FontAwesome6 name="location-dot" size={12} color="#C8102E" />
+                  </View>
+                  <Text style={styles.contactLabel}>单位地址</Text>
+                  <Text style={styles.contactValue}>{winBid.win_company_address}</Text>
                 </View>
               )}
-            </TouchableOpacity>
 
-            {/* 单位地址 */}
-            <View style={styles.contactRow}>
-              <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="location-dot" size={12} color="#C8102E" />
-              </View>
-              <Text style={styles.contactLabel}>单位地址</Text>
-              <Text style={styles.contactValue}>{winBid.win_company_address || '暂无'}</Text>
-            </View>
-
-            {/* 项目地址 */}
-            <View style={styles.contactRow}>
-              <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="location-dot" size={12} color="#2563EB" />
-              </View>
-              <Text style={styles.contactLabel}>项目地址</Text>
-              <Text style={styles.contactValue}>{winBid.project_location || `${winBid.province || ''}${winBid.city || ''}`}</Text>
+              {/* 项目地址 */}
+              {winBid.project_location && (
+                <View style={styles.contactRow}>
+                  <View style={styles.contactIconWrap}>
+                    <FontAwesome6 name="location-dot" size={12} color="#2563EB" />
+                  </View>
+                  <Text style={styles.contactLabel}>项目地址</Text>
+                  <Text style={styles.contactValue}>{winBid.project_location}</Text>
+                </View>
+              )}
             </View>
           </View>
-        </View>
-
-        {/* 项目详情 */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIcon}>
-              <FontAwesome6 name="file-lines" size={11} color="#059669" />
-            </View>
-            <Text style={styles.sectionTitle}>项目详情</Text>
-          </View>
-          <Text style={styles.contentText}>
-            {winBid.content || '暂无详细信息。'}
-          </Text>
-          
-          {/* 来源 */}
-          <View style={styles.sourceRow}>
-            <Text style={styles.sourceLabel}>信息来源</Text>
-            <Text style={styles.sourceValue}>{winBid.source || '官方渠道'}</Text>
-          </View>
-        </View>
+        )}
       </ScrollView>
 
       {/* 底部操作栏 */}

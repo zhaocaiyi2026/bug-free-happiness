@@ -17,6 +17,20 @@ import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
 
+interface FormattedDetail {
+  id: number;
+  title: string;
+  formattedContent: string;
+  projectOverview: string;
+  basicInfo: string;
+  qualificationRequirements: string;
+  getBidDocuments: string;
+  bidSubmission: string;
+  announcementPeriod: string;
+  otherMatters: string;
+  contactInfo: string;
+}
+
 interface Bid {
   id: number;
   title: string;
@@ -32,12 +46,10 @@ interface Bid {
   source_url: string | null;
   is_urgent: boolean;
   view_count: number;
-  // 联系人信息
   contact_person: string | null;
   contact_phone: string | null;
   contact_email: string | null;
   contact_address: string | null;
-  // 详细信息
   project_location: string | null;
   requirements: string | null;
   open_bid_time: string | null;
@@ -52,7 +64,9 @@ export default function DetailScreen() {
   const insets = useSafeAreaInsets();
 
   const [bid, setBid] = useState<Bid | null>(null);
+  const [formattedDetail, setFormattedDetail] = useState<FormattedDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [formatting, setFormatting] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [userId] = useState(1);
 
@@ -72,6 +86,10 @@ export default function DetailScreen() {
 
       if (data.success) {
         setBid(data.data);
+        // 获取详情后，自动格式化内容
+        if (data.data.content && data.data.content.length >= 50) {
+          fetchFormattedDetail();
+        }
       } else {
         Alert.alert('错误', data.message || '获取招标详情失败');
         router.back();
@@ -82,6 +100,24 @@ export default function DetailScreen() {
       router.back();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFormattedDetail = async () => {
+    try {
+      setFormatting(true);
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/bids/${params.id}/format`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        setFormattedDetail(data.data);
+      }
+    } catch (error) {
+      console.error('获取格式化详情失败:', error);
+    } finally {
+      setFormatting(false);
     }
   };
 
@@ -161,7 +197,6 @@ export default function DetailScreen() {
     return diff > 0 ? diff : 0;
   };
 
-  // 拨打电话
   const handleCall = (phone: string) => {
     if (!phone || phone === '暂无') {
       Alert.alert('提示', '暂无联系电话');
@@ -196,6 +231,22 @@ export default function DetailScreen() {
     );
   };
 
+  // 渲染格式化后的章节内容
+  const renderSection = (title: string, content: string, iconName: string) => {
+    if (!content) return null;
+    return (
+      <View style={styles.sectionCard}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIcon}>
+            <FontAwesome6 name={iconName as any} size={11} color="#2563EB" />
+          </View>
+          <Text style={styles.sectionTitle}>{title}</Text>
+        </View>
+        <Text style={styles.docContent}>{content}</Text>
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
@@ -215,7 +266,7 @@ export default function DetailScreen() {
   return (
     <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header - 紧凑型 */}
+        {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -305,134 +356,108 @@ export default function DetailScreen() {
           </View>
         </View>
 
-        {/* 联系人信息卡片 */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
-              <FontAwesome6 name="address-card" size={11} color="#2563EB" />
-            </View>
-            <Text style={styles.sectionTitle}>联系方式</Text>
-          </View>
-          
-          {/* 联系人信息列表 */}
-          <View style={styles.contactList}>
-            {/* 联系人 */}
-            <View style={styles.contactRow}>
-              <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="user" size={12} color="#6B7280" />
-              </View>
-              <Text style={styles.contactLabel}>联系人</Text>
-              <Text style={styles.contactValue}>{bid.contact_person || '暂无'}</Text>
-            </View>
-
-            {/* 联系电话 - 可点击拨打 */}
-            <TouchableOpacity 
-              style={styles.contactRow}
-              onPress={() => handleCall(bid.contact_phone || '')}
-              activeOpacity={0.7}
-            >
-              <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="phone" size={12} color="#059669" />
-              </View>
-              <Text style={styles.contactLabel}>联系电话</Text>
-              <Text style={[styles.contactValue, styles.contactPhone]}>
-                {bid.contact_phone || '暂无'}
-              </Text>
-              {bid.contact_phone && (
-                <View style={styles.callButton}>
-                  <FontAwesome6 name="phone-volume" size={12} color="#FFFFFF" />
-                </View>
-              )}
-            </TouchableOpacity>
-
-            {/* 电子邮箱 */}
-            <View style={styles.contactRow}>
-              <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="envelope" size={12} color="#2563EB" />
-              </View>
-              <Text style={styles.contactLabel}>电子邮箱</Text>
-              <Text style={styles.contactValue}>{bid.contact_email || '暂无'}</Text>
-            </View>
-
-            {/* 项目地址 */}
-            <View style={styles.contactRow}>
-              <View style={styles.contactIconWrap}>
-                <FontAwesome6 name="location-dot" size={12} color="#C8102E" />
-              </View>
-              <Text style={styles.contactLabel}>项目地址</Text>
-              <Text style={styles.contactValue}>{bid.project_location || `${bid.province || ''}${bid.city || ''}`}</Text>
-            </View>
-
-            {/* 开标时间 */}
-            {bid.open_bid_time && (
-              <View style={styles.contactRow}>
-                <View style={styles.contactIconWrap}>
-                  <FontAwesome6 name="gavel" size={12} color="#9333EA" />
-                </View>
-                <Text style={styles.contactLabel}>开标时间</Text>
-                <Text style={styles.contactValue}>{formatDate(bid.open_bid_time)}</Text>
-              </View>
-            )}
-
-            {/* 开标地点 */}
-            {bid.open_bid_location && (
-              <View style={styles.contactRow}>
-                <View style={styles.contactIconWrap}>
-                  <FontAwesome6 name="building" size={12} color="#D97706" />
-                </View>
-                <Text style={styles.contactLabel}>开标地点</Text>
-                <Text style={styles.contactValue}>{bid.open_bid_location}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* 投标要求 */}
-        {bid.requirements && (
+        {/* 格式化加载中 */}
+        {formatting && (
           <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIcon, { backgroundColor: 'rgba(217,119,6,0.1)' }]}>
-                <FontAwesome6 name="clipboard-list" size={11} color="#D97706" />
-              </View>
-              <Text style={styles.sectionTitle}>投标要求</Text>
+            <View style={styles.loadingFormatContainer}>
+              <ActivityIndicator size="small" color="#2563EB" />
+              <Text style={styles.loadingFormatText}>正在智能排版...</Text>
             </View>
-            <Text style={styles.contentText}>{bid.requirements}</Text>
           </View>
         )}
 
-        {/* 项目详情 */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionIcon}>
-              <FontAwesome6 name="file-lines" size={11} color="#2563EB" />
-            </View>
-            <Text style={styles.sectionTitle}>项目详情</Text>
-          </View>
-          <Text style={styles.contentText}>
-            {bid.content || '暂无详细信息，请联系招标方获取更多资料。'}
-          </Text>
-          
-          {/* 来源 */}
-          <View style={styles.sourceRow}>
-            <Text style={styles.sourceLabel}>信息来源</Text>
-            <Text style={styles.sourceValue}>{bid.source || '官方渠道'}</Text>
-          </View>
-        </View>
+        {/* 格式化后的内容 */}
+        {formattedDetail && !formatting && (
+          <>
+            {/* 项目概况 */}
+            {renderSection('项目概况', formattedDetail.projectOverview, 'info-circle')}
+            
+            {/* 项目基本情况 */}
+            {renderSection('一、项目基本情况', formattedDetail.basicInfo, 'building')}
+            
+            {/* 申请人资格要求 */}
+            {renderSection('二、申请人的资格要求', formattedDetail.qualificationRequirements, 'clipboard-check')}
+            
+            {/* 获取招标文件 */}
+            {renderSection('三、获取招标文件', formattedDetail.getBidDocuments, 'file-arrow-down')}
+            
+            {/* 投标截止时间 */}
+            {renderSection('四、提交投标文件截止时间、开标时间和地点', formattedDetail.bidSubmission, 'clock')}
+            
+            {/* 公告期限 */}
+            {renderSection('五、公告期限', formattedDetail.announcementPeriod, 'calendar-days')}
+            
+            {/* 其他补充事宜 */}
+            {renderSection('六、其他补充事宜', formattedDetail.otherMatters, 'circle-info')}
+            
+            {/* 联系方式 */}
+            {renderSection('七、联系方式', formattedDetail.contactInfo, 'address-book')}
+          </>
+        )}
 
-        {/* 相关提示 */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={[styles.sectionIcon, { backgroundColor: 'rgba(200,16,46,0.1)' }]}>
-              <FontAwesome6 name="circle-info" size={11} color="#C8102E" />
+        {/* 如果没有格式化内容，显示原始内容 */}
+        {!formattedDetail && !formatting && bid.content && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIcon}>
+                <FontAwesome6 name="file-lines" size={11} color="#2563EB" />
+              </View>
+              <Text style={styles.sectionTitle}>项目详情</Text>
             </View>
-            <Text style={styles.sectionTitle}>温馨提示</Text>
+            <Text style={styles.contentText}>
+              {bid.content || '暂无详细信息，请联系招标方获取更多资料。'}
+            </Text>
+            
+            {/* 来源 */}
+            <View style={styles.sourceRow}>
+              <Text style={styles.sourceLabel}>信息来源</Text>
+              <Text style={styles.sourceValue}>{bid.source || '官方渠道'}</Text>
+            </View>
           </View>
-          <Text style={styles.contentText}>
-            1. 请在截止时间前完成投标{'\n'}
-            2. 仔细阅读招标文件要求{'\n'}
-            3. 如有疑问请及时联系招标方
-          </Text>
-        </View>
+        )}
+
+        {/* 联系人信息卡片 */}
+        {(bid.contact_person || bid.contact_phone) && (
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
+                <FontAwesome6 name="address-card" size={11} color="#2563EB" />
+              </View>
+              <Text style={styles.sectionTitle}>联系方式</Text>
+            </View>
+            
+            <View style={styles.contactList}>
+              {bid.contact_person && (
+                <View style={styles.contactRow}>
+                  <View style={styles.contactIconWrap}>
+                    <FontAwesome6 name="user" size={12} color="#6B7280" />
+                  </View>
+                  <Text style={styles.contactLabel}>联系人</Text>
+                  <Text style={styles.contactValue}>{bid.contact_person}</Text>
+                </View>
+              )}
+
+              {bid.contact_phone && (
+                <TouchableOpacity 
+                  style={styles.contactRow}
+                  onPress={() => handleCall(bid.contact_phone || '')}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.contactIconWrap}>
+                    <FontAwesome6 name="phone" size={12} color="#059669" />
+                  </View>
+                  <Text style={styles.contactLabel}>联系电话</Text>
+                  <Text style={[styles.contactValue, styles.contactPhone]}>
+                    {bid.contact_phone}
+                  </Text>
+                  <View style={styles.callButton}>
+                    <FontAwesome6 name="phone-volume" size={12} color="#FFFFFF" />
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       {/* 底部操作栏 */}

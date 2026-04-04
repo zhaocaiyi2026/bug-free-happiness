@@ -195,6 +195,49 @@ export const createStyles = (theme: Theme) => {
       lineHeight: 22,
       color: '#4B5563',
     },
+    // 文档格式样式
+    docSection: {
+      marginBottom: Spacing.md,
+    },
+    docSectionTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: '#1C1917',
+      marginTop: Spacing.sm,
+      marginBottom: Spacing.xs,
+      lineHeight: 22,
+    },
+    docParagraph: {
+      fontSize: 13,
+      lineHeight: 22,
+      color: '#4B5563',
+      marginBottom: Spacing.xs,
+    },
+    docListItem: {
+      fontSize: 13,
+      lineHeight: 22,
+      color: '#4B5563',
+      marginLeft: Spacing.sm,
+      marginBottom: Spacing.xs,
+    },
+    // 文档内容样式
+    docContent: {
+      fontSize: 14,
+      lineHeight: 24,
+      color: '#374151',
+    },
+    // 格式化加载样式
+    loadingFormatContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.md,
+    },
+    loadingFormatText: {
+      fontSize: 13,
+      color: '#6B7280',
+      marginLeft: Spacing.sm,
+    },
     // 联系人信息列表
     contactList: {
       marginTop: Spacing.xs,
