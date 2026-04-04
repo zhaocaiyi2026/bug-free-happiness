@@ -2,7 +2,7 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 
 const appName = '招采易';  // 固定应用名称
 const projectId = process.env.COZE_PROJECT_ID || process.env.EXPO_PUBLIC_COZE_PROJECT_ID;
-const slugAppName = projectId ? `app${projectId}` : 'myapp';
+const slugAppName = projectId ? `zcy${projectId.slice(-8)}` : 'myapp';
 
 // 后端API地址：优先使用环境变量，否则使用公网地址
 const backendBaseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || 'https://4dedb0b5-952a-4a4c-a211-0bf5165689d2.dev.coze.site';
@@ -36,7 +36,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "extra": {
       expoPublicBackendBaseUrl: backendBaseUrl,
       eas: {
-        projectId: "7622121045184577562"
+        projectId: "82d1d27a-9a18-4271-995f-606a09996296"
       }
     },
     "plugins": [
