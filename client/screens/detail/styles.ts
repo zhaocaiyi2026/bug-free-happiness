@@ -108,8 +108,6 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'baseline',
       justifyContent: 'center',
       paddingVertical: Spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6',
     },
     budgetLabel: {
       fontSize: 12,
@@ -255,8 +253,6 @@ export const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: Spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6',
     },
     contactIconWrap: {
       width: 28,
@@ -296,8 +292,6 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingTop: Spacing.sm,
-      borderTopWidth: 1,
-      borderTopColor: '#F3F4F6',
       marginTop: Spacing.sm,
     },
     sourceLabel: {
@@ -315,8 +309,6 @@ export const createStyles = (theme: Theme) => {
       left: 0,
       right: 0,
       backgroundColor: '#FFFFFF',
-      borderTopWidth: 1,
-      borderTopColor: '#E5E7EB',
       flexDirection: 'row',
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.sm,
@@ -336,8 +328,6 @@ export const createStyles = (theme: Theme) => {
     },
     secondaryButton: {
       backgroundColor: '#F5F5F5',
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
     },
     actionButtonText: {
       fontSize: 14,
