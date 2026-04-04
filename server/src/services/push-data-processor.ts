@@ -106,6 +106,7 @@ function getLLMClient(): LLMClient {
  * - title: 公告标题
  * - contact_person: 联系人（从content提取）
  * - contact_phone: 联系电话（从content提取）
+ * - address: 项目地址（从content提取或area字段）
  * - content: 项目详细信息
  */
 export function reviewPushedData(data: PushedBidData): ReviewResult {
@@ -148,6 +149,13 @@ export function reviewPushedData(data: PushedBidData): ReviewResult {
   if (!contactInfo.contactPhone) {
     missingFields.push('联系电话');
     reasons.push('正文无法提取联系电话(contact_phone)');
+  }
+
+  // 6. 必须有项目地址（从content提取或area字段）
+  const addressInfo = extractAddress(data.content, data.area);
+  if (!addressInfo) {
+    missingFields.push('项目地址');
+    reasons.push('正文无法提取地址信息(address)');
   }
 
   const passed = missingFields.length === 0;
@@ -223,6 +231,65 @@ export function extractContactInfo(content: string): { contactPerson: string | n
   }
   
   return { contactPerson, contactPhone };
+}
+
+/**
+ * 从content中提取地址信息
+ * 支持多种格式的地址信息提取
+ * 
+ * 注意：地址必须是有效的具体地址，不能仅仅是省份名称
+ */
+export function extractAddress(content: string, area?: string): string | null {
+  if (!content) return null;
+  
+  // 地址提取模式（优先级从高到低）
+  const addressPatterns = [
+    // 格式1: 地址：xxx
+    /地址\s*[：:]\s*([^\n,，。；;]+)/,
+    // 格式2: 项目地点：xxx
+    /项目地点\s*[：:]\s*([^\n,，。；;]+)/,
+    // 格式3: 建设地点：xxx
+    /建设地点\s*[：:]\s*([^\n,，。；;]+)/,
+    // 格式4: 采购人地址：xxx
+    /采购人地址\s*[：:]\s*([^\n,，。；;]+)/,
+    // 格式5: 投标地点：xxx
+    /投标地点\s*[：:]\s*([^\n,，。；;]+)/,
+    // 格式6: 开标地点：xxx
+    /开标地点\s*[：:]\s*([^\n,，。；;]+)/,
+    // 格式7: 联系地址：xxx
+    /联系地址\s*[：:]\s*([^\n,，。；;]+)/,
+  ];
+  
+  for (const pattern of addressPatterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      const address = match[1].trim();
+      // 地址至少要有6个字符（如：吉林省长春市）
+      if (address.length >= 6) {
+        return address;
+      }
+    }
+  }
+  
+  // 尝试匹配省市区组合（如：吉林省长春市朝阳区xxx路xxx号）
+  const fullAddressPattern = /(吉林省|北京市|上海市|天津市|重庆市)[^\n]*?(市|区|县|路|街|道|号)/;
+  const fullMatch = content.match(fullAddressPattern);
+  if (fullMatch) {
+    const address = fullMatch[0].trim();
+    if (address.length >= 6) {
+      return address;
+    }
+  }
+  
+  // 如果 area 字段存在且是有效地址（至少包含省和市），则返回
+  if (area && area.trim().length >= 4) {
+    // 检查 area 是否包含省市组合
+    if (/(省|市).*(市|区|县)/.test(area)) {
+      return area.trim();
+    }
+  }
+  
+  return null;
 }
 
 /**
