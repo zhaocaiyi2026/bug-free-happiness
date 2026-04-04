@@ -33,13 +33,13 @@ interface Bid {
   city: string | null;
   industry: string | null;
   bid_type: string | null;
+  announcement_type?: string | null;  // 实际公告类型：招标、废标公告、终止公告等
   publish_date: string | null;
   deadline: string | null;
   is_urgent: boolean;
   view_count: number;
   isWinBid?: boolean;
   winCompany?: string;
-  bidType?: '招标' | '中标';
 }
 
 interface Stats {
@@ -178,7 +178,6 @@ export default function HomeScreen() {
           const bidItems = data.data.list.map((item: Bid) => ({
             ...item,
             isWinBid: false,
-            bidType: '招标' as const,
           }));
           
           setBidsCache(prev => ({
@@ -218,13 +217,13 @@ export default function HomeScreen() {
             city: item.city,
             industry: item.industry,
             bid_type: '中标',
+            announcement_type: '中标公告',
             publish_date: item.publish_date,
             deadline: null,
             is_urgent: false,
             view_count: 0,
             isWinBid: true,
             winCompany: item.win_company,
-            bidType: '中标' as const,
           }));
           
           setBidsCache(prev => ({
@@ -541,7 +540,7 @@ export default function HomeScreen() {
             )}
             <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
               <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]} numberOfLines={1}>
-                {item.bidType || (isWinBid ? '中标' : '招标')}
+                {item.announcement_type || item.bid_type || (isWinBid ? '中标' : '招标')}
               </Text>
             </View>
           </View>
