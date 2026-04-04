@@ -72,7 +72,35 @@ export default function HomeScreen() {
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
 
-  const [bids, setBids] = useState<Bid[]>([]);
+  // 各标签数据缓存
+  const [bidsCache, setBidsCache] = useState<Record<string, Bid[]>>({
+    all: [],
+    province: [],
+    city: [],
+    provinceWin: [],
+  });
+  // 各标签是否已加载过
+  const [hasLoaded, setHasLoaded] = useState<Record<string, boolean>>({
+    all: false,
+    province: false,
+    city: false,
+    provinceWin: false,
+  });
+  // 各标签的分页状态
+  const [pageCache, setPageCache] = useState<Record<string, number>>({
+    all: 1,
+    province: 1,
+    city: 1,
+    provinceWin: 1,
+  });
+  // 各标签是否还有更多数据
+  const [hasMoreCache, setHasMoreCache] = useState<Record<string, boolean>>({
+    all: true,
+    province: true,
+    city: true,
+    provinceWin: true,
+  });
+  
   const [stats, setStats] = useState<Stats>({ 
     todayCount: 156, 
     urgentCount: 8, 
@@ -80,8 +108,7 @@ export default function HomeScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const [activeFilter, setActiveFilter] = useState('all');
   
@@ -96,6 +123,11 @@ export default function HomeScreen() {
   
   const activeFilterRef = useRef<string>('all');
   const loadingRef = useRef(false);
+  
+  // 当前标签的数据
+  const bids = bidsCache[activeFilter] || [];
+  const page = pageCache[activeFilter] || 1;
+  const hasMore = hasMoreCache[activeFilter] ?? true;
 
   // 快捷入口 - 固定4个
   const quickActions = [
@@ -121,24 +153,23 @@ export default function HomeScreen() {
     }
   };
 
-  const fetchData = async (pageNum: number, filterKey: string, province?: string, city?: string) => {
+  const fetchData = async (pageNum: number, filterKey: string, province?: string, city?: string, isRefresh = false) => {
     if (loadingRef.current) return;
     
     try {
       loadingRef.current = true;
-      setLoading(true);
+      if (pageNum === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
       const isWinBidFilter = filterKey === 'provinceWin' || filterKey === 'cityWin';
       
       if (filterKey === 'all') {
         const params = new URLSearchParams();
         params.append('page', String(pageNum));
         params.append('pageSize', '20');
-        if (province) {
-          params.append('province', province);
-        }
-        if (city) {
-          params.append('city', city);
-        }
 
         const res = await fetch(`${API_BASE_URL}/api/v1/bids?${params.toString()}`);
         const data = await res.json();
@@ -150,15 +181,18 @@ export default function HomeScreen() {
             bidType: '招标' as const,
           }));
           
-          if (pageNum === 1) {
-            setBids(bidItems);
-          } else {
-            setBids((prev) => [...prev, ...bidItems]);
-          }
-          setHasMore(data.data.page < data.data.totalPages);
+          setBidsCache(prev => ({
+            ...prev,
+            [filterKey]: pageNum === 1 ? bidItems : [...prev[filterKey], ...bidItems]
+          }));
+          setPageCache(prev => ({ ...prev, [filterKey]: pageNum }));
+          setHasMoreCache(prev => ({ ...prev, [filterKey]: data.data.page < data.data.totalPages }));
+          setHasLoaded(prev => ({ ...prev, [filterKey]: true }));
         } else {
-          if (pageNum === 1) setBids([]);
-          setHasMore(false);
+          if (pageNum === 1) {
+            setBidsCache(prev => ({ ...prev, [filterKey]: [] }));
+          }
+          setHasMoreCache(prev => ({ ...prev, [filterKey]: false }));
         }
       } else if (isWinBidFilter) {
         const params = new URLSearchParams();
@@ -193,15 +227,18 @@ export default function HomeScreen() {
             bidType: '中标' as const,
           }));
           
-          if (pageNum === 1) {
-            setBids(winBidItems);
-          } else {
-            setBids((prev) => [...prev, ...winBidItems]);
-          }
-          setHasMore(data.data.page < data.data.totalPages);
+          setBidsCache(prev => ({
+            ...prev,
+            [filterKey]: pageNum === 1 ? winBidItems : [...prev[filterKey], ...winBidItems]
+          }));
+          setPageCache(prev => ({ ...prev, [filterKey]: pageNum }));
+          setHasMoreCache(prev => ({ ...prev, [filterKey]: data.data.page < data.data.totalPages }));
+          setHasLoaded(prev => ({ ...prev, [filterKey]: true }));
         } else {
-          if (pageNum === 1) setBids([]);
-          setHasMore(false);
+          if (pageNum === 1) {
+            setBidsCache(prev => ({ ...prev, [filterKey]: [] }));
+          }
+          setHasMoreCache(prev => ({ ...prev, [filterKey]: false }));
         }
       } else {
         const params = new URLSearchParams();
@@ -225,25 +262,31 @@ export default function HomeScreen() {
             bidType: '招标' as const,
           }));
           
-          if (pageNum === 1) {
-            setBids(bidItems);
-          } else {
-            setBids((prev) => [...prev, ...bidItems]);
-          }
-          setHasMore(data.data.page < data.data.totalPages);
+          setBidsCache(prev => ({
+            ...prev,
+            [filterKey]: pageNum === 1 ? bidItems : [...prev[filterKey], ...bidItems]
+          }));
+          setPageCache(prev => ({ ...prev, [filterKey]: pageNum }));
+          setHasMoreCache(prev => ({ ...prev, [filterKey]: data.data.page < data.data.totalPages }));
+          setHasLoaded(prev => ({ ...prev, [filterKey]: true }));
         } else {
-          if (pageNum === 1) setBids([]);
-          setHasMore(false);
+          if (pageNum === 1) {
+            setBidsCache(prev => ({ ...prev, [filterKey]: [] }));
+          }
+          setHasMoreCache(prev => ({ ...prev, [filterKey]: false }));
         }
       }
     } catch (error) {
       console.error('获取数据失败:', error);
-      setHasMore(false);
-      if (pageNum === 1) setBids([]);
+      setHasMoreCache(prev => ({ ...prev, [filterKey]: false }));
+      if (pageNum === 1) {
+        setBidsCache(prev => ({ ...prev, [filterKey]: [] }));
+      }
     } finally {
       loadingRef.current = false;
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   };
 
@@ -277,24 +320,35 @@ export default function HomeScreen() {
     }
   };
 
+  // 首次加载时获取数据，返回时不刷新
   useFocusEffect(
     useCallback(() => {
-      fetchData(1, activeFilterRef.current);
+      // 只在首次加载时获取数据
+      if (!hasLoaded.all) {
+        fetchData(1, 'all');
+      }
       fetchStats();
       fetchProvinces();
     }, [])
   );
 
   const handleFilterPress = async (filterKey: string) => {
-    // 如果已经选择了地区，直接按选择的地区筛选
+    // 如果点击的是当前已选中的标签，不做任何操作
+    if (filterKey === activeFilter) return;
+    
+    // 先切换标签，显示缓存数据（如果有）
+    setActiveFilter(filterKey);
+    activeFilterRef.current = filterKey;
+    
+    // 如果已经加载过数据，直接显示缓存，不刷新
+    if (hasLoaded[filterKey] && bidsCache[filterKey].length > 0) {
+      return;
+    }
+    
+    // 如果没有缓存数据，需要根据情况获取数据
     if (filterKey === 'province' || filterKey === 'provinceWin') {
       if (selectedProvince) {
-        // 已选择省份，直接筛选
-        setPage(1);
-        setHasMore(true);
-        setBids([]);
-        setActiveFilter(filterKey);
-        activeFilterRef.current = filterKey;
+        // 已选择省份，发起请求获取数据
         fetchData(1, filterKey, selectedProvince.name);
         return;
       }
@@ -302,21 +356,9 @@ export default function HomeScreen() {
     
     if (filterKey === 'city') {
       if (selectedProvince && selectedCity) {
-        // 已选择城市，直接筛选
-        setPage(1);
-        setHasMore(true);
-        setBids([]);
-        setActiveFilter(filterKey);
-        activeFilterRef.current = filterKey;
         fetchData(1, filterKey, selectedProvince.name, selectedCity.name);
         return;
       } else if (selectedProvince && !selectedCity) {
-        // 只选择了省份，按省份筛选
-        setPage(1);
-        setHasMore(true);
-        setBids([]);
-        setActiveFilter('province');
-        activeFilterRef.current = 'province';
         fetchData(1, 'province', selectedProvince.name);
         return;
       }
@@ -333,13 +375,10 @@ export default function HomeScreen() {
       return;
     }
     
-    // 全部招标
-    setPage(1);
-    setHasMore(true);
-    setBids([]);
-    setActiveFilter(filterKey);
-    activeFilterRef.current = filterKey;
-    fetchData(1, filterKey);
+    // 全部招标 - 如果没有数据则获取
+    if (!hasLoaded.all) {
+      fetchData(1, 'all');
+    }
   };
 
   // 选择省份后的处理
@@ -357,13 +396,11 @@ export default function HomeScreen() {
     setSelectedCity(city);
     setLocationModalVisible(false);
     
-    setPage(1);
-    setHasMore(true);
-    setBids([]);
+    // 切换到城市标签并获取数据
     setActiveFilter('city');
     activeFilterRef.current = 'city';
     
-    // 按选择的省、市筛选数据
+    // 获取城市数据
     fetchData(1, 'city', selectedProvince?.name, city.name);
   };
 
@@ -373,9 +410,6 @@ export default function HomeScreen() {
     
     setLocationModalVisible(false);
     
-    setPage(1);
-    setHasMore(true);
-    setBids([]);
     const filterKey = activeFilter === 'provinceWin' ? 'provinceWin' : 'province';
     setActiveFilter(filterKey);
     activeFilterRef.current = filterKey;
@@ -389,28 +423,41 @@ export default function HomeScreen() {
     setSelectedCity(null);
     setCities([]);
     
-    setPage(1);
-    setHasMore(true);
-    setBids([]);
+    // 切换到全部招标标签
     setActiveFilter('all');
     activeFilterRef.current = 'all';
-    
-    fetchData(1, 'all');
   };
 
   const handleRefresh = () => {
     if (loadingRef.current) return;
     setRefreshing(true);
-    setPage(1);
-    setHasMore(true);
-    fetchData(1, activeFilterRef.current);
+    
+    // 重置当前标签的缓存
+    setPageCache(prev => ({ ...prev, [activeFilter]: 1 }));
+    setHasMoreCache(prev => ({ ...prev, [activeFilter]: true }));
+    
+    // 根据当前标签获取数据
+    if (activeFilter === 'province' || activeFilter === 'provinceWin') {
+      fetchData(1, activeFilter, selectedProvince?.name, undefined, true);
+    } else if (activeFilter === 'city') {
+      fetchData(1, activeFilter, selectedProvince?.name, selectedCity?.name, true);
+    } else {
+      fetchData(1, activeFilter, undefined, undefined, true);
+    }
   };
 
   const handleLoadMore = () => {
-    if (hasMore && !loadingRef.current) {
+    if (hasMore && !loadingRef.current && !loadingMore) {
       const nextPage = page + 1;
-      setPage(nextPage);
-      fetchData(nextPage, activeFilterRef.current);
+      
+      // 根据当前标签加载更多
+      if (activeFilter === 'province' || activeFilter === 'provinceWin') {
+        fetchData(nextPage, activeFilter, selectedProvince?.name);
+      } else if (activeFilter === 'city') {
+        fetchData(nextPage, activeFilter, selectedProvince?.name, selectedCity?.name);
+      } else {
+        fetchData(nextPage, activeFilter);
+      }
     }
   };
 
@@ -488,7 +535,8 @@ export default function HomeScreen() {
     );
   }, [styles, handleBidPress]);
 
-  if (loading && page === 1 && bids.length === 0) {
+  // 首次加载状态（无数据显示loading）
+  if (loading && page === 1 && bids.length === 0 && !hasLoaded[activeFilter]) {
     return (
       <Screen backgroundColor="#F5F7FA" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
         <View style={styles.loadingContainer}>
@@ -669,12 +717,12 @@ export default function HomeScreen() {
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           ListFooterComponent={
-            loading && page > 1 ? (
+            loadingMore ? (
               <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: Spacing.md }} />
             ) : null
           }
           ListEmptyComponent={
-            !loading ? (
+            !loading && !loadingMore ? (
               <View style={styles.emptyContainer}>
                 <FontAwesome6 name="folder-open" size={48} color="#CBD5E1" style={styles.emptyIcon} />
                 <Text style={styles.emptyText}>暂无招标信息</Text>
