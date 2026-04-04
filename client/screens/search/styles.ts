@@ -235,6 +235,7 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.xs + 2,
       paddingVertical: 1,
       borderRadius: 3,
+      maxWidth: 60,  // 限制最大宽度
     },
     typeTagWin: {
       backgroundColor: 'rgba(5, 150, 105, 0.2)',

@@ -519,6 +519,8 @@ export default function HomeScreen() {
 
   const renderBidItem = useCallback(({ item, index }: { item: Bid; index: number }) => {
     const isWinBid = item.isWinBid;
+    // 规范化公告类型名称
+    const displayType = item.announcement_type || item.bid_type || (isWinBid ? '中标' : '招标');
     
     return (
       <TouchableOpacity
@@ -544,7 +546,7 @@ export default function HomeScreen() {
             )}
             <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
               <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]} numberOfLines={1}>
-                {item.announcement_type || item.bid_type || (isWinBid ? '中标' : '招标')}
+                {displayType}
               </Text>
             </View>
           </View>

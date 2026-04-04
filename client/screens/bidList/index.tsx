@@ -43,6 +43,7 @@ interface WinBid {
   province: string | null;
   city: string | null;
   industry: string | null;
+  bid_type: string | null;
   win_company: string | null;
   publish_date: string | null;
 }
@@ -250,7 +251,7 @@ export default function BidListScreen() {
           </Text>
         </View>
         <View style={styles.typeTag}>
-          <Text style={styles.typeTagText}>招标</Text>
+          <Text style={styles.typeTagText} numberOfLines={1}>{item.bid_type || '招标'}</Text>
         </View>
         {item.is_urgent && (
           <View style={styles.urgentTag}>
@@ -287,7 +288,7 @@ export default function BidListScreen() {
         </View>
         <View style={styles.winTag}>
           <FontAwesome6 name="trophy" size={10} color="#FFFFFF" />
-          <Text style={styles.winTagText}>中标</Text>
+          <Text style={styles.winTagText} numberOfLines={1}>{item.bid_type || '中标'}</Text>
         </View>
       </View>
       <Text style={styles.bidTitle} numberOfLines={2}>

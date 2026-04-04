@@ -371,19 +371,19 @@ export default function SearchAdminScreen() {
           <View style={styles.helpSection}>
             <Text style={styles.helpTitle}>使用说明</Text>
             <View style={styles.helpItem}>
-              <FontAwesome6 name="check-circle" size={14} color="#059669" />
+              <FontAwesome6 name="circle-check" size={14} color="#059669" />
               <Text style={styles.helpText}>豆包AI将自动搜索吉林省政府采购网</Text>
             </View>
             <View style={styles.helpItem}>
-              <FontAwesome6 name="check-circle" size={14} color="#059669" />
+              <FontAwesome6 name="circle-check" size={14} color="#059669" />
               <Text style={styles.helpText}>自动访问详情页获取完整正文内容</Text>
             </View>
             <View style={styles.helpItem}>
-              <FontAwesome6 name="check-circle" size={14} color="#059669" />
+              <FontAwesome6 name="circle-check" size={14} color="#059669" />
               <Text style={styles.helpText}>入库前验证：正文≥500字符、有联系方式</Text>
             </View>
             <View style={styles.helpItem}>
-              <FontAwesome6 name="check-circle" size={14} color="#059669" />
+              <FontAwesome6 name="circle-check" size={14} color="#059669" />
               <Text style={styles.helpText}>自动去重：相同URL的公告不会重复入库</Text>
             </View>
           </View>
@@ -406,7 +406,7 @@ export default function SearchAdminScreen() {
               <TouchableOpacity
                 onPress={() => setDetailModal({ visible: false, data: null })}
               >
-                <FontAwesome6 name="times" size={20} color="#6B7280" />
+                <FontAwesome6 name="xmark" size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>

@@ -694,7 +694,7 @@ router.post('/push', async (req, res) => {
     }
     
     const supabase = getSupabaseClient();
-    let dataType = type || '招标';
+    let dataType = normalizeAnnouncementType(type || '招标');
     
     // 名称规范化：单一来源采购 -> 单一来源公告
     if (dataType === '单一来源采购') {
@@ -820,8 +820,8 @@ router.post('/push', async (req, res) => {
         source: source || '豆包采集',
         source_platform: source || '豆包采集',
         publish_date: publish_time || null,
-        bid_type: getBidType(dataType),
-        announcement_type: dataType,
+        bid_type: getBidType(dataType),  // 简称，如"竞争性谈判"
+        announcement_type: dataType,      // 规范化后的名称
         data_type: dataType,
       };
       
@@ -869,10 +869,34 @@ router.post('/push', async (req, res) => {
 });
 
 /**
+ * 规范化公告类型名称
+ * 1. 去掉金额等后缀（如"竞争性谈判290万元" -> "竞争性谈判"）
+ * 2. 统一名称格式
+ */
+function normalizeAnnouncementType(typeName: string): string {
+  if (!typeName) return '招标';
+  
+  let normalized = typeName.trim();
+  
+  // 去掉金额等后缀（如"竞争性谈判290万元"）
+  normalized = normalized.replace(/[\d,.]+万元?$/i, '');
+  normalized = normalized.replace(/[\d,.]+亿元?$/i, '');
+  normalized = normalized.replace(/[\d,.]+元$/i, '');
+  
+  // 去掉多余的空格
+  normalized = normalized.trim();
+  
+  return normalized || '招标';
+}
+
+/**
  * 根据公告类型获取招标类型（用于 bid_type 字段）
  * announcement_type 保存原始公告类型名称
  */
 function getBidType(announcementType: string): string {
+  // 先规范化
+  const normalized = normalizeAnnouncementType(announcementType);
+  
   const typeMap: Record<string, string> = {
     // 招标类
     '公开招标公告': '公开招标',
@@ -903,7 +927,7 @@ function getBidType(announcementType: string): string {
     '询价': '询价',
     '单一来源采购': '单一来源',  // 旧名称兼容
   };
-  return typeMap[announcementType] || '招标公告';
+  return typeMap[normalized] || normalized || '招标公告';
 }
 
 export default router;

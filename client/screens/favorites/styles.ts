@@ -96,6 +96,7 @@ export const createStyles = (theme: Theme) => {
       paddingVertical: 2,
       borderRadius: 3,
       marginRight: Spacing.xs,
+      maxWidth: 60,  // 限制最大宽度
     },
     typeTagText: {
       fontSize: 10,

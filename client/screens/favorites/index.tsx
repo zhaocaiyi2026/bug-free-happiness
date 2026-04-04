@@ -24,6 +24,7 @@ interface Bid {
   province: string | null;
   city: string | null;
   industry: string | null;
+  bid_type: string | null;
   deadline: string | null;
   is_urgent: boolean;
 }
@@ -137,7 +138,7 @@ export default function FavoritesScreen() {
           </Text>
         </View>
         <View style={styles.typeTag}>
-          <Text style={styles.typeTagText}>招标</Text>
+          <Text style={styles.typeTagText} numberOfLines={1}>{item.bids.bid_type || '招标'}</Text>
         </View>
         {item.bids.is_urgent && (
           <View style={styles.urgentTag}>

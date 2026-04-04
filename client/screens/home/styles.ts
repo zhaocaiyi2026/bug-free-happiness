@@ -294,6 +294,7 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.sm,
       paddingVertical: 4,
       borderRadius: 6,
+      maxWidth: 80,  // 限制最大宽度，防止溢出
     },
     typeTagWin: {
       backgroundColor: 'rgba(5, 150, 105, 0.15)',

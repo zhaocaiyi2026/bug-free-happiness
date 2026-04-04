@@ -39,6 +39,7 @@ interface Bid {
   province: string | null;
   city: string | null;
   industry: string | null;
+  bid_type: string | null;
   deadline: string | null;
   is_urgent: boolean;
 }
@@ -218,7 +219,7 @@ export default function DiscoverScreen() {
             </Text>
           </View>
           <View style={styles.typeTag}>
-            <Text style={styles.typeTagText}>招标</Text>
+            <Text style={styles.typeTagText} numberOfLines={1}>{bid.bid_type || '招标'}</Text>
           </View>
           {bid.is_urgent && (
             <View style={styles.urgentTag}>
