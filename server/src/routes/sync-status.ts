@@ -801,6 +801,9 @@ router.post('/push', async (req, res) => {
       
       console.log(`[通用推送] 中标入库成功: type=${dataType}, ID=${savedData.id}`);
       
+      // ========== 更新同步状态 ==========
+      await updateSyncStatus(province, savedData.id);
+      
       return res.json({
         success: true,
         action: 'saved',
@@ -854,6 +857,9 @@ router.post('/push', async (req, res) => {
       }
       
       console.log(`[通用推送] 入库成功: type=${dataType}, ID=${savedData.id}`);
+      
+      // ========== 更新同步状态 ==========
+      await updateSyncStatus(province, savedData.id);
       
       return res.json({
         success: true,
@@ -1034,6 +1040,80 @@ router.post('/fix-contact-info', async (req, res) => {
     });
   }
 });
+
+/**
+ * 更新同步状态表
+ * 每次成功入库后调用，更新 synced_count 和 last_sync_time
+ */
+async function updateSyncStatus(province: string, savedId: number): Promise<void> {
+  const supabase = getSupabaseClient();
+  const now = new Date().toISOString();
+  
+  // 默认省份处理
+  const provinceName = province || '吉林省';
+  
+  try {
+    // 先查询当前记录
+    const { data: existing, error: queryError } = await supabase
+      .from('sync_status')
+      .select('*')
+      .eq('provider', 'doubao')
+      .eq('province', provinceName)
+      .maybeSingle();
+    
+    if (queryError) {
+      console.error('[更新同步状态] 查询失败:', queryError);
+      return;
+    }
+    
+    if (existing) {
+      // 更新现有记录：递增计数
+      const newSyncedCount = (existing.synced_count || 0) + 1;
+      const newTotalCount = (existing.total_count || 0) + 1;
+      
+      const { error: updateError } = await supabase
+        .from('sync_status')
+        .update({
+          total_count: newTotalCount,
+          synced_count: newSyncedCount,
+          status: 'in_progress',
+          last_sync_time: now,
+          last_sync_id: savedId,
+          message: '采集中...',
+          updated_at: now,
+        })
+        .eq('id', existing.id);
+      
+      if (updateError) {
+        console.error('[更新同步状态] 更新失败:', updateError);
+      } else {
+        console.log(`[更新同步状态] 成功: province=${provinceName}, synced_count=${newSyncedCount}, last_id=${savedId}`);
+      }
+    } else {
+      // 创建新记录
+      const { error: insertError } = await supabase
+        .from('sync_status')
+        .insert({
+          provider: 'doubao',
+          province: provinceName,
+          total_count: 1,
+          synced_count: 1,
+          status: 'in_progress',
+          last_sync_time: now,
+          last_sync_id: savedId,
+          message: '采集中...',
+        });
+      
+      if (insertError) {
+        console.error('[更新同步状态] 创建失败:', insertError);
+      } else {
+        console.log(`[更新同步状态] 创建新记录: province=${provinceName}, id=${savedId}`);
+      }
+    }
+  } catch (err) {
+    console.error('[更新同步状态] 异常:', err);
+  }
+}
 
 /**
  * 从content中提取联系人和联系电话
