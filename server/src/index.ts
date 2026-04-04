@@ -120,10 +120,10 @@ app.post('/api/v1/compliant-collect', async (req, res) => {
   }
 });
 
-// APK 下载路由
-app.get('/download/apk', (req, res) => {
+// APK 下载路由 - 使用 /api/v1 路径避免被前端路由拦截
+app.get('/api/v1/download/apk', (req, res) => {
   const apkPath = path.join(__dirname, '..', 'public', 'zcy.apk');
-  res.download(apkPath, '招采易.apk', (err) => {
+  res.download(apkPath, 'zcy.apk', (err) => {
     if (err) {
       console.error('APK下载失败:', err);
       res.status(404).json({ error: 'APK文件不存在' });
@@ -141,8 +141,8 @@ if (process.env.NODE_ENV === 'production') {
   
   // 所有非 API 路由返回 index.html (SPA 支持)
   app.get('*', (req, res, next) => {
-    // 跳过 API 路由
-    if (req.path.startsWith('/api/')) {
+    // 跳过 API 路由和下载路由
+    if (req.path.startsWith('/api/') || req.path.startsWith('/download/')) {
       return next();
     }
     res.sendFile(path.join(clientDistPath, 'index.html'));
