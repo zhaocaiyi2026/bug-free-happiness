@@ -732,8 +732,29 @@ router.post('/push', async (req, res) => {
       }
     }
     
+    // 判断是否属于中标数据类型
+    const isWinBidType = (type: string): boolean => {
+      const winBidTypes = [
+        '中标',
+        '中标公告',
+        '中标结果公告',
+        '中标（成交）结果公告',
+        '成交公告',
+        '成交结果公告',
+        '废标公告',
+        '终止公告',
+        '采购结果变更公告',
+        '合同公告',
+        '合同变更公告',
+        '履约验收公告',
+        '其它公告',
+        '其他公告',
+      ];
+      return winBidTypes.includes(type);
+    };
+    
     // 根据 type 分别处理
-    if (dataType === '中标') {
+    if (isWinBidType(dataType)) {
       // 存入 win_bids 表
       const insertData = {
         title,
@@ -744,6 +765,8 @@ router.post('/push', async (req, res) => {
         source: source || '豆包采集',
         source_platform: source || '豆包采集',
         publish_date: publish_time || null,
+        bid_type: dataType,  // 使用公告类型作为 bid_type
+        data_type: dataType,
         // 中标表特有字段
         win_company: '',  // 豆包推送的格式中没有中标单位，需要从content中提取
         win_amount: null,
@@ -766,16 +789,18 @@ router.post('/push', async (req, res) => {
         });
       }
       
-      console.log(`[通用推送] 中标入库成功: ID=${savedData.id}`);
+      console.log(`[通用推送] 中标入库成功: type=${dataType}, ID=${savedData.id}`);
       
       return res.json({
         success: true,
         action: 'saved',
-        type: '中标',
+        type: dataType,
+        table: 'win_bids',
         data: {
           id: savedData.id,
           title: savedData.title,
           province: savedData.province,
+          announcement_type: dataType,
         },
       });
       
