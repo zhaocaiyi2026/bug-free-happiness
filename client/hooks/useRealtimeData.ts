@@ -83,7 +83,7 @@ export function useRealtimeData(options: UseRealtimeDataOptions = {}): UseRealti
        * 接口：GET /api/v1/sync-status/province/:name
        * Path 参数：name: string (省份名称)
        */
-      const response = await fetch(`${API_BASE_URL}/sync-status/province/吉林省`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/sync-status/province/吉林省`);
       
       if (!response.ok) {
         console.log('[实时检测] 获取状态失败');

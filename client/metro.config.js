@@ -31,7 +31,9 @@ config.resolver.blockList = [
   /.*node_modules\/\.pnpm\/.*_tmp_\d+.*/,
 ];
 
-const BACKEND_TARGET = 'https://4dedb0b5-952a-4a4c-a211-0bf5165689d2.dev.coze.site';
+// Metro代理目标：开发环境代理到本地后端
+// 注意：前端代码中的API_BASE_URL仍使用公网地址（APP运行在手机上需要公网访问）
+const BACKEND_TARGET = 'http://localhost:9091';
 
 const apiProxy = createProxyMiddleware({
   target: BACKEND_TARGET,
