@@ -792,6 +792,12 @@ router.post('/push', async (req, res) => {
     console.log('[数据处理] 步骤3：存入数据库...');
     
     if (isWinBidType(dataType)) {
+      // 辅助函数：确保时间戳字段有效（空字符串转为null）
+      const safeTimestamp = (value: string | undefined | null): string | null => {
+        if (!value || value.trim() === '') return null;
+        return value;
+      };
+      
       // 存入 win_bids 表
       const insertData = formattedData ? {
         title: formattedData.title,
@@ -802,8 +808,8 @@ router.post('/push', async (req, res) => {
         city: formattedData.city,
         source: formattedData.source_platform || pushedData.source,
         source_platform: formattedData.source_platform || pushedData.source,
-        publish_date: formattedData.publish_date || pushedData.publish_time,
-        win_date: formattedData.win_date,
+        publish_date: safeTimestamp(formattedData.publish_date) || safeTimestamp(pushedData.publish_time),
+        win_date: safeTimestamp(formattedData.win_date),
         bid_type: dataType,
         data_type: dataType,
         win_company: formattedData.win_company || '',
@@ -817,7 +823,7 @@ router.post('/push', async (req, res) => {
         province: pushedData.area,
         source: pushedData.source,
         source_platform: pushedData.source,
-        publish_date: pushedData.publish_time,
+        publish_date: safeTimestamp(pushedData.publish_time),
         bid_type: dataType,
         data_type: dataType,
         win_company: '',
@@ -864,6 +870,15 @@ router.post('/push', async (req, res) => {
       
     } else {
       // 存入 bids 表（招标、变更、废标等）
+      // 辅助函数：确保时间戳字段有效（空字符串转为null，无值时使用当前时间）
+      const safeTimestamp = (value: string | undefined | null, useDefault = false): string | null => {
+        if (!value || value.trim() === '') {
+          // 如果需要默认值，返回当前时间
+          return useDefault ? new Date().toISOString() : null;
+        }
+        return value;
+      };
+      
       const insertData = formattedData ? {
         title: formattedData.title,
         source_url: formattedData.source_url,
@@ -874,8 +889,9 @@ router.post('/push', async (req, res) => {
         industry: formattedData.industry,
         source: formattedData.source_platform || pushedData.source,
         source_platform: formattedData.source_platform || pushedData.source,
-        publish_date: formattedData.publish_date || pushedData.publish_time,
-        deadline: formattedData.deadline,
+        // 优先使用格式化后的日期，其次使用推送的发布时间，最后使用当前时间
+        publish_date: safeTimestamp(formattedData.publish_date) || safeTimestamp(pushedData.publish_time) || new Date().toISOString(),
+        deadline: safeTimestamp(formattedData.deadline),
         bid_type: getBidType(dataType),
         announcement_type: dataType,
         data_type: dataType,
@@ -893,7 +909,8 @@ router.post('/push', async (req, res) => {
         province: pushedData.area,
         source: pushedData.source,
         source_platform: pushedData.source,
-        publish_date: pushedData.publish_time,
+        // 使用推送的发布时间，如果没有则使用当前时间
+        publish_date: safeTimestamp(pushedData.publish_time) || new Date().toISOString(),
         bid_type: getBidType(dataType),
         announcement_type: dataType,
         data_type: dataType,
