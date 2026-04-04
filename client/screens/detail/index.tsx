@@ -17,18 +17,11 @@ import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
 
-interface FormattedDetail {
-  id: number;
-  title: string;
-  formattedContent: string;
-  rawContent: string;
-  fromCache?: boolean;
-}
-
 interface Bid {
   id: number;
   title: string;
   content: string | null;
+  formatted_content: string | null;
   budget: number | null;
   province: string | null;
   city: string | null;
@@ -58,9 +51,7 @@ export default function DetailScreen() {
   const insets = useSafeAreaInsets();
 
   const [bid, setBid] = useState<Bid | null>(null);
-  const [formattedDetail, setFormattedDetail] = useState<FormattedDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [formatting, setFormatting] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [userId] = useState(1);
 
@@ -80,10 +71,6 @@ export default function DetailScreen() {
 
       if (data.success) {
         setBid(data.data);
-        // 获取详情后，自动格式化内容
-        if (data.data.content && data.data.content.length >= 50) {
-          fetchFormattedDetail();
-        }
       } else {
         Alert.alert('错误', data.message || '获取招标详情失败');
         router.back();
@@ -94,24 +81,6 @@ export default function DetailScreen() {
       router.back();
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchFormattedDetail = async () => {
-    try {
-      setFormatting(true);
-      const res = await fetch(
-        `${API_BASE_URL}/api/v1/bids/${params.id}/format`
-      );
-      const data = await res.json();
-
-      if (data.success) {
-        setFormattedDetail(data.data);
-      }
-    } catch (error) {
-      console.error('获取格式化详情失败:', error);
-    } finally {
-      setFormatting(false);
     }
   };
 
@@ -225,22 +194,6 @@ export default function DetailScreen() {
     );
   };
 
-  // 渲染格式化后的章节内容
-  const renderSection = (title: string, content: string, iconName: string) => {
-    if (!content) return null;
-    return (
-      <View style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionIcon}>
-            <FontAwesome6 name={iconName as any} size={11} color="#2563EB" />
-          </View>
-          <Text style={styles.sectionTitle}>{title}</Text>
-        </View>
-        <Text style={styles.docContent}>{content}</Text>
-      </View>
-    );
-  };
-
   if (loading) {
     return (
       <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
@@ -350,34 +303,21 @@ export default function DetailScreen() {
           </View>
         </View>
 
-        {/* 格式化加载中 */}
-        {formatting && (
-          <View style={styles.sectionCard}>
-            <View style={styles.loadingFormatContainer}>
-              <ActivityIndicator size="small" color="#2563EB" />
-              <Text style={styles.loadingFormatText}>正在智能排版...</Text>
-            </View>
-          </View>
-        )}
-
-        {/* 格式化后的内容 */}
-        {formattedDetail && !formatting && formattedDetail.formattedContent && (
+        {/* 格式化后的内容 - 优先显示后台格式化内容 */}
+        {bid.formatted_content && (
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIcon}>
                 <FontAwesome6 name="file-lines" size={11} color="#2563EB" />
               </View>
               <Text style={styles.sectionTitle}>招标详情</Text>
-              {formattedDetail.fromCache && (
-                <Text style={styles.cachedBadge}>已缓存</Text>
-              )}
             </View>
-            <Text style={styles.docContent}>{formattedDetail.formattedContent}</Text>
+            <Text style={styles.docContent}>{bid.formatted_content}</Text>
           </View>
         )}
 
         {/* 如果没有格式化内容，显示原始内容 */}
-        {!formattedDetail && !formatting && bid.content && (
+        {!bid.formatted_content && bid.content && (
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIcon}>
