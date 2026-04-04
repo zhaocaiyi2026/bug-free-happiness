@@ -5,14 +5,14 @@
  * 点击后刷新列表
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Animated,
-  Dimensions,
+  Platform,
 } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
@@ -39,60 +39,69 @@ export function NewDataAlert({
   autoHideDuration = 10000,
 }: NewDataAlertProps) {
   const { theme } = useTheme();
-  const translateY = useRef(new Animated.Value(-100));
-  const opacity = useRef(new Animated.Value(0));
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [showComponent, setShowComponent] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(-100)).current;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 显示/隐藏动画
   useEffect(() => {
+    // 清理之前的定时器
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
     if (visible) {
-      // 显示动画
+      setShowComponent(true);
+      
+      // 并行执行淡入和下滑动画
       Animated.parallel([
-        Animated.spring(translateY, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 100,
-          friction: 10,
-        }),
-        Animated.timing(opacity, {
+        Animated.timing(fadeAnim, {
           toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
           duration: 200,
           useNativeDriver: true,
         }),
       ]).start();
 
       // 自动隐藏
-      if (autoHideDuration > 0) {
+      if (autoHideDuration > 0 && onClose) {
         timerRef.current = setTimeout(() => {
-          if (onClose) {
-            onClose();
-          }
+          onClose();
         }, autoHideDuration);
       }
     } else {
-      // 隐藏动画
+      // 并行执行淡出和上滑动画
       Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: -100,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
+        Animated.timing(fadeAnim, {
           toValue: 0,
           duration: 200,
           useNativeDriver: true,
         }),
-      ]).start();
+        Animated.timing(slideAnim, {
+          toValue: -100,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setShowComponent(false);
+      });
     }
 
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
     };
-  }, [visible, autoHideDuration, translateY, opacity, onClose]);
+  }, [visible, autoHideDuration, fadeAnim, slideAnim, onClose]);
 
-  if (!visible) {
+  if (!showComponent) {
     return null;
   }
 
@@ -102,8 +111,8 @@ export function NewDataAlert({
         styles.container,
         {
           backgroundColor: theme.primary,
-          transform: [{ translateY: translateY.current }],
-          opacity: opacity.current,
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
         },
       ]}
     >

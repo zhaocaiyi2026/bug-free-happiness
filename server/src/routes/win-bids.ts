@@ -214,6 +214,11 @@ router.get('/', async (req, res) => {
       throw new Error(`查询中标列表失败: ${error.message}`);
     }
 
+    // 添加缓存控制响应头，禁止缓存
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     res.json({
       success: true,
       data: {

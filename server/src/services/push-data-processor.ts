@@ -100,54 +100,54 @@ function getLLMClient(): LLMClient {
 /**
  * 步骤1：数据审核
  * 检查是否符合入库要求
+ * 
+ * 必填字段（缺一不可）：
+ * - type: 公告类型（招标 / 中标）
+ * - title: 公告标题
+ * - contact_person: 联系人（从content提取）
+ * - contact_phone: 联系电话（从content提取）
+ * - content: 项目详细信息
  */
 export function reviewPushedData(data: PushedBidData): ReviewResult {
   const missingFields: string[] = [];
   const reasons: string[] = [];
 
-  // 1. 必须有标题
-  if (!data.title || data.title.trim().length < 5) {
-    missingFields.push('标题');
-    reasons.push('标题缺失或过短');
+  // 1. 必须有公告类型
+  if (!data.type || data.type.trim() === '') {
+    missingFields.push('公告类型');
+    reasons.push('缺少公告类型(type)');
   }
 
-  // 2. 必须有来源URL
-  if (!data.url || !data.url.startsWith('http')) {
-    missingFields.push('来源URL');
-    reasons.push('来源URL无效');
+  // 2. 必须有标题（至少5字符）
+  if (!data.title || data.title.trim().length < 5) {
+    missingFields.push('公告标题');
+    reasons.push('标题缺失或过短(title)');
   }
 
   // 3. 必须有正文内容（至少200字符）
   if (!data.content || data.content.length < 200) {
-    missingFields.push('正文内容');
-    reasons.push(`正文内容不足（仅${data.content?.length || 0}字符，需至少200字符）`);
+    missingFields.push('项目详细信息');
+    reasons.push(`正文内容不足(content)：仅${data.content?.length || 0}字符，需至少200字符`);
+    // 内容不足时直接返回，不再检查其他字段
+    return {
+      passed: false,
+      reason: reasons.join('；'),
+      missingFields,
+    };
   }
 
-  // 4. 正文必须包含联系信息（联系人或电话）
-  const hasContactPerson = /联系人[：:]/i.test(data.content);
-  const hasContactPhone = /电话[：:]|联系电话[：:]/i.test(data.content) || /\d{3,4}[-－]\d{7,8}/.test(data.content);
+  // 4. 从正文中提取联系人
+  const contactInfo = extractContactInfo(data.content);
   
-  if (!hasContactPerson && !hasContactPhone) {
-    missingFields.push('联系信息');
-    reasons.push('正文缺少联系人或联系电话');
+  if (!contactInfo.contactPerson) {
+    missingFields.push('联系人');
+    reasons.push('正文无法提取联系人(contact_person)');
   }
 
-  // 5. 正文必须包含项目信息关键词
-  const projectKeywords = ['项目名称', '采购人', '招标人', '采购单位', '招标单位', '预算金额', '采购内容'];
-  const hasProjectInfo = projectKeywords.some(kw => data.content.includes(kw));
-  
-  if (!hasProjectInfo) {
-    missingFields.push('项目信息');
-    reasons.push('正文缺少项目基本信息');
-  }
-
-  // 6. 正文必须包含地址或地区信息
-  const locationKeywords = ['地址', '地点', '省', '市', '区', '县'];
-  const hasLocation = locationKeywords.some(kw => data.content.includes(kw)) || data.area;
-  
-  if (!hasLocation) {
-    missingFields.push('地区信息');
-    reasons.push('正文缺少地区或地址信息');
+  // 5. 从正文中提取联系电话
+  if (!contactInfo.contactPhone) {
+    missingFields.push('联系电话');
+    reasons.push('正文无法提取联系电话(contact_phone)');
   }
 
   const passed = missingFields.length === 0;
@@ -157,6 +157,72 @@ export function reviewPushedData(data: PushedBidData): ReviewResult {
     reason: passed ? '审核通过' : reasons.join('；'),
     missingFields,
   };
+}
+
+/**
+ * 从content中提取联系人和联系电话
+ * 支持多种格式的联系人信息提取
+ */
+export function extractContactInfo(content: string): { contactPerson: string | null; contactPhone: string | null } {
+  if (!content) return { contactPerson: null, contactPhone: null };
+  
+  let contactPerson: string | null = null;
+  let contactPhone: string | null = null;
+  
+  // 提取联系人
+  // 格式1: 联系人：张三
+  // 格式2: 联系人: 张三
+  // 格式3: 采购人联系人：张三
+  // 格式4: 联系人姓名：张三
+  const personPatterns = [
+    /(?:采购人)?联系人[姓]?\s*[：:]\s*([^\s,，。；;\n]+)/,
+    /(?:项目)?负责人\s*[：:]\s*([^\s,，。；;\n]+)/,
+    /联系人员\s*[：:]\s*([^\s,，。；;\n]+)/,
+  ];
+  
+  for (const pattern of personPatterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      contactPerson = match[1].trim();
+      // 清理可能带上的电话号码（如果联系人后面紧跟电话）
+      contactPerson = contactPerson.replace(/[\d\-()（）]+$/, '').trim();
+      if (contactPerson && contactPerson.length >= 2 && contactPerson.length <= 10) {
+        break;
+      }
+    }
+  }
+  
+  // 提取联系电话
+  // 格式1: 联系电话：0431-12345678
+  // 格式2: 电话：0431-12345678
+  // 格式3: 电话: 0431-12345678
+  // 格式4: 手机：13812345678
+  const phonePatterns = [
+    /(?:联系)?电话\s*[：:]\s*([\d\-()（）\s]{7,20})/,
+    /手机\s*[：:]\s*([\d\-()（）\s]{11,20})/,
+    /联系电话[：:]\s*([\d\-()（）\s]{7,20})/,
+    /(\d{3,4}[-－]\d{7,8})/,  // 座机格式：0431-12345678
+    /(\d{11})/,  // 手机号格式
+  ];
+  
+  for (const pattern of phonePatterns) {
+    const match = content.match(pattern);
+    if (match && match[1]) {
+      let phone = match[1].trim();
+      // 清理多余空格
+      phone = phone.replace(/\s+/g, '');
+      // 标准化分隔符
+      phone = phone.replace(/[-－]/g, '-');
+      
+      // 验证电话号码格式
+      if (phone.length >= 7 && phone.length <= 20) {
+        contactPhone = phone;
+        break;
+      }
+    }
+  }
+  
+  return { contactPerson, contactPhone };
 }
 
 /**

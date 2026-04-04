@@ -18,6 +18,7 @@ import {
   formatBidData,
   formatWinBidData,
   isServiceAvailable as isProcessorAvailable,
+  extractContactInfo,
   type PushedBidData,
 } from '@/services/push-data-processor.js';
 
@@ -707,9 +708,10 @@ router.post('/push', async (req, res) => {
     console.log('[数据处理] 步骤1：开始数据审核...');
     const reviewResult = reviewPushedData(pushedData);
     
+    // 审核失败：返回 400 错误，不入库，不更新状态表
     if (!reviewResult.passed) {
       console.log(`[数据处理] 审核不通过: ${reviewResult.reason}`);
-      return res.json({
+      return res.status(400).json({
         success: false,
         action: 'rejected',
         reason: reviewResult.reason,
@@ -1179,74 +1181,6 @@ async function updateSyncStatus(province: string, savedId: number): Promise<void
   } catch (err) {
     console.error('[更新同步状态] 异常:', err);
   }
-}
-
-/**
- * 从content中提取联系人和联系电话
- * 支持多种格式的联系人信息提取
- */
-function extractContactInfo(content: string): { contactPerson: string | null; contactPhone: string | null } {
-  if (!content) return { contactPerson: null, contactPhone: null };
-  
-  let contactPerson: string | null = null;
-  let contactPhone: string | null = null;
-  
-  // 提取联系人
-  // 格式1: 联系人：张三
-  // 格式2: 联系人: 张三
-  // 格式3: 采购人联系人：张三
-  // 格式4: 联系人姓名：张三
-  const personPatterns = [
-    /(?:采购人)?联系人[姓]?\s*[：:]\s*([^\s,，。；;\n]+)/,
-    /(?:项目)?负责人\s*[：:]\s*([^\s,，。；;\n]+)/,
-    /联系人员\s*[：:]\s*([^\s,，。；;\n]+)/,
-  ];
-  
-  for (const pattern of personPatterns) {
-    const match = content.match(pattern);
-    if (match && match[1]) {
-      contactPerson = match[1].trim();
-      // 清理可能带上的电话号码（如果联系人后面紧跟电话）
-      contactPerson = contactPerson.replace(/[\d\-()（）]+$/, '').trim();
-      if (contactPerson && contactPerson.length >= 2 && contactPerson.length <= 10) {
-        break;
-      }
-    }
-  }
-  
-  // 提取联系电话
-  // 格式1: 联系电话：0431-12345678
-  // 格式2: 电话：0431-12345678
-  // 格式3: 电话: 0431-12345678
-  // 格式4: 手机：13812345678
-  const phonePatterns = [
-    /(?:联系)?电话\s*[：:]\s*([\d\-()（）\s]{7,20})/,
-    /手机\s*[：:]\s*([\d\-()（）\s]{11,20})/,
-    /联系电话[：:]\s*([\d\-()（）\s]{7,20})/,
-    /(\d{3,4}[-－]\d{7,8})/,  // 座机格式：0431-12345678
-    /(\d{11})/,  // 手机号格式
-  ];
-  
-  for (const pattern of phonePatterns) {
-    const match = content.match(pattern);
-    if (match && match[1]) {
-      let phone = match[1].trim();
-      // 清理多余空格
-      phone = phone.replace(/\s+/g, '');
-      // 标准化分隔符
-      phone = phone.replace(/[-－]/g, '-');
-      
-      // 验证电话号码格式
-      if (phone.length >= 7 && phone.length <= 20) {
-        contactPhone = phone;
-        break;
-      }
-    }
-  }
-  
-  console.log(`[提取联系信息] 联系人=${contactPerson}, 电话=${contactPhone}`);
-  
-  return { contactPerson, contactPhone };
 }
 
 /**

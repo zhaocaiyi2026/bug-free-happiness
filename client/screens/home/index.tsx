@@ -336,18 +336,31 @@ export default function HomeScreen() {
   };
 
   // 页面聚焦时获取数据
+  // 每次进入页面或从详情页返回时，都刷新数据以确保显示最新内容
   useFocusEffect(
     useCallback(() => {
-      // 首次加载：获取所有数据
-      // 后续进入：刷新统计数据，招标数据保持缓存（用户可下拉刷新）
+      // 刷新统计数据
       fetchStats();
       fetchProvinces();
       
-      // 只在首次加载时获取招标数据
-      if (!hasLoaded.all) {
-        fetchData(1, 'all');
+      // 根据当前标签刷新数据
+      const currentFilter = activeFilterRef.current;
+      if (currentFilter === 'all') {
+        fetchData(1, 'all', undefined, undefined, true);
+      } else if (currentFilter === 'province') {
+        if (selectedProvince) {
+          fetchData(1, 'province', selectedProvince.name, undefined, true);
+        }
+      } else if (currentFilter === 'city') {
+        if (selectedProvince && selectedCity) {
+          fetchData(1, 'city', selectedProvince.name, selectedCity.name, true);
+        }
+      } else if (currentFilter === 'provinceWin') {
+        if (selectedProvince) {
+          fetchData(1, 'provinceWin', selectedProvince.name, undefined, true);
+        }
       }
-    }, [hasLoaded.all])
+    }, [selectedProvince, selectedCity])
   );
 
   const handleFilterPress = async (filterKey: string) => {
