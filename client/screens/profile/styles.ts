@@ -253,6 +253,18 @@ export const createStyles = (theme: Theme) => {
       color: '#FFFFFF',
       fontWeight: '600',
     },
+    adminBadge: {
+      backgroundColor: '#D97706',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderRadius: BorderRadius.full,
+      marginRight: Spacing.sm,
+    },
+    adminBadgeText: {
+      fontSize: 10,
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',

@@ -330,6 +330,22 @@ export default function ProfileScreen() {
                 <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
               </View>
             </TouchableOpacity>
+
+            {/* 管理员入口 - 仅管理员可见 */}
+            {user?.role === 'admin' && (
+              <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => router.push('/user-manage')}>
+                <View style={styles.menuItemContent}>
+                  <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
+                    <FontAwesome6 name="users-gear" size={18} color="#D97706" />
+                  </View>
+                  <Text style={styles.menuText}>用户管理</Text>
+                  <View style={styles.adminBadge}>
+                    <Text style={styles.adminBadgeText}>管理员</Text>
+                  </View>
+                  <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* 关于 */}

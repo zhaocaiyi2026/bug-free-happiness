@@ -11,6 +11,7 @@ interface User {
   vip_level: number;
   vip_expire_at: string | null;
   points: number;
+  role: 'admin' | 'user';
 }
 
 interface AuthContextType {

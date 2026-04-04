@@ -30,6 +30,7 @@ import bidLLMCleanRouter from './routes/bid-llm-clean';
 import jilinIntelligentRouter from './routes/jilin-intelligent';
 import doubaoSearchRouter from './routes/doubao-search';
 import pythonCollectRouter from './routes/python-collect';
+import adminRouter from './routes/admin';
 import { createCollector, collectAndSave } from './services/compliant-collector';
 import { startDataSyncScheduler } from './services/data-sources';
 
@@ -78,6 +79,7 @@ app.use('/api/v1/bids/llm-clean', bidLLMCleanRouter);
 app.use('/api/v1/jilin-intelligent', jilinIntelligentRouter);
 app.use('/api/v1/doubao-search', doubaoSearchRouter);
 app.use('/api/v1/python-collect', pythonCollectRouter);
+app.use('/api/v1/admin', adminRouter);
 
 // 合规采集器路由
 app.post('/api/v1/compliant-collect', async (req, res) => {
