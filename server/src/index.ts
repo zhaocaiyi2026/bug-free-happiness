@@ -120,6 +120,17 @@ app.post('/api/v1/compliant-collect', async (req, res) => {
   }
 });
 
+// APK 下载路由
+app.get('/download/apk', (req, res) => {
+  const apkPath = path.join(__dirname, '..', 'public', 'zcy.apk');
+  res.download(apkPath, '招采易.apk', (err) => {
+    if (err) {
+      console.error('APK下载失败:', err);
+      res.status(404).json({ error: 'APK文件不存在' });
+    }
+  });
+});
+
 // 生产环境：提供前端静态文件
 if (process.env.NODE_ENV === 'production') {
   // 前端构建文件的路径：../../client/dist (相对于 server/dist/index.js)
