@@ -89,44 +89,119 @@ router.get('/', async (req, res) => {
       query = query.lte('budget', Number(maxBudget));
     }
     
-    // 关键词搜索：支持分词匹配，搜索项目名称(title)和项目详情(content)
-    // 例如搜索"能源环保"，会拆分为"能源"和"环保"，只要包含任意一个词即可匹配
+    // 关键词搜索：智能分词匹配
+    // 1. 先识别地名（省/市），转为精确筛选条件
+    // 2. 剩余关键词使用模糊匹配（OR逻辑，匹配任意一个关键词）
     if (keyword) {
       const keywordStr = keyword as string;
       
-      // 分词函数：支持空格分隔和中文自动分词
-      const tokenize = (text: string): string[] => {
-        // 1. 先按空格分词
+      // 常见省份和城市列表（部分常用）
+      const provinces = [
+        '北京市', '天津市', '上海市', '重庆市', '河北省', '山西省', '辽宁省', '吉林省', '黑龙江省',
+        '江苏省', '浙江省', '安徽省', '福建省', '江西省', '山东省', '河南省', '湖北省', '湖南省',
+        '广东省', '海南省', '四川省', '贵州省', '云南省', '陕西省', '甘肃省', '青海省', '台湾省',
+        '内蒙古', '广西', '西藏', '宁夏', '新疆', '香港', '澳门',
+        // 简称
+        '北京', '天津', '上海', '重庆', '河北', '山西', '辽宁', '吉林', '黑龙江',
+        '江苏', '浙江', '安徽', '福建', '江西', '山东', '河南', '湖北', '湖南',
+        '广东', '海南', '四川', '贵州', '云南', '陕西', '甘肃', '青海', '台湾',
+        '香港', '澳门'
+      ];
+      
+      const cities = [
+        '深圳市', '广州市', '成都市', '杭州市', '武汉市', '西安市', '南京市', '苏州市',
+        '青岛市', '大连市', '宁波市', '厦门市', '福州市', '长沙市', '郑州市', '济南市',
+        '合肥市', '昆明市', '南昌市', '贵阳市', '太原市', '石家庄', '哈尔滨', '沈阳市',
+        '长春市', '南宁市', '海口市', '兰州市', '西宁市', '银川市', '乌鲁木齐',
+        // 简称
+        '深圳', '广州', '成都', '杭州', '武汉', '西安', '南京', '苏州',
+        '青岛', '大连', '宁波', '厦门', '福州', '长沙', '郑州', '济南',
+        '合肥', '昆明', '南昌', '贵阳', '太原', '石家庄', '哈尔滨', '沈阳',
+        '长春', '南宁', '海口', '兰州', '西宁', '银川', '乌鲁木齐'
+      ];
+      
+      // 提取地名
+      let extractedProvince = '';
+      let extractedCity = '';
+      let remainingKeyword = keywordStr;
+      
+      // 优先匹配城市（因为城市更具体）
+      for (const city of cities) {
+        if (remainingKeyword.includes(city)) {
+          // 保持原样，不去掉"市"后缀，因为数据库存储格式可能是"深圳市"
+          extractedCity = city;
+          // 同时生成不带"市"的版本用于匹配
+          const cityWithoutSuffix = city.endsWith('市') ? city.slice(0, -1) : city;
+          remainingKeyword = remainingKeyword.replace(city, '').trim();
+          // 如果剩余关键词中还有不带"市"的版本，也去掉
+          remainingKeyword = remainingKeyword.replace(cityWithoutSuffix, '').trim();
+          break;
+        }
+      }
+      
+      // 匹配省份
+      for (const prov of provinces) {
+        if (remainingKeyword.includes(prov)) {
+          // 保持原样
+          extractedProvince = prov;
+          // 同时生成不带"省"的版本用于匹配
+          const provWithoutSuffix = prov.endsWith('省') ? prov.slice(0, -1) : prov;
+          remainingKeyword = remainingKeyword.replace(prov, '').trim();
+          // 如果剩余关键词中还有不带"省"的版本，也去掉
+          remainingKeyword = remainingKeyword.replace(provWithoutSuffix, '').trim();
+          break;
+        }
+      }
+      
+      // 如果提取到了地名，添加到筛选条件
+      if (extractedProvince && !province) {
+        query = query.eq('province', extractedProvince);
+      }
+      if (extractedCity && !city) {
+        query = query.eq('city', extractedCity);
+      }
+      
+      // 对剩余关键词进行分词处理
+      // 如果没有空格分隔，对中文进行智能分词（提取有意义的词汇）
+      const tokenizeKeyword = (text: string): string[] => {
+        // 先按空格分词
         const spaceTokens = text.split(/\s+/).filter(k => k.length > 0);
-        const allTokens: string[] = [];
+        const result: string[] = [];
         
         for (const token of spaceTokens) {
-          // 如果是纯中文且长度>2，尝试按2-4字分词（滑动窗口）
-          if (/^[\u4e00-\u9fa5]+$/.test(token) && token.length > 2) {
-            // 使用滑动窗口提取所有可能的2-4字词组
-            for (let len = 2; len <= Math.min(4, token.length); len++) {
-              for (let i = 0; i <= token.length - len; i++) {
-                const subToken = token.substring(i, i + len);
-                allTokens.push(subToken);
+          if (/^[\u4e00-\u9fa5]+$/.test(token)) {
+            // 纯中文：提取2-4字的有意义词汇
+            // 但保留完整的词（如果长度<=4）
+            if (token.length <= 4) {
+              result.push(token);
+            } else {
+              // 较长的词，提取主要词汇
+              // 例如"实验室项目" -> "实验室"、"项目"
+              for (let len = 2; len <= Math.min(4, token.length); len++) {
+                for (let i = 0; i <= token.length - len; i++) {
+                  const subToken = token.substring(i, i + len);
+                  // 只添加有意义的词（避免添加无意义的字组合）
+                  if (subToken.length >= 2) {
+                    result.push(subToken);
+                  }
+                }
               }
             }
           } else {
-            // 非中文或长度<=2，直接使用
-            allTokens.push(token);
+            // 非中文或混合，直接使用
+            result.push(token);
           }
         }
         
         // 去重
-        return [...new Set(allTokens)];
+        return [...new Set(result)];
       };
       
-      const keywords = tokenize(keywordStr);
+      const keywords = tokenizeKeyword(remainingKeyword);
       
-      if (keywords.length === 1) {
-        // 单个关键词：直接匹配
-        query = query.or(`title.ilike.%${keywords[0]}%,content.ilike.%${keywords[0]}%`);
-      } else if (keywords.length > 1) {
-        // 多个关键词：构建OR条件，匹配任意一个词
+      // 使用单个 OR 条件匹配所有关键词
+      if (keywords.length > 0) {
+        // 构建条件：每个关键词匹配 title 或 content
         const conditions = keywords.map(k => 
           `title.ilike.%${k}%,content.ilike.%${k}%`
         ).join(',');
