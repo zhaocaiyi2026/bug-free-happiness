@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
-import { Spacing, Typography } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 
 interface NewDataAlertProps {
   /** 是否显示 */
@@ -39,8 +39,8 @@ export function NewDataAlert({
   autoHideDuration = 10000,
 }: NewDataAlertProps) {
   const { theme } = useTheme();
-  const translateY = useRef(new Animated.Value(-100)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(-100));
+  const opacity = useRef(new Animated.Value(0));
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 显示/隐藏动画
@@ -101,9 +101,9 @@ export function NewDataAlert({
       style={[
         styles.container,
         {
-          backgroundColor: theme.colors.primary,
-          transform: [{ translateY }],
-          opacity,
+          backgroundColor: theme.primary,
+          transform: [{ translateY: translateY.current }],
+          opacity: opacity.current,
         },
       ]}
     >
@@ -168,12 +168,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: Typography.fontSizes.md,
+    fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
   },
   subtitle: {
-    fontSize: Typography.fontSizes.xs,
+    fontSize: 12,
     color: 'rgba(255, 255, 255, 0.85)',
     marginTop: 2,
   },
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   actionText: {
-    fontSize: Typography.fontSizes.xs,
+    fontSize: 12,
     color: '#FFFFFF',
     marginRight: Spacing.xs,
     fontWeight: '500',

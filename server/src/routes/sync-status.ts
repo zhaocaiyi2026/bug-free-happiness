@@ -2,10 +2,24 @@
  * 数据同步状态路由
  * 
  * 供豆包等数据提供者更新同步进度
+ * 
+ * 工作流程：
+ * 1. 豆包推送数据
+ * 2. 我进行分析，检查是否符合入库要求（联系人、电话、详情页、地址、项目信息等）
+ * 3. 确认好后 → 发送给豆包大模型进行格式化处理
+ * 4. 豆包大模型格式化处理完成 → 回传给我
+ * 5. 我存入数据库并展示在前端
  */
 
 import { Router } from 'express';
 import { getSupabaseClient } from '@/storage/database/supabase-client.js';
+import {
+  reviewPushedData,
+  formatBidData,
+  formatWinBidData,
+  isServiceAvailable as isProcessorAvailable,
+  type PushedBidData,
+} from '@/services/push-data-processor.js';
 
 const router = Router();
 
@@ -652,12 +666,12 @@ router.post('/complete', async (req, res) => {
  * POST /api/v1/sync-status/push
  * 豆包通用推送接口 - 接收所有类型的公告数据
  * 
- * 支持的数据类型：
- * - "招标" → 招标公告，存入 bids 表
- * - "中标" → 中标公告，存入 win_bids 表
- * - "变更" → 答疑、澄清、变更公告，存入 bids 表
- * - "废标" → 废标公告，存入 bids 表
- * - 其他类型 → 存入 bids 表
+ * 工作流程：
+ * 1. 豆包推送数据
+ * 2. 我进行分析，检查是否符合入库要求（联系人、电话、详情页、地址、项目信息等）
+ * 3. 确认好后 → 发送给豆包大模型进行格式化处理
+ * 4. 豆包大模型格式化处理完成 → 回传给我
+ * 5. 我存入数据库并展示在前端
  * 
  * Body 格式：
  * {
@@ -675,111 +689,136 @@ router.post('/push', async (req, res) => {
   try {
     const { type, title, area, publish_time, url, content, source, push_time } = req.body;
     
-    // 基础校验
-    if (!title || !url) {
-      return res.status(400).json({
-        success: false,
-        action: 'rejected',
-        reason: '缺少必要字段：title 或 url',
-      });
-    }
+    // 构建推送数据对象
+    const pushedData: PushedBidData = {
+      type: type || '招标',
+      title: title || '',
+      area: area || '',
+      publish_time: publish_time || '',
+      url: url || '',
+      content: content || '',
+      source: source || '豆包采集',
+      push_time: push_time || new Date().toISOString(),
+    };
     
-    if (!content || content.length < 100) {
+    console.log(`[通用推送] 收到数据: type=${pushedData.type}, title=${pushedData.title}`);
+    
+    // ========== 步骤1：数据审核 ==========
+    console.log('[数据处理] 步骤1：开始数据审核...');
+    const reviewResult = reviewPushedData(pushedData);
+    
+    if (!reviewResult.passed) {
+      console.log(`[数据处理] 审核不通过: ${reviewResult.reason}`);
       return res.json({
         success: false,
         action: 'rejected',
-        reason: `内容不完整（仅${content?.length || 0}字符，需至少100字符）`,
-        title,
+        reason: reviewResult.reason,
+        missingFields: reviewResult.missingFields,
+        title: pushedData.title,
       });
     }
     
+    console.log('[数据处理] 审核通过 ✓');
+    
+    // ========== 步骤2：去重检查 ==========
     const supabase = getSupabaseClient();
-    let dataType = normalizeAnnouncementType(type || '招标');
     
-    // 名称规范化：单一来源采购 -> 单一来源公告
-    if (dataType === '单一来源采购') {
-      dataType = '单一来源公告';
-    }
-    
-    console.log(`[通用推送] 收到数据: type=${dataType}, title=${title}`);
-    
-    // 去重检查 - 根据 URL
     const { data: existingByUrl } = await supabase
       .from('bids')
       .select('id, title')
-      .eq('source_url', url)
+      .eq('source_url', pushedData.url)
       .maybeSingle();
     
     if (existingByUrl) {
-      console.log(`[通用推送] 去重跳过: URL已存在`);
+      console.log(`[数据处理] 去重跳过: URL已存在`);
       return res.json({
         success: false,
         action: 'duplicate',
         reason: 'URL已存在',
-        title,
+        title: pushedData.title,
       });
     }
     
-    // 解析地区
-    let province = area || '';
-    let city = '';
-    if (area) {
-      // 解析省份和城市
-      const areaParts = area.split(/[省市区县]/);
-      if (areaParts.length >= 1) {
-        province = areaParts[0] + (area.includes('省') ? '省' : '');
-      }
-      if (areaParts.length >= 2) {
-        city = areaParts[1].replace(/^[市区县]/, '');
-        if (area.includes('市')) city += '市';
-        else if (area.includes('区')) city += '区';
-        else if (area.includes('县')) city += '县';
-      }
+    // ========== 步骤3：调用豆包大模型格式化处理 ==========
+    console.log('[数据处理] 步骤2：调用豆包大模型格式化处理...');
+    
+    let dataType = normalizeAnnouncementType(pushedData.type);
+    if (dataType === '单一来源采购') {
+      dataType = '单一来源公告';
     }
     
     // 判断是否属于中标数据类型
-    const isWinBidType = (type: string): boolean => {
+    const isWinBidType = (typeStr: string): boolean => {
       const winBidTypes = [
-        '中标',
-        '中标公告',
-        '中标结果公告',
-        '中标（成交）结果公告',
-        '成交公告',
-        '成交结果公告',
-        '废标公告',
-        '终止公告',
-        '采购结果变更公告',
-        '合同公告',
-        '合同变更公告',
-        '履约验收公告',
-        '其它公告',
-        '其他公告',
+        '中标', '中标公告', '中标结果公告', '中标（成交）结果公告',
+        '成交公告', '成交结果公告', '废标公告', '终止公告',
+        '采购结果变更公告', '合同公告', '合同变更公告', '履约验收公告',
+        '其它公告', '其他公告',
       ];
-      return winBidTypes.includes(type);
+      return winBidTypes.includes(typeStr);
     };
     
-    // 根据 type 分别处理
+    let formattedData: any = null;
+    let formatError: string | null = null;
+    
+    // 检查格式化服务是否可用
+    if (!isProcessorAvailable()) {
+      console.warn('[数据处理] 格式化服务不可用，使用原始数据入库');
+    } else {
+      try {
+        if (isWinBidType(dataType)) {
+          // 中标数据
+          formattedData = await formatWinBidData(pushedData, false);
+        } else {
+          // 招标数据
+          formattedData = await formatBidData(pushedData, false);
+        }
+        
+        if (formattedData) {
+          console.log('[数据处理] 格式化完成 ✓');
+        } else {
+          formatError = '格式化返回空结果';
+          console.warn(`[数据处理] 格式化失败: ${formatError}`);
+        }
+      } catch (err) {
+        formatError = String(err);
+        console.error(`[数据处理] 格式化异常: ${err}`);
+      }
+    }
+    
+    // ========== 步骤4：存入数据库 ==========
+    console.log('[数据处理] 步骤3：存入数据库...');
+    
     if (isWinBidType(dataType)) {
       // 存入 win_bids 表
-      // 自动从content中提取联系信息
-      const { contactPerson, contactPhone } = extractContactInfo(content);
-      
-      const insertData = {
-        title,
-        source_url: url,
-        content,
-        province,
-        city,
-        source: source || '豆包采集',
-        source_platform: source || '豆包采集',
-        publish_date: publish_time || null,
-        bid_type: dataType,  // 使用公告类型作为 bid_type
+      const insertData = formattedData ? {
+        title: formattedData.title,
+        source_url: formattedData.source_url,
+        content: formattedData.content,
+        formatted_content: formattedData.formatted_content,
+        province: formattedData.province || pushedData.area,
+        city: formattedData.city,
+        source: formattedData.source_platform || pushedData.source,
+        source_platform: formattedData.source_platform || pushedData.source,
+        publish_date: formattedData.publish_date || pushedData.publish_time,
+        win_date: formattedData.win_date,
+        bid_type: dataType,
         data_type: dataType,
-        // 中标表特有字段
-        win_company: '',  // 豆包推送的格式中没有中标单位，需要从content中提取
-        win_amount: null,
-        // 联系信息（自动提取）
-        win_company_phone: contactPhone,
+        win_company: formattedData.win_company || '',
+        win_amount: formattedData.win_amount,
+        win_company_phone: formattedData.contact_phone,
+      } : {
+        // 格式化失败时的兜底数据
+        title: pushedData.title,
+        source_url: pushedData.url,
+        content: pushedData.content,
+        province: pushedData.area,
+        source: pushedData.source,
+        source_platform: pushedData.source,
+        publish_date: pushedData.publish_time,
+        bid_type: dataType,
+        data_type: dataType,
+        win_company: '',
       };
       
       const { data: savedData, error: saveError } = await supabase
@@ -789,54 +828,75 @@ router.post('/push', async (req, res) => {
         .single();
       
       if (saveError) {
-        console.error('[通用推送] 中标入库失败:', saveError);
+        console.error('[数据处理] 中标入库失败:', saveError);
         return res.status(500).json({
           success: false,
           action: 'error',
           reason: '入库失败',
           details: saveError.message,
-          title,
+          title: pushedData.title,
         });
       }
       
-      console.log(`[通用推送] 中标入库成功: type=${dataType}, ID=${savedData.id}`);
+      console.log(`[数据处理] 中标入库成功: ID=${savedData.id}`);
       
-      // ========== 更新同步状态 ==========
-      await updateSyncStatus(province, savedData.id);
+      // 更新同步状态
+      await updateSyncStatus(insertData.province || '吉林省', savedData.id);
       
       return res.json({
         success: true,
         action: 'saved',
         type: dataType,
         table: 'win_bids',
+        formatted: !!formattedData,
+        formatError,
         data: {
           id: savedData.id,
           title: savedData.title,
           province: savedData.province,
           announcement_type: dataType,
+          contact_person: formattedData?.contact_person,
+          contact_phone: formattedData?.contact_phone,
         },
       });
       
     } else {
       // 存入 bids 表（招标、变更、废标等）
-      // 自动从content中提取联系信息
-      const { contactPerson, contactPhone } = extractContactInfo(content);
-      
-      const insertData = {
-        title,
-        source_url: url,
-        content,
-        province,
-        city,
-        source: source || '豆包采集',
-        source_platform: source || '豆包采集',
-        publish_date: publish_time || null,
-        bid_type: getBidType(dataType),  // 简称，如"竞争性谈判"
-        announcement_type: dataType,      // 规范化后的名称
+      const insertData = formattedData ? {
+        title: formattedData.title,
+        source_url: formattedData.source_url,
+        content: formattedData.content,
+        formatted_content: formattedData.formatted_content,
+        province: formattedData.province || pushedData.area,
+        city: formattedData.city,
+        industry: formattedData.industry,
+        source: formattedData.source_platform || pushedData.source,
+        source_platform: formattedData.source_platform || pushedData.source,
+        publish_date: formattedData.publish_date || pushedData.publish_time,
+        deadline: formattedData.deadline,
+        bid_type: getBidType(dataType),
+        announcement_type: dataType,
         data_type: dataType,
-        // 联系信息（自动提取）
-        contact_person: contactPerson,
-        contact_phone: contactPhone,
+        project_code: formattedData.project_code,
+        budget: formattedData.budget,
+        contact_person: formattedData.contact_person,
+        contact_phone: formattedData.contact_phone,
+        contact_address: formattedData.contact_address,
+        requirements: formattedData.requirements,
+      } : {
+        // 格式化失败时的兜底数据（从content提取联系信息）
+        title: pushedData.title,
+        source_url: pushedData.url,
+        content: pushedData.content,
+        province: pushedData.area,
+        source: pushedData.source,
+        source_platform: pushedData.source,
+        publish_date: pushedData.publish_time,
+        bid_type: getBidType(dataType),
+        announcement_type: dataType,
+        data_type: dataType,
+        contact_person: extractContactInfo(pushedData.content).contactPerson,
+        contact_phone: extractContactInfo(pushedData.content).contactPhone,
       };
       
       const { data: savedData, error: saveError } = await supabase
@@ -846,31 +906,37 @@ router.post('/push', async (req, res) => {
         .single();
       
       if (saveError) {
-        console.error('[通用推送] 入库失败:', saveError);
+        console.error('[数据处理] 入库失败:', saveError);
         return res.status(500).json({
           success: false,
           action: 'error',
           reason: '入库失败',
           details: saveError.message,
-          title,
+          title: pushedData.title,
         });
       }
       
-      console.log(`[通用推送] 入库成功: type=${dataType}, ID=${savedData.id}`);
+      console.log(`[数据处理] 入库成功: ID=${savedData.id}`);
       
-      // ========== 更新同步状态 ==========
-      await updateSyncStatus(province, savedData.id);
+      // 更新同步状态
+      await updateSyncStatus(insertData.province || '吉林省', savedData.id);
       
       return res.json({
         success: true,
         action: 'saved',
         type: dataType,
+        formatted: !!formattedData,
+        formatError,
         data: {
           id: savedData.id,
           title: savedData.title,
           province: savedData.province,
           city: savedData.city,
           bid_type: savedData.bid_type,
+          contact_person: savedData.contact_person,
+          contact_phone: savedData.contact_phone,
+          project_name: formattedData?.project_name,
+          budget: formattedData?.budget,
         },
       });
     }
