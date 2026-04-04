@@ -540,6 +540,11 @@ export default function HomeScreen() {
     // 规范化公告类型名称
     const displayType = item.announcement_type || item.bid_type || (isWinBid ? '中标' : '招标');
     
+    // 规范化行业名称：如果industry是代码格式（如S912），则显示bid_type
+    const displayIndustry = item.industry && !/^[A-Z][0-9]{3}$/.test(item.industry) 
+      ? item.industry 
+      : displayType;
+    
     return (
       <TouchableOpacity
         style={[
@@ -553,7 +558,7 @@ export default function HomeScreen() {
         <View style={styles.cardHeader}>
           <View style={styles.categoryTag}>
             <Text style={styles.categoryTagText} numberOfLines={1}>
-              {item.industry?.slice(0, 4) || '项目'}
+              {displayIndustry?.slice(0, 6) || '项目'}
             </Text>
           </View>
           <View style={styles.typeTagContainer}>
