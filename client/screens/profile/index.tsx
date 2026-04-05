@@ -158,12 +158,9 @@ export default function ProfileScreen() {
       {/* 状态栏 - 深色文字 */}
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* 导航栏 - 白色背景 */}
+      {/* 导航栏 - 白色背景，无标题 */}
       <View style={[styles.navBar, { paddingTop: insets.top }]}>
-        <Text style={styles.navTitle}>我的</Text>
-        <TouchableOpacity style={styles.settingButton} onPress={() => handleMenuPress('settings')}>
-          <FontAwesome6 name="gear" size={18} color="#6B7280" />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView 
@@ -335,8 +332,21 @@ export default function ProfileScreen() {
             <FontAwesome6 name="circle-info" size={18} color="#6B7280" />
           </View>
           <Text style={styles.menuText}>关于招采易</Text>
-          <Text style={{ fontSize: 13, color: '#9CA3AF', marginRight: Spacing.sm }}>v1.0.0</Text>
+          <Text style={{ fontSize: 13, color: '#9CA3AF', marginRight: Spacing.sm }}>v1.0.1</Text>
           <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+        </TouchableOpacity>
+
+        {/* 设置 */}
+        <TouchableOpacity 
+          style={[styles.menuSection, { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, marginTop: Spacing.sm }]} 
+          onPress={() => handleMenuPress('settings')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.menuIcon, { backgroundColor: 'rgba(107,114,128,0.1)' }]}>
+            <FontAwesome6 name="gear" size={18} color="#6B7280" />
+          </View>
+          <Text style={styles.menuText}>设置</Text>
+          <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
         </TouchableOpacity>
 
         {/* 退出登录 */}

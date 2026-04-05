@@ -210,7 +210,7 @@ export default function MessagesScreen() {
       <View style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={[styles.navBar, { paddingTop: insets.top }]}>
-          <Text style={styles.navTitle}>消息</Text>
+          <View style={{ width: 40 }} />
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
@@ -225,9 +225,9 @@ export default function MessagesScreen() {
       {/* 状态栏 - 深色文字 */}
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* 导航栏 - 白色背景 */}
+      {/* 导航栏 - 白色背景，无标题 */}
       <View style={[styles.navBar, { paddingTop: insets.top }]}>
-        <Text style={styles.navTitle}>消息</Text>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
