@@ -2,10 +2,11 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack, useSegments, useRootNavigationState, useRouter, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { LogBox, ActivityIndicator, View } from 'react-native';
+import { LogBox, View, StyleSheet } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ColorSchemeProvider } from '@/hooks/useColorScheme';
+import { SplashScreen } from '@/components/SplashScreen';
 
 LogBox.ignoreLogs([
   "TurboModuleRegistry.getEnforcing(...): 'RNMapsAirModule' could not be found",
@@ -43,13 +44,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [rootState?.key, isAuthenticated, isLoading, segments, router]);
 
-  // 加载中显示loading
+  // 加载中显示 SplashScreen
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color="#2563EB" />
-      </View>
-    );
+    return <SplashScreen />;
   }
 
   return <>{children}</>;
