@@ -217,8 +217,8 @@ export default function DetailScreen() {
       {/* 状态栏 */}
       <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
       
-      {/* Header - 固定在顶部 */}
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+      {/* Header - 固定在顶部，延伸到状态栏 */}
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm, minHeight: 100 + insets.top }]}>
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
@@ -408,8 +408,9 @@ export default function DetailScreen() {
           <Disclaimer mode="compact" />
         </View>
         
-        {/* 底部留白 - 必须足够大，确保免责声明完全可见（底部栏约80px + 安全区） */}
-        <View style={{ height: 200 + insets.bottom }} />
+        {/* 底部留白 - 必须足够大，确保免责声明完全可见 */}
+        {/* 底部栏高度约100px + 安全区 + 额外滚动空间 */}
+        <View style={{ height: 280 + insets.bottom }} />
       </ScrollView>
 
       {/* 底部操作栏 - 固定在底部 */}

@@ -6,11 +6,13 @@ export const createStyles = (theme: Theme) => {
     // 页面容器 - 包含 header、scrollview、bottombar
     pageContainer: {
       flex: 1,
-      backgroundColor: '#F5F5F5',
+      backgroundColor: '#2563EB', // 改为蓝色，让状态栏区域也是蓝色
     },
     container: {
       flex: 1,
-      backgroundColor: '#F5F5F5',
+      backgroundColor: '#F5F5F5', // 内容区域保持浅灰
+      borderTopLeftRadius: 0,
+      borderTopRightRadius: 0,
     },
     scrollContent: {
       paddingBottom: Spacing.xl,
@@ -308,14 +310,14 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#FFFFFF',
       flexDirection: 'row',
       paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.sm,
+      paddingTop: Spacing.sm,
       paddingBottom: Spacing.lg,
       // 添加阴影，增强层次感
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 4,
-      elevation: 8,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 10,
     },
     actionButton: {
       flex: 1,

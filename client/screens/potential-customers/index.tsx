@@ -70,15 +70,20 @@ export default function PotentialCustomersScreen() {
   // 动态筛选示例列表（当用户选择不在示例中的选项时，替换最后一个）
   const [industryExamples, setIndustryExamples] = useState<string[]>(DEFAULT_INDUSTRY_EXAMPLES);
 
+  // 记录已处理的行业，防止重复处理
+  const processedIndustryRef = React.useRef<string>('');
+
   // 监听参数变化，更新筛选状态（仅从其他页面返回时）
   useEffect(() => {
-    if (params?.industry && params.industry !== selectedIndustry) {
+    const industryParam = params?.industry;
+    // 只有当参数存在且与已处理的不同时才处理
+    if (industryParam && industryParam !== selectedIndustry && industryParam !== processedIndustryRef.current) {
+      processedIndustryRef.current = industryParam;
       // 从行业筛选页面返回
-      handleIndustryFromMore(params.industry);
+      handleIndustryFromMore(industryParam);
     }
-    // 注意：不再从 params 自动设置 customerType，让用户手动控制
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params]);
+  }, [params?.industry]);
 
   // 注意：移除 customerType 变化时的自动搜索，避免切换冲突
   // 用户需要手动点击搜索按钮
