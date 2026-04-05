@@ -1,0 +1,38 @@
+# fly.toml - Fly.io 部署配置
+app = "zcy-api"
+primary_region = "sin"  # 新加坡区域，国内访问较快
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 9000
+  force_https = true
+  auto_stop_machines = false  # 不自动停止，保持服务运行
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 9000
+
+[[services.ports]]
+  handlers = ["http"]
+  port = 80
+
+[[services.ports]]
+  handlers = ["tls", "http"]
+  port = 443
+
+[[services.tcp_checks]]
+  interval = "30s"
+  timeout = "10s"
+  grace_period = "5s"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "9000"
+
+[mounts]
+  source = "data"
+  destination = "/app/data"
