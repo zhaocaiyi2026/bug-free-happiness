@@ -3,104 +3,119 @@ import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
-    // 页面容器 - 包含 header、scrollview、bottombar
+    // 页面容器
     pageContainer: {
       flex: 1,
-      backgroundColor: '#2563EB', // 改为蓝色，让状态栏区域也是蓝色
+      backgroundColor: '#F5F5F5',
     },
     container: {
       flex: 1,
-      backgroundColor: '#F5F5F5', // 内容区域保持浅灰
-      borderTopLeftRadius: 0,
-      borderTopRightRadius: 0,
+      backgroundColor: '#F5F5F5',
     },
     scrollContent: {
       paddingBottom: Spacing.xl,
     },
-    // 紧凑型 Header
-    header: {
-      backgroundColor: '#2563EB',
-      paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.md,
-      paddingBottom: Spacing.lg,
-    },
-    headerTop: {
+    // 紧凑型导航栏 - 白色背景，深色状态栏
+    navBar: {
+      backgroundColor: '#FFFFFF',
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: Spacing.sm,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
     },
     backButton: {
-      width: 32,
-      height: 32,
-      borderRadius: BorderRadius.md,
-      backgroundColor: 'rgba(255,255,255,0.15)',
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: '#F3F4F6',
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: Spacing.sm,
     },
-    headerTitle: {
+    navTitle: {
       flex: 1,
       fontSize: 17,
-      fontWeight: '700',
-      color: '#FFFFFF',
+      fontWeight: '600',
+      color: '#1F2937',
+      marginLeft: Spacing.sm,
     },
-    headerRight: {
+    navActions: {
       flexDirection: 'row',
       gap: Spacing.sm,
     },
-    headerButton: {
-      width: 32,
-      height: 32,
-      borderRadius: BorderRadius.md,
-      backgroundColor: 'rgba(255,255,255,0.15)',
+    navButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: '#F3F4F6',
       justifyContent: 'center',
       alignItems: 'center',
     },
-    // 标题区
-    titleSection: {
-      marginTop: Spacing.xs,
+    // 标题卡片 - 蓝色渐变背景
+    titleCard: {
+      backgroundColor: '#2563EB',
+      marginHorizontal: Spacing.md,
+      marginTop: Spacing.md,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
     },
-    titleRow: {
+    titleTop: {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: Spacing.xs,
     },
-    categoryTag: {
+    categoryBadge: {
       backgroundColor: 'rgba(255,255,255,0.2)',
       paddingHorizontal: Spacing.sm,
-      paddingVertical: 2,
+      paddingVertical: 3,
       borderRadius: 4,
-      marginRight: Spacing.sm,
     },
-    categoryTagText: {
+    categoryText: {
+      fontSize: 11,
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
+    urgentBadge: {
+      backgroundColor: '#DC2626',
+      marginLeft: Spacing.sm,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 3,
+      borderRadius: 4,
+    },
+    urgentText: {
       fontSize: 11,
       color: '#FFFFFF',
       fontWeight: '600',
     },
     title: {
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: '700',
       color: '#FFFFFF',
-      lineHeight: 26,
+      lineHeight: 24,
     },
-    // 核心信息卡片 - 紧凑型
+    // 核心信息卡片
     coreInfoCard: {
       backgroundColor: '#FFFFFF',
       marginHorizontal: Spacing.md,
-      marginTop: -Spacing.md,
+      marginTop: Spacing.md,
       borderRadius: BorderRadius.lg,
       padding: Spacing.md,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 6,
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
       elevation: 2,
     },
+    // 预算行
     budgetRow: {
       flexDirection: 'row',
       alignItems: 'baseline',
       justifyContent: 'center',
       paddingVertical: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6',
+      marginBottom: Spacing.sm,
     },
     budgetLabel: {
       fontSize: 12,
@@ -108,64 +123,65 @@ export const createStyles = (theme: Theme) => {
       marginRight: Spacing.sm,
     },
     budgetValue: {
-      fontSize: 26,
+      fontSize: 24,
       fontWeight: '800',
       color: '#2563EB',
     },
     budgetUnit: {
-      fontSize: 14,
+      fontSize: 13,
       color: '#2563EB',
       fontWeight: '600',
     },
-    // 信息网格 - 紧凑型
+    // 信息网格
     infoGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      marginTop: Spacing.sm,
     },
     infoItem: {
       width: '50%',
-      paddingVertical: Spacing.sm,
-      paddingHorizontal: Spacing.xs,
-    },
-    infoItemFull: {
-      width: '100%',
-      paddingVertical: Spacing.sm,
-      paddingHorizontal: Spacing.xs,
+      paddingVertical: Spacing.xs,
     },
     infoIcon: {
-      width: 28,
-      height: 28,
+      width: 24,
+      height: 24,
       borderRadius: 6,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: Spacing.xs,
+      marginBottom: 2,
     },
     infoLabel: {
-      fontSize: 11,
+      fontSize: 10,
       color: '#9CA3AF',
       marginBottom: 1,
     },
     infoValue: {
       fontSize: 13,
-      color: '#1C1917',
+      color: '#1F2937',
       fontWeight: '500',
     },
     infoValueRed: {
-      color: '#C8102E',
+      color: '#DC2626',
     },
-    // 项目详情
+    // 内容区域卡片
     sectionCard: {
       backgroundColor: '#FFFFFF',
       marginHorizontal: Spacing.md,
-      marginTop: Spacing.sm,
+      marginTop: Spacing.md,
       borderRadius: BorderRadius.lg,
       padding: Spacing.md,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 3,
+      elevation: 1,
     },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: Spacing.sm,
+      paddingBottom: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6',
     },
     sectionIcon: {
       width: 24,
@@ -179,172 +195,137 @@ export const createStyles = (theme: Theme) => {
     sectionTitle: {
       fontSize: 14,
       fontWeight: '600',
-      color: '#1C1917',
+      color: '#1F2937',
     },
-    cachedBadge: {
-      fontSize: 10,
-      color: '#059669',
-      marginLeft: Spacing.sm,
-      backgroundColor: 'rgba(5,150,105,0.1)',
-      paddingHorizontal: Spacing.xs,
-      paddingVertical: 1,
-      borderRadius: 4,
+    // 联系人卡片
+    contactCard: {
+      backgroundColor: '#FFFFFF',
+      marginHorizontal: Spacing.md,
+      marginTop: Spacing.md,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
     },
-    contentText: {
-      fontSize: 13,
-      lineHeight: 20,
-      color: '#4B5563',
-    },
-    contentTextWrapper: {
-      maxHeight: 300,
-    },
-    // 文档格式样式
-    docSection: {
-      marginBottom: Spacing.md,
-    },
-    docSectionTitle: {
-      fontSize: 15,
-      fontWeight: '700',
-      color: '#1C1917',
-      marginTop: Spacing.sm,
-      marginBottom: Spacing.xs,
-      lineHeight: 22,
-    },
-    docParagraph: {
-      fontSize: 13,
-      lineHeight: 22,
-      color: '#4B5563',
-      marginBottom: Spacing.xs,
-    },
-    docListItem: {
-      fontSize: 13,
-      lineHeight: 22,
-      color: '#4B5563',
-      marginLeft: Spacing.sm,
-      marginBottom: Spacing.xs,
-    },
-    // 文档内容样式 - 限制最大高度，超出可滚动
-    docContent: {
-      fontSize: 13,
-      lineHeight: 20,
-      color: '#374151',
-    },
-    docContentWrapper: {
-      maxHeight: 300,
-    },
-    // 格式化加载样式
-    loadingFormatContainer: {
+    contactHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: Spacing.md,
+      marginBottom: Spacing.sm,
     },
-    loadingFormatText: {
-      fontSize: 13,
-      color: '#6B7280',
+    contactTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#1F2937',
       marginLeft: Spacing.sm,
     },
-    // 联系人信息列表
-    contactList: {
-      marginTop: Spacing.xs,
-    },
-    contactRow: {
+    contactItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: Spacing.sm,
+      paddingVertical: Spacing.xs,
     },
-    contactIconWrap: {
+    contactIcon: {
       width: 28,
       height: 28,
-      borderRadius: 6,
-      backgroundColor: '#F9FAFB',
+      borderRadius: 8,
+      backgroundColor: '#F3F4F6',
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: Spacing.sm,
     },
     contactLabel: {
-      width: 70,
       fontSize: 12,
-      color: '#9CA3AF',
+      color: '#6B7280',
+      width: 60,
     },
     contactValue: {
-      flex: 1,
       fontSize: 13,
-      color: '#1C1917',
+      color: '#1F2937',
+      flex: 1,
+    },
+    contactValueLink: {
+      color: '#2563EB',
       fontWeight: '500',
     },
-    contactPhone: {
-      color: '#2563EB',
+    // 内容文本
+    contentTextWrapper: {
+      maxHeight: 400,
     },
-    callButton: {
-      backgroundColor: '#059669',
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginLeft: Spacing.sm,
+    docContent: {
+      fontSize: 13,
+      lineHeight: 22,
+      color: '#374151',
     },
-    // 来源信息
+    docContentWrapper: {
+      maxHeight: 500,
+    },
+    // 来源行
     sourceRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
+      marginTop: Spacing.md,
       paddingTop: Spacing.sm,
-      marginTop: Spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: '#F3F4F6',
     },
     sourceLabel: {
       fontSize: 11,
       color: '#9CA3AF',
+      marginRight: Spacing.sm,
     },
     sourceValue: {
-      fontSize: 12,
+      fontSize: 11,
       color: '#6B7280',
     },
-    // 底部操作栏 - 固定在底部，需要足够的内容间距
+    // 底部操作栏
     bottomBar: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: '#FFFFFF',
       flexDirection: 'row',
-      paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.sm,
-      paddingBottom: Spacing.lg,
-      // 添加阴影，增强层次感
+      backgroundColor: '#FFFFFF',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      paddingBottom: Spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: '#E5E7EB',
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.08,
       shadowRadius: 8,
-      elevation: 10,
+      elevation: 8,
     },
-    actionButton: {
+    bottomButton: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: Spacing.sm + 2,
+      paddingVertical: Spacing.sm,
       borderRadius: BorderRadius.md,
-      marginHorizontal: Spacing.xs,
+      marginHorizontal: 4,
     },
-    primaryButton: {
+    callButton: {
       backgroundColor: '#2563EB',
     },
-    secondaryButton: {
-      backgroundColor: '#F5F5F5',
-    },
-    actionButtonText: {
+    callButtonText: {
+      color: '#FFFFFF',
       fontSize: 14,
       fontWeight: '600',
       marginLeft: Spacing.xs,
     },
-    primaryButtonText: {
-      color: '#FFFFFF',
+    collectButton: {
+      backgroundColor: '#F3F4F6',
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
     },
-    secondaryButtonText: {
+    collectButtonText: {
       color: '#374151',
+      fontSize: 14,
+      fontWeight: '600',
+      marginLeft: Spacing.xs,
     },
+    collectButtonActive: {
+      backgroundColor: '#FEF2F2',
+      borderColor: '#FECACA',
+    },
+    collectButtonTextActive: {
+      color: '#DC2626',
+    },
+    // 加载状态
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -352,9 +333,9 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#F5F5F5',
     },
     loadingText: {
+      marginTop: Spacing.sm,
       fontSize: 14,
-      color: '#9CA3AF',
-      marginTop: Spacing.md,
+      color: '#6B7280',
     },
   });
 };

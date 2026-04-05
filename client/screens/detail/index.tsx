@@ -198,7 +198,7 @@ export default function DetailScreen() {
   if (loading) {
     return (
       <View style={styles.pageContainer}>
-        <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>加载中...</Text>
@@ -214,47 +214,52 @@ export default function DetailScreen() {
 
   return (
     <View style={styles.pageContainer}>
-      {/* 状态栏 */}
-      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+      {/* 状态栏 - 深色文字，白色背景 */}
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
-      {/* Header - 固定在顶部，延伸到状态栏 */}
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm, minHeight: 100 + insets.top }]}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
+      {/* 导航栏 - 白色背景 */}
+      <View style={[styles.navBar, { paddingTop: insets.top }]}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <FontAwesome6 name="arrow-left" size={16} color="#374151" />
+        </TouchableOpacity>
+        <Text style={styles.navTitle}>招标详情</Text>
+        <View style={styles.navActions}>
+          <TouchableOpacity 
+            style={styles.navButton} 
+            onPress={handleToggleFavorite}
+          >
+            <FontAwesome6 
+              name="heart" 
+              size={16} 
+              color={isFavorite ? '#DC2626' : '#9CA3AF'} 
+            />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>招标详情</Text>
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.headerButton} onPress={handleToggleFavorite}>
-              <FontAwesome6 
-                name={isFavorite ? 'heart' : 'heart'} 
-                size={16} 
-                color={isFavorite ? '#C8102E' : '#FFFFFF'} 
-              />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton}>
-              <FontAwesome6 name="share-nodes" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* 标题区 */}
-        <View style={styles.titleSection}>
-          <View style={styles.titleRow}>
-            <View style={styles.categoryTag}>
-              <Text style={styles.categoryTagText}>{bid.industry?.slice(0, 4) || '项目'}</Text>
-            </View>
-          </View>
-          <Text style={styles.title}>{bid.title}</Text>
+          <TouchableOpacity style={styles.navButton}>
+            <FontAwesome6 name="share-nodes" size={16} color="#9CA3AF" />
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* 可滚动内容区域 */}
       <ScrollView 
         style={styles.container} 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
       >
+        {/* 标题卡片 - 蓝色背景 */}
+        <View style={styles.titleCard}>
+          <View style={styles.titleTop}>
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{bid.industry?.slice(0, 4) || '项目'}</Text>
+            </View>
+            {bid.is_urgent && (
+              <View style={styles.urgentBadge}>
+                <Text style={styles.urgentText}>紧急</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.title}>{bid.title}</Text>
+        </View>
 
         {/* 核心信息卡片 */}
         <View style={styles.coreInfoCard}>
@@ -270,7 +275,7 @@ export default function DetailScreen() {
             {/* 地点 */}
             <View style={styles.infoItem}>
               <View style={[styles.infoIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
-                <FontAwesome6 name="location-dot" size={12} color="#2563EB" />
+                <FontAwesome6 name="location-dot" size={11} color="#2563EB" />
               </View>
               <Text style={styles.infoLabel}>项目地点</Text>
               <Text style={styles.infoValue}>{bid.province} {bid.city}</Text>
@@ -279,7 +284,7 @@ export default function DetailScreen() {
             {/* 招标方式 */}
             <View style={styles.infoItem}>
               <View style={[styles.infoIcon, { backgroundColor: 'rgba(5,150,105,0.1)' }]}>
-                <FontAwesome6 name="file-signature" size={12} color="#059669" />
+                <FontAwesome6 name="file-signature" size={11} color="#059669" />
               </View>
               <Text style={styles.infoLabel}>招标方式</Text>
               <Text style={styles.infoValue}>{bid.bid_type || '公开招标'}</Text>
@@ -288,7 +293,7 @@ export default function DetailScreen() {
             {/* 发布时间 */}
             <View style={styles.infoItem}>
               <View style={[styles.infoIcon, { backgroundColor: 'rgba(107,114,128,0.1)' }]}>
-                <FontAwesome6 name="calendar" size={12} color="#6B7280" />
+                <FontAwesome6 name="calendar" size={11} color="#6B7280" />
               </View>
               <Text style={styles.infoLabel}>发布时间</Text>
               <Text style={styles.infoValue}>{formatDate(bid.publish_date)}</Text>
@@ -296,16 +301,56 @@ export default function DetailScreen() {
 
             {/* 截止时间 */}
             <View style={styles.infoItem}>
-              <View style={[styles.infoIcon, { backgroundColor: 'rgba(200,16,46,0.1)' }]}>
-                <FontAwesome6 name="clock" size={12} color="#C8102E" />
+              <View style={[styles.infoIcon, { backgroundColor: 'rgba(220,38,38,0.1)' }]}>
+                <FontAwesome6 name="clock" size={11} color="#DC2626" />
               </View>
               <Text style={styles.infoLabel}>截止时间</Text>
-              <Text style={[styles.infoValue, styles.infoValueRed]}>
+              <Text style={[styles.infoValue, daysRemaining !== null && daysRemaining <= 3 && styles.infoValueRed]}>
                 {formatDate(bid.deadline)}
                 {daysRemaining !== null && ` (剩${daysRemaining}天)`}
               </Text>
             </View>
           </View>
+        </View>
+
+        {/* 联系人信息 */}
+        <View style={styles.contactCard}>
+          <View style={styles.contactHeader}>
+            <View style={[styles.sectionIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
+              <FontAwesome6 name="address-book" size={11} color="#2563EB" />
+            </View>
+            <Text style={styles.contactTitle}>联系方式</Text>
+          </View>
+          
+          <View style={styles.contactItem}>
+            <View style={styles.contactIcon}>
+              <FontAwesome6 name="user" size={12} color="#6B7280" />
+            </View>
+            <Text style={styles.contactLabel}>联系人</Text>
+            <Text style={styles.contactValue}>{bid.contact_person || '暂无'}</Text>
+          </View>
+          
+          <View style={styles.contactItem}>
+            <View style={styles.contactIcon}>
+              <FontAwesome6 name="phone" size={12} color="#2563EB" />
+            </View>
+            <Text style={styles.contactLabel}>电话</Text>
+            <TouchableOpacity onPress={() => handleCall(bid.contact_phone || '')}>
+              <Text style={[styles.contactValue, styles.contactValueLink]}>
+                {bid.contact_phone || '暂无'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {bid.contact_address && (
+            <View style={styles.contactItem}>
+              <View style={styles.contactIcon}>
+                <FontAwesome6 name="map-marker-alt" size={12} color="#6B7280" />
+              </View>
+              <Text style={styles.contactLabel}>地址</Text>
+              <Text style={styles.contactValue}>{bid.contact_address}</Text>
+            </View>
+          )}
         </View>
 
         {/* 格式化后的内容 - 优先显示后台格式化内容 */}
@@ -347,90 +392,37 @@ export default function DetailScreen() {
               nestedScrollEnabled
               showsVerticalScrollIndicator
             >
-              <Text style={styles.contentText}>
-                {bid.content || '暂无详细信息，请联系招标方获取更多资料。'}
-              </Text>
+              <Text style={styles.docContent}>{bid.content}</Text>
             </ScrollView>
-            
-            {/* 来源 */}
-            <View style={styles.sourceRow}>
-              <Text style={styles.sourceLabel}>信息来源</Text>
-              <Text style={styles.sourceValue}>{bid.source || '官方渠道'}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* 联系人信息卡片 */}
-        {(bid.contact_person || bid.contact_phone) && (
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
-                <FontAwesome6 name="address-card" size={11} color="#2563EB" />
-              </View>
-              <Text style={styles.sectionTitle}>联系方式</Text>
-            </View>
-            
-            <View style={styles.contactList}>
-              {bid.contact_person && (
-                <View style={styles.contactRow}>
-                  <View style={styles.contactIconWrap}>
-                    <FontAwesome6 name="user" size={12} color="#6B7280" />
-                  </View>
-                  <Text style={styles.contactLabel}>联系人</Text>
-                  <Text style={styles.contactValue}>{bid.contact_person}</Text>
-                </View>
-              )}
-
-              {bid.contact_phone && (
-                <TouchableOpacity 
-                  style={styles.contactRow}
-                  onPress={() => handleCall(bid.contact_phone || '')}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.contactIconWrap}>
-                    <FontAwesome6 name="phone" size={12} color="#059669" />
-                  </View>
-                  <Text style={styles.contactLabel}>联系电话</Text>
-                  <Text style={[styles.contactValue, styles.contactPhone]}>
-                    {bid.contact_phone}
-                  </Text>
-                  <View style={styles.callButton}>
-                    <FontAwesome6 name="phone-volume" size={12} color="#FFFFFF" />
-                  </View>
-                </TouchableOpacity>
-              )}
-            </View>
           </View>
         )}
 
         {/* 免责声明 */}
-        <View style={[styles.sectionCard, { marginBottom: Spacing.lg }]}>
-          <Disclaimer mode="compact" />
-        </View>
-        
-        {/* 底部留白 - 必须足够大，确保免责声明完全可见 */}
-        {/* 底部栏高度约100px + 安全区 + 额外滚动空间 */}
-        <View style={{ height: 280 + insets.bottom }} />
+        <Disclaimer />
       </ScrollView>
 
-      {/* 底部操作栏 - 固定在底部 */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.md }]}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.secondaryButton]}
+      {/* 底部操作栏 */}
+      <View style={[styles.bottomBar, { paddingBottom: Spacing.md + insets.bottom }]}>
+        <TouchableOpacity 
+          style={[styles.bottomButton, styles.collectButton, isFavorite && styles.collectButtonActive]}
           onPress={handleToggleFavorite}
         >
-          <FontAwesome6
-            name={isFavorite ? 'heart' : 'heart'}
-            size={16}
-            color={isFavorite ? '#C8102E' : '#374151'}
+          <FontAwesome6 
+            name="heart" 
+            size={16} 
+            color={isFavorite ? '#DC2626' : '#6B7280'} 
           />
-          <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>
+          <Text style={[styles.collectButtonText, isFavorite && styles.collectButtonTextActive]}>
             {isFavorite ? '已收藏' : '收藏'}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionButton, styles.primaryButton]}>
-          <FontAwesome6 name="bell" size={16} color="#FFFFFF" />
-          <Text style={[styles.actionButtonText, styles.primaryButtonText]}>设置提醒</Text>
+        
+        <TouchableOpacity 
+          style={[styles.bottomButton, styles.callButton]}
+          onPress={() => handleCall(bid.contact_phone || '')}
+        >
+          <FontAwesome6 name="phone" size={16} color="#FFFFFF" />
+          <Text style={styles.callButtonText}>立即联系</Text>
         </TouchableOpacity>
       </View>
     </View>
