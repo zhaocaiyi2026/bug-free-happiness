@@ -22,6 +22,21 @@ import type { Message } from 'coze-coding-dev-sdk';
 // ==================== 类型定义 ====================
 
 /**
+ * LLM响应解析结果
+ */
+interface ParsedCleanResult {
+  cleaned_content?: string;
+  project_number?: string;
+  project_name?: string;
+  budget?: number | null;
+  bid_type?: string;
+  publish_date?: string;
+  deadline?: string;
+  contact_person?: string;
+  contact_phone?: string;
+}
+
+/**
  * 清理结果类型
  */
 export interface CleanedBidContent {
@@ -211,15 +226,15 @@ export async function cleanBidContentWithLLM(
       
       return {
         title: title,
-        content: result.cleaned_content || rawContent,
-        projectNumber: result.project_number || '',
-        projectName: result.project_name || title,
-        budget: result.budget || null,
-        bidType: result.bid_type || '公开招标',
-        publishDate: result.publish_date || '',
-        deadline: result.deadline || '',
-        contactPerson: result.contact_person || '',
-        contactPhone: result.contact_phone || '',
+        content: result.cleaned_content ?? rawContent,
+        projectNumber: result.project_number ?? '',
+        projectName: result.project_name ?? title,
+        budget: result.budget ?? null,
+        bidType: result.bid_type ?? '公开招标',
+        publishDate: result.publish_date ?? '',
+        deadline: result.deadline ?? '',
+        contactPerson: result.contact_person ?? '',
+        contactPhone: result.contact_phone ?? '',
       };
     }
     
@@ -299,7 +314,7 @@ export async function cleanBidContentsWithLLM(
 /**
  * 解析JSON响应
  */
-function parseJsonResponse(response: string): Record<string, unknown> | null {
+function parseJsonResponse(response: string): ParsedCleanResult | null {
   try {
     return JSON.parse(response);
   } catch {

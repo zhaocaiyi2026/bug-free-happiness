@@ -1322,7 +1322,9 @@ router.post('/fix-contact-info', async (req, res) => {
     // 逐条处理
     for (const bid of bidsWithoutContact) {
       try {
-        const { contactPerson, contactPhone } = extractContactInfo(bid.content || '');
+        const { contactPerson: cp, contactPhone: cph } = extractContactInfo(bid.content || '');
+        const contactPerson = cp ?? undefined;
+        const contactPhone = cph ?? undefined;
         
         // 如果没有提取到任何联系信息，跳过
         if (!contactPerson && !contactPhone) {

@@ -28,7 +28,7 @@ const status: ScheduleStatus = {
 };
 
 // 定时任务实例
-let scheduledTask: cron.ScheduledTask | null = null;
+let scheduledTask: ReturnType<typeof cron.schedule> | null = null;
 
 /**
  * 执行搜索任务

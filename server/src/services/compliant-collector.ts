@@ -139,7 +139,7 @@ export class CompliantCollector {
           // 查找所有公告链接
           const links = document.querySelectorAll('a[href*="site/detail"]');
           
-          links.forEach(link => {
+          links.forEach((link) => {
             const href = link.getAttribute('href') || '';
             const text = link.textContent?.trim() || '';
             
@@ -219,18 +219,23 @@ export class CompliantCollector {
         await randomDelay();
 
         // 提取详情内容
+        // @ts-expect-error - 在浏览器上下文中执行
         const detail = await this.page.evaluate(() => {
           // 提取标题
+          // @ts-expect-error - 浏览器API
           const titleEl = document.querySelector('h1, .title, .article-title');
           const title = titleEl?.textContent?.trim() || '';
           
           // 提取正文
+          // @ts-expect-error - 浏览器API
           const contentEl = document.querySelector('.article-content, .content, .detail-content, article');
           let content = contentEl?.textContent?.trim() || '';
           
           // 如果没找到，尝试获取整个主体内容
           if (!content) {
+            // @ts-expect-error - 浏览器API
             const bodyEl = document.querySelector('body');
+            // @ts-expect-error - 浏览器API
             content = bodyEl?.innerText || '';
           }
           

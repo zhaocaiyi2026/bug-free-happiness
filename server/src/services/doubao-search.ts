@@ -142,7 +142,7 @@ export async function doubaoSearchJilinBids(
       .replace('{types}', types.join('、'))
       .replace('{count}', String(countPerType));
     
-    const messages = [
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
       {
         role: 'system',
         content: '你是一个政府采购信息搜索专家，擅长搜索和整理招标公告信息。请使用你的联网搜索能力，访问吉林省政府采购网获取真实数据，并直接返回JSON格式的数据。'

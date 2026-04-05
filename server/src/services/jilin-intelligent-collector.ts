@@ -335,7 +335,7 @@ ${truncatedContent}
 
 只返回JSON，不要有其他内容。`;
 
-    const messages = [
+    const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
       { role: 'system', content: '你是一个政府采购信息提取专家，擅长从招标公告中提取结构化信息。' },
       { role: 'user', content: prompt },
     ];

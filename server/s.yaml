@@ -11,7 +11,7 @@ resources:
     props:
       region: ${vars.region}
       functionName: zcy-api
-      description: 招标信息聚合API服务（Docker容器）
+      description: 招标信息聚合API服务（Docker容器+Playwright）
       runtime: custom-container
       code: ./
       customContainerConfig:
@@ -19,13 +19,16 @@ resources:
         command: '["node", "dist/index.js"]'
         args: '[]'
         port: 9000
-      memorySize: 1024
-      timeout: 60
+      memorySize: 2048
+      timeout: 120
       instanceConcurrency: 10
       environmentVariables:
         NODE_ENV: production
         COZE_SUPABASE_URL: ${COZE_SUPABASE_URL}
         COZE_SUPABASE_ANON_KEY: ${COZE_SUPABASE_ANON_KEY}
+        ALIYUN_ACCESS_KEY_ID: ${ALIYUN_ACCESS_KEY_ID}
+        ALIYUN_ACCESS_KEY_SECRET: ${ALIYUN_ACCESS_KEY_SECRET}
+        APISPACE_API_KEY: ${APISPACE_API_KEY}
       triggers:
         - triggerName: httpTrigger
           triggerType: http
