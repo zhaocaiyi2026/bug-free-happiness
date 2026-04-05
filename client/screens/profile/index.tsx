@@ -36,6 +36,7 @@ export default function ProfileScreen() {
   const [historyCount, setHistoryCount] = useState(0);
   const [subscribeCount, setSubscribeCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [hasSignedIn, setHasSignedIn] = useState(false);
 
   const hasNewFavorite = favoriteCount > lastViewedFavoriteCount;
   const newFavoriteCount = Math.max(0, favoriteCount - lastViewedFavoriteCount);
@@ -180,6 +181,26 @@ export default function ProfileScreen() {
 
   const userInitial = user?.nickname?.charAt(0) || user?.phone?.slice(-2) || 'U';
   const vipLevel = user?.vip_level ?? 0;
+  const userPoints = user?.points || 0;
+  
+  // 计算等级进度（假设每升一级需要100积分）
+  const currentLevelPoints = vipLevel * 100;
+  const nextLevelPoints = (vipLevel + 1) * 100;
+  const levelProgress = Math.min(100, Math.max(0, ((userPoints - currentLevelPoints) / (nextLevelPoints - currentLevelPoints)) * 100));
+
+  const handleSignIn = () => {
+    if (hasSignedIn) {
+      Alert.alert('签到', '今日已签到，明天再来吧！');
+      return;
+    }
+    Alert.alert('签到成功', '恭喜获得 +10 积分！', [
+      { text: '好的', onPress: () => setHasSignedIn(true) }
+    ]);
+  };
+
+  const handleEditProfile = () => {
+    router.push('/profile-edit');
+  };
 
   return (
     <Screen backgroundColor="#2563EB" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
@@ -191,25 +212,85 @@ export default function ProfileScreen() {
         {/* 用户卡片 - 蓝色背景延伸到顶部 */}
         <View style={[styles.userCard, { paddingTop: Spacing.md + (insets.top > 0 ? insets.top : 0) }]}>
           <View style={styles.userMain}>
-            <View style={styles.avatar}>
+            <TouchableOpacity style={styles.avatar} onPress={handleEditProfile}>
               <Text style={styles.avatarText}>{userInitial}</Text>
-            </View>
+            </TouchableOpacity>
             <View style={styles.userInfo}>
-              <Text style={styles.nickname}>{user?.nickname || '招标用户'}</Text>
-              <Text style={styles.phone}>{user?.phone?.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') || '未登录'}</Text>
-              {/* 始终显示会员等级标签 */}
-              <View style={[styles.vipBadge, vipLevel === 0 && styles.normalBadge]}>
-                <FontAwesome6 
-                  name={vipLevel > 0 ? "crown" : "user"} 
-                  size={12} 
-                  color={vipLevel > 0 ? "#FFD700" : "#FFFFFF"} 
-                  solid 
-                />
-                <Text style={[styles.vipBadgeText, vipLevel === 0 && styles.normalBadgeText]}>
-                  {VIP_LEVELS[vipLevel]}
-                </Text>
+              <View style={styles.userRow}>
+                <Text style={styles.nickname}>{user?.nickname || '招标用户'}</Text>
+                <TouchableOpacity style={styles.editBtn} onPress={handleEditProfile}>
+                  <FontAwesome6 name="pen" size={12} color="rgba(255,255,255,0.8)" />
+                </TouchableOpacity>
               </View>
+              <Text style={styles.phone}>{user?.phone?.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') || '未登录'}</Text>
+              
+              {/* 会员等级 + 积分 */}
+              <View style={styles.userTags}>
+                <View style={[styles.vipBadge, vipLevel === 0 && styles.normalBadge]}>
+                  <FontAwesome6 
+                    name={vipLevel > 0 ? "crown" : "user"} 
+                    size={11} 
+                    color={vipLevel > 0 ? "#FFD700" : "#FFFFFF"} 
+                    solid 
+                  />
+                  <Text style={[styles.vipBadgeText, vipLevel === 0 && styles.normalBadgeText]}>
+                    {VIP_LEVELS[vipLevel]}
+                  </Text>
+                </View>
+                <View style={styles.pointsBadge}>
+                  <FontAwesome6 name="coins" size={11} color="#FFD700" />
+                  <Text style={styles.pointsText}>{userPoints}</Text>
+                </View>
+              </View>
+              
+              {/* 等级进度条 */}
+              {vipLevel < 4 && (
+                <View style={styles.progressRow}>
+                  <View style={styles.progressBar}>
+                    <View style={[styles.progressFill, { width: `${levelProgress}%` }]} />
+                  </View>
+                  <Text style={styles.progressText}>还需{nextLevelPoints - userPoints}积分升级</Text>
+                </View>
+              )}
             </View>
+            
+            {/* 签到入口 */}
+            <TouchableOpacity 
+              style={[styles.signInBtn, hasSignedIn && styles.signedInBtn]} 
+              onPress={handleSignIn}
+            >
+              <FontAwesome6 
+                name={hasSignedIn ? "check-circle" : "calendar-check"} 
+                size={18} 
+                color={hasSignedIn ? "rgba(255,255,255,0.5)" : "#FFD700"} 
+              />
+              <Text style={[styles.signInText, hasSignedIn && styles.signedInText]}>
+                {hasSignedIn ? '已签到' : '签到'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* 快捷入口行 */}
+          <View style={styles.quickActions}>
+            <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/favorites')}>
+              <FontAwesome6 name="heart" size={16} color="#FFFFFF" />
+              <Text style={styles.quickItemText}>收藏</Text>
+            </TouchableOpacity>
+            <View style={styles.quickDivider} />
+            <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/history')}>
+              <FontAwesome6 name="clock-rotate-left" size={16} color="#FFFFFF" />
+              <Text style={styles.quickItemText}>历史</Text>
+            </TouchableOpacity>
+            <View style={styles.quickDivider} />
+            <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/subscribe')}>
+              <FontAwesome6 name="bookmark" size={16} color="#FFFFFF" />
+              <Text style={styles.quickItemText}>订阅</Text>
+            </TouchableOpacity>
+            <View style={styles.quickDivider} />
+            <TouchableOpacity style={styles.quickItem} onPress={() => Alert.alert('邀请好友', '分享给好友，双方各得50积分！')}>
+              <FontAwesome6 name="gift" size={16} color="#FFFFFF" />
+              <Text style={styles.quickItemText}>邀请</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

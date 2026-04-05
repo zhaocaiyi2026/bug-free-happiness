@@ -38,10 +38,11 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#2563EB',
       paddingHorizontal: Spacing.lg,
       padding: Spacing.lg,
+      paddingBottom: 0,
     },
     userMain: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
     },
     avatar: {
       width: 60,
@@ -57,18 +58,32 @@ export const createStyles = (theme: Theme) => {
       color: '#2563EB',
     },
     userInfo: {
-      marginLeft: Spacing.lg,
+      marginLeft: Spacing.md,
       flex: 1,
+    },
+    userRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     nickname: {
       fontSize: 18,
       fontWeight: '700',
       color: '#FFFFFF',
-      marginBottom: Spacing.xs,
+    },
+    editBtn: {
+      marginLeft: Spacing.sm,
+      padding: 4,
     },
     phone: {
       fontSize: 13,
       color: 'rgba(255, 255, 255, 0.8)',
+      marginTop: 2,
+    },
+    userTags: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: Spacing.xs,
+      gap: 8,
     },
     vipBadge: {
       flexDirection: 'row',
@@ -77,8 +92,6 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: 8,
       paddingVertical: 2,
       borderRadius: BorderRadius.full,
-      marginTop: Spacing.xs,
-      alignSelf: 'flex-start',
     },
     vipBadgeText: {
       fontSize: 11,
@@ -92,6 +105,85 @@ export const createStyles = (theme: Theme) => {
     },
     normalBadgeText: {
       color: '#FFFFFF',
+    },
+    pointsBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(255, 215, 0, 0.15)',
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: BorderRadius.full,
+    },
+    pointsText: {
+      fontSize: 11,
+      color: '#FFD700',
+      fontWeight: '600',
+      marginLeft: 4,
+    },
+    progressRow: {
+      marginTop: Spacing.xs,
+    },
+    progressBar: {
+      height: 4,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: '#FFD700',
+      borderRadius: 2,
+    },
+    progressText: {
+      fontSize: 10,
+      color: 'rgba(255, 255, 255, 0.6)',
+      marginTop: 4,
+    },
+    // 签到按钮
+    signInBtn: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(255, 215, 0, 0.15)',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: BorderRadius.md,
+    },
+    signedInBtn: {
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    },
+    signInText: {
+      fontSize: 11,
+      color: '#FFD700',
+      fontWeight: '600',
+      marginTop: 2,
+    },
+    signedInText: {
+      color: 'rgba(255, 255, 255, 0.5)',
+    },
+    // 快捷入口
+    quickActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      marginTop: Spacing.md,
+      paddingVertical: Spacing.md,
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      borderRadius: BorderRadius.lg,
+      marginBottom: Spacing.md,
+    },
+    quickItem: {
+      alignItems: 'center',
+      flex: 1,
+    },
+    quickItemText: {
+      fontSize: 12,
+      color: '#FFFFFF',
+      marginTop: 4,
+    },
+    quickDivider: {
+      width: 1,
+      height: 24,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     // 统计卡片
     statsCard: {
