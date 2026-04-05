@@ -3,12 +3,17 @@ import { Spacing, BorderRadius, Theme } from '@/constants/theme';
 
 export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
+    // 页面容器 - 包含 header、scrollview、bottombar
+    pageContainer: {
+      flex: 1,
+      backgroundColor: '#F5F5F5',
+    },
     container: {
       flex: 1,
       backgroundColor: '#F5F5F5',
     },
     scrollContent: {
-      paddingBottom: Spacing['2xl'],  // 基础底部间距
+      paddingBottom: Spacing.xl,
     },
     // 紧凑型 Header
     header: {

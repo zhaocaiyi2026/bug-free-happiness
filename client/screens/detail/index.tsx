@@ -8,11 +8,11 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
-import { Screen } from '@/components/Screen';
 import { Disclaimer } from '@/components/Disclaimer';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -197,12 +197,13 @@ export default function DetailScreen() {
 
   if (loading) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+      <View style={styles.pageContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>加载中...</Text>
         </View>
-      </Screen>
+      </View>
     );
   }
 
@@ -212,43 +213,48 @@ export default function DetailScreen() {
   const daysRemaining = getDaysRemaining(bid.deadline);
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right']}>
-      <ScrollView 
-        style={styles.container} 
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + insets.bottom }]} 
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
+    <View style={styles.pageContainer}>
+      {/* 状态栏 */}
+      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+      
+      {/* Header - 固定在顶部 */}
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>招标详情</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity style={styles.headerButton} onPress={handleToggleFavorite}>
+              <FontAwesome6 
+                name={isFavorite ? 'heart' : 'heart'} 
+                size={16} 
+                color={isFavorite ? '#C8102E' : '#FFFFFF'} 
+              />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>招标详情</Text>
-            <View style={styles.headerRight}>
-              <TouchableOpacity style={styles.headerButton} onPress={handleToggleFavorite}>
-                <FontAwesome6 
-                  name={isFavorite ? 'heart' : 'heart'} 
-                  size={16} 
-                  color={isFavorite ? '#C8102E' : '#FFFFFF'} 
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.headerButton}>
-                <FontAwesome6 name="share-nodes" size={16} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* 标题区 */}
-          <View style={styles.titleSection}>
-            <View style={styles.titleRow}>
-              <View style={styles.categoryTag}>
-                <Text style={styles.categoryTagText}>{bid.industry?.slice(0, 4) || '项目'}</Text>
-              </View>
-            </View>
-            <Text style={styles.title}>{bid.title}</Text>
+            <TouchableOpacity style={styles.headerButton}>
+              <FontAwesome6 name="share-nodes" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
         </View>
+
+        {/* 标题区 */}
+        <View style={styles.titleSection}>
+          <View style={styles.titleRow}>
+            <View style={styles.categoryTag}>
+              <Text style={styles.categoryTagText}>{bid.industry?.slice(0, 4) || '项目'}</Text>
+            </View>
+          </View>
+          <Text style={styles.title}>{bid.title}</Text>
+        </View>
+      </View>
+
+      {/* 可滚动内容区域 */}
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
 
         {/* 核心信息卡片 */}
         <View style={styles.coreInfoCard}>
@@ -385,13 +391,16 @@ export default function DetailScreen() {
           </View>
         )}
 
-        {/* 免责声明 */}
-        <View style={[styles.sectionCard, { marginBottom: Spacing.sm }]}>
+        {/* 免责声明 - 给足够的底部空间 */}
+        <View style={[styles.sectionCard, { marginBottom: Spacing.lg }]}>
           <Disclaimer mode="compact" />
         </View>
+        
+        {/* 底部留白 - 确保内容不被底部栏遮挡 */}
+        <View style={{ height: 80 + insets.bottom }} />
       </ScrollView>
 
-      {/* 底部操作栏 */}
+      {/* 底部操作栏 - 固定在底部 */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.sm }]}>
         <TouchableOpacity
           style={[styles.actionButton, styles.secondaryButton]}
@@ -411,6 +420,6 @@ export default function DetailScreen() {
           <Text style={[styles.actionButtonText, styles.primaryButtonText]}>设置提醒</Text>
         </TouchableOpacity>
       </View>
-    </Screen>
+    </View>
   );
 }
