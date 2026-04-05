@@ -169,12 +169,14 @@ export default function CompanyDetailScreen() {
               {item.province}{item.city ? `·${item.city}` : ''}
             </Text>
           </View>
-          <View style={styles.infoItem}>
-            <FontAwesome6 name="calendar" size={12} color="#6B7280" />
-            <Text style={styles.infoText}>
-              {isWin ? '中标' : '截止'}：{formatDate(item.deadline)}
-            </Text>
-          </View>
+          {item.deadline && (
+            <View style={styles.infoItem}>
+              <FontAwesome6 name="calendar" size={12} color="#6B7280" />
+              <Text style={styles.infoText}>
+                {isWin ? '中标' : '截止'}：{formatDate(item.deadline)}
+              </Text>
+            </View>
+          )}
           <View style={styles.infoItem}>
             <FontAwesome6 name="clock" size={12} color="#6B7280" />
             <Text style={styles.infoText}>发布：{formatDate(item.publish_date)}</Text>

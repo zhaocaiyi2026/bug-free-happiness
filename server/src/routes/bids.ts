@@ -217,10 +217,12 @@ router.get('/', async (req, res) => {
     }
 
     // 核心过滤条件：
-    // 必须包含完整联系信息（联系电话、联系人、项目详情）
+    // 必须包含完整信息：项目名称、联系电话、联系人、项目详情
     if (isSearch === 'true') {
-      // 搜索模式：必须有完整的联系信息
+      // 搜索模式：必须有完整信息
       query = query
+        .not('title', 'is', null)
+        .neq('title', '')
         .not('contact_phone', 'is', null)
         .neq('contact_phone', '')
         .not('contact_person', 'is', null)
@@ -228,14 +230,15 @@ router.get('/', async (req, res) => {
         .not('content', 'is', null)
         .neq('content', '');
       
-      // 过滤过期招标（搜索时也可以选择是否包含）
+      // 过期过滤（搜索时也可选择包含）
       if (includeExpired !== 'true') {
-        // deadline IS NULL OR deadline > now（允许没有截止日期的招标）
         query = query.or(`deadline.is.null,deadline.gt.${now.toISOString()}`);
       }
     } else {
-      // 主页模式：必须包含完整联系信息
+      // 主页模式：必须有完整信息
       query = query
+        .not('title', 'is', null)
+        .neq('title', '')
         .not('contact_phone', 'is', null)
         .neq('contact_phone', '')
         .not('contact_person', 'is', null)
@@ -243,8 +246,7 @@ router.get('/', async (req, res) => {
         .not('content', 'is', null)
         .neq('content', '');
 
-      // 主页不显示过期招标（但允许没有截止日期的招标）
-      // deadline IS NULL OR deadline > now
+      // 主页不显示过期招标
       query = query.or(`deadline.is.null,deadline.gt.${now.toISOString()}`);
     }
 

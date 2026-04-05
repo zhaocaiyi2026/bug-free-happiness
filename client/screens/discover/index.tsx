@@ -231,7 +231,7 @@ export default function DiscoverScreen() {
         </Text>
         <Text style={styles.bidBudget}>{formatBudget(bid.budget)}元</Text>
         <Text style={styles.bidMeta} numberOfLines={1}>{bid.province} · {bid.city}</Text>
-        <Text style={styles.bidDeadline}>截止 {formatDeadline(bid.deadline)}</Text>
+        {bid.deadline && <Text style={styles.bidDeadline}>截止 {formatDeadline(bid.deadline)}</Text>}
       </View>
     </TouchableOpacity>
   ), [styles]);

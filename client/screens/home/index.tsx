@@ -579,7 +579,7 @@ export default function HomeScreen() {
           </Text>
         )}
         <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
-        {!isWinBid && <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>}
+        {!isWinBid && item.deadline && <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>}
         {isWinBid && item.publish_date && <Text style={styles.bidPublishDate}>发布 {formatDeadline(item.publish_date)}</Text>}
       </TouchableOpacity>
     );

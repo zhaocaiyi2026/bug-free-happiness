@@ -158,7 +158,7 @@ export default function FavoritesScreen() {
       <Text style={styles.bidBudget}>{formatBudget(item.bids.budget)}元</Text>
       <View style={styles.bidFooter}>
         <Text style={styles.bidMeta} numberOfLines={1}>{item.bids.province} · {item.bids.city}</Text>
-        <Text style={styles.bidDeadline}>截止 {formatDeadline(item.bids.deadline)}</Text>
+        {item.bids.deadline && <Text style={styles.bidDeadline}>截止 {formatDeadline(item.bids.deadline)}</Text>}
       </View>
     </TouchableOpacity>
   ), [styles, handleRemoveFavorite]);

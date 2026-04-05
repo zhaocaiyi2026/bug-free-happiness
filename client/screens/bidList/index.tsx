@@ -265,7 +265,7 @@ export default function BidListScreen() {
       <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
       {listType === 'today' ? (
         <Text style={styles.bidDeadline}>{formatPublishDate(item.publish_date)}</Text>
-      ) : listType === 'urgent' ? (
+      ) : listType === 'urgent' && item.deadline ? (
         <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>
       ) : (
         <Text style={styles.bidDeadline}>发布 {formatPublishDate(item.publish_date)}</Text>
