@@ -5,274 +5,264 @@ export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F5F5F5',
+      backgroundColor: '#FAFAFA',
     },
-    // Header - 品牌增强型（蓝色主题，确保状态栏清晰可见）
+    // ========== 新设计：白色极简导航 ==========
     header: {
-      backgroundColor: '#2563EB',
+      backgroundColor: '#FFFFFF',
       paddingHorizontal: Spacing.lg,
       paddingTop: Spacing.md,
-      paddingBottom: Spacing.sm,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 0,
+      // 柔和阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.04,
+      shadowRadius: 8,
+      elevation: 2,
     },
     headerTop: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    appTitleWrapper: {
+    brandSection: {
       flexDirection: 'row',
       alignItems: 'center',
     },
-    appLogo: {
-      width: 36,
-      height: 36,
-      borderRadius: BorderRadius.lg,
+    brandIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
       backgroundColor: '#2563EB',
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: Spacing.sm,
+      // 图标内部阴影效果
+      shadowColor: '#2563EB',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
     },
-    appTitleContainer: {
-      flexDirection: 'row',
-      alignItems: 'baseline',
+    brandTextContainer: {
+      flexDirection: 'column',
     },
-    appTitle: {
-      fontSize: 28,
+    brandTitle: {
+      fontSize: 22,
       fontWeight: '800',
-      color: '#FFFFFF',
-      letterSpacing: 1,
+      color: '#1F2937',
+      letterSpacing: 0.5,
     },
-    appTitleAccent: {
-      color: '#FFFFFF',
+    brandSubtitle: {
+      fontSize: 11,
+      color: '#9CA3AF',
+      fontWeight: '500',
+      marginTop: 1,
     },
-    iconButton: {
-      width: 40,
-      height: 40,
-      borderRadius: BorderRadius.md,
-      backgroundColor: 'rgba(255,255,255,0.15)',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    searchContainer: {
+    // 搜索按钮
+    searchButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F5F5F5',
-      borderRadius: BorderRadius.md,
+      backgroundColor: '#F3F4F6',
+      borderRadius: BorderRadius.full,
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm + 2,
-      marginTop: Spacing.md,
+      paddingVertical: Spacing.sm,
+      minWidth: 120,
     },
     searchPlaceholder: {
       fontSize: 13,
       color: '#9CA3AF',
       marginLeft: Spacing.sm,
     },
-    // 地址选择
-    locationSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: '#FFFFFF',
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.sm + 2,
-    },
-    locationSelector: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    locationText: {
-      fontSize: 14,
-      color: '#1C1917',
-      fontWeight: '500',
-      marginLeft: Spacing.xs,
-      marginRight: Spacing.xs,
-    },
-    viewAllText: {
-      fontSize: 12,
-      color: '#2563EB',
-      fontWeight: '500',
-    },
-    // Section
+    // ========== Section 样式 ==========
     sectionContainer: {
       backgroundColor: '#FFFFFF',
       marginTop: Spacing.sm,
       paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md,
+      paddingVertical: Spacing.lg,
+      // 柔和阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.03,
+      shadowRadius: 4,
+      elevation: 1,
     },
     sectionHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: Spacing.md,
+      marginBottom: Spacing.md + 2,
     },
     sectionTitle: {
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: '700',
-      color: '#1C1917',
+      color: '#111827',
+      letterSpacing: 0.3,
     },
     sectionMore: {
-      fontSize: 12,
+      fontSize: 13,
       color: '#2563EB',
-      fontWeight: '500',
+      fontWeight: '600',
     },
-    // 分类宫格
+    // ========== 分类宫格 ==========
     categoryGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
+      marginHorizontal: -4,
     },
     categoryItem: {
       width: '25%',
       alignItems: 'center',
-      paddingVertical: Spacing.sm,
+      paddingVertical: Spacing.sm + 2,
+      paddingHorizontal: 4,
     },
-    categoryIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: BorderRadius.lg,
+    categoryIconWrapper: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: Spacing.xs,
+      marginBottom: Spacing.xs + 2,
+      // 柔和阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 6,
+      elevation: 2,
     },
     categoryName: {
       fontSize: 12,
       color: '#374151',
-      fontWeight: '500',
+      fontWeight: '600',
+      textAlign: 'center',
     },
     categoryCount: {
       fontSize: 10,
       color: '#9CA3AF',
       marginTop: 1,
     },
-    // 特色功能区
+    // ========== 特色功能区 ==========
     featureGrid: {
-      gap: Spacing.sm,
+      gap: Spacing.sm + 2,
     },
     featureCard: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.lg,
-      padding: Spacing.md,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
+      borderRadius: 16,
+      padding: Spacing.md + 2,
+      // 柔和阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 3,
     },
-    featureIcon: {
+    featureIconWrapper: {
       width: 52,
       height: 52,
-      borderRadius: BorderRadius.lg,
+      borderRadius: 14,
       justifyContent: 'center',
       alignItems: 'center',
+      // 柔和阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+      elevation: 2,
     },
     featureContent: {
       flex: 1,
       marginLeft: Spacing.md,
     },
+    featureTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
     featureTitle: {
       fontSize: 15,
-      fontWeight: '600',
-      color: '#1C1917',
+      fontWeight: '700',
+      color: '#111827',
     },
     featureDesc: {
       fontSize: 12,
       color: '#6B7280',
-      marginTop: 2,
-    },
-    comingSoonTag: {
-      backgroundColor: '#FEF3C7',
-      paddingHorizontal: Spacing.xs,
-      paddingVertical: 1,
-      borderRadius: BorderRadius.sm,
-      marginLeft: Spacing.xs,
-    },
-    comingSoonText: {
-      fontSize: 10,
-      color: '#D97706',
-      fontWeight: '500',
+      marginTop: 3,
+      lineHeight: 16,
     },
     vipTag: {
       backgroundColor: '#FEF3C7',
-      paddingHorizontal: Spacing.xs,
-      paddingVertical: 1,
-      borderRadius: BorderRadius.sm,
-      marginLeft: Spacing.xs,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 6,
+      marginLeft: Spacing.sm,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 2,
+      gap: 3,
     },
     vipTagText: {
-      fontSize: 9,
+      fontSize: 10,
       color: '#D97706',
-      fontWeight: '600',
+      fontWeight: '700',
     },
-    // 筛选
-    filterContainer: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
+    featureArrow: {
+      marginLeft: Spacing.sm,
     },
-    filterChip: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.xs + 2,
-      borderRadius: BorderRadius.full,
-      backgroundColor: '#F5F5F5',
-    },
-    filterChipActive: {
-      backgroundColor: '#2563EB',
-    },
-    filterChipText: {
-      fontSize: 13,
-      color: '#6B7280',
-      fontWeight: '500',
-    },
-    filterChipTextActive: {
-      color: '#FFFFFF',
-      fontWeight: '600',
-    },
-    // 双列网格
+    // ========== 招标卡片网格 ==========
     bidGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      marginHorizontal: -2,
+      marginHorizontal: -4,
     },
-    // 紧凑型卡片样式
     bidCard: {
       width: '50%',
-      padding: 2,
+      padding: 4,
     },
     bidCardContent: {
       flex: 1,
       backgroundColor: '#FFFFFF',
-      borderRadius: BorderRadius.md,
-      padding: Spacing.sm + 2,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
+      borderRadius: 14,
+      padding: Spacing.sm + 4,
+      // 柔和阴影
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
     },
     bidCardUrgent: {
-      borderColor: '#FCA5A5',
+      borderWidth: 0,
       backgroundColor: '#FFFBFC',
+      // 紧急卡片特殊阴影
+      shadowColor: '#EF4444',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+      elevation: 3,
     },
     cardHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: Spacing.xs,
+      marginBottom: Spacing.xs + 2,
     },
     categoryTag: {
-      backgroundColor: 'rgba(37, 99, 235, 0.1)',
-      paddingHorizontal: Spacing.xs + 2,
-      paddingVertical: 1,
-      borderRadius: 3,
+      backgroundColor: 'rgba(37, 99, 235, 0.08)',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
     },
     categoryTagText: {
       fontSize: 10,
       color: '#2563EB',
       fontWeight: '600',
     },
-    // 类型标签（招标/中标）
     typeTag: {
-      backgroundColor: 'rgba(37, 99, 235, 0.15)',
-      paddingHorizontal: Spacing.xs + 2,
-      paddingVertical: 1,
-      borderRadius: 3,
+      backgroundColor: 'rgba(37, 99, 235, 0.12)',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
     },
     typeTagText: {
       fontSize: 10,
@@ -282,26 +272,28 @@ export const createStyles = (theme: Theme) => {
     bidTitle: {
       fontSize: 13,
       fontWeight: '600',
-      color: '#1C1917',
+      color: '#1F2937',
       lineHeight: 18,
-      marginBottom: Spacing.xs,
+      marginBottom: Spacing.xs + 2,
     },
     bidBudget: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: '800',
       color: '#2563EB',
-      marginBottom: 2,
+      marginBottom: 3,
+      letterSpacing: -0.5,
     },
     bidMeta: {
-      fontSize: 10,
+      fontSize: 11,
       color: '#9CA3AF',
-      marginBottom: 1,
+      marginBottom: 2,
     },
     bidDeadline: {
-      fontSize: 10,
-      color: '#C8102E',
-      fontWeight: '500',
+      fontSize: 11,
+      color: '#DC2626',
+      fontWeight: '600',
     },
+    // ========== 加载和空状态 ==========
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -321,21 +313,22 @@ export const createStyles = (theme: Theme) => {
     },
     emptyIcon: {
       marginBottom: Spacing.md,
+      opacity: 0.6,
     },
     emptyText: {
       fontSize: 14,
       color: '#9CA3AF',
     },
-    // 弹窗样式
+    // ========== 弹窗样式 ==========
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
       justifyContent: 'flex-end',
     },
     modalContent: {
       backgroundColor: '#FFFFFF',
-      borderTopLeftRadius: BorderRadius.xl,
-      borderTopRightRadius: BorderRadius.xl,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
       maxHeight: '60%',
       paddingBottom: Spacing['2xl'],
     },
@@ -344,14 +337,21 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
+      paddingVertical: Spacing.md + 2,
+      borderBottomWidth: 0,
     },
     modalTitle: {
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '700',
-      color: '#1C1917',
+      color: '#111827',
+    },
+    modalCloseButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: '#F3F4F6',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     modalList: {
       paddingHorizontal: Spacing.md,
@@ -362,22 +362,27 @@ export const createStyles = (theme: Theme) => {
       justifyContent: 'space-between',
       paddingVertical: Spacing.md,
       paddingHorizontal: Spacing.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: '#F5F5F5',
+      borderRadius: 12,
+      marginBottom: 4,
     },
     modalItemActive: {
-      backgroundColor: '#F0F7FF',
-      marginHorizontal: -Spacing.sm,
-      paddingHorizontal: Spacing.md,
-      borderRadius: BorderRadius.md,
+      backgroundColor: 'rgba(37, 99, 235, 0.08)',
     },
     modalItemText: {
-      fontSize: 14,
-      color: '#1C1917',
+      fontSize: 15,
+      color: '#374151',
     },
     modalItemTextActive: {
       color: '#2563EB',
       fontWeight: '600',
+    },
+    modalCheckIcon: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: '#2563EB',
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   });
 };

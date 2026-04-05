@@ -31,6 +31,7 @@ interface Category {
   icon: string;
   count: number;
   color: string;
+  bgColor: string;
 }
 
 interface Bid {
@@ -46,14 +47,14 @@ interface Bid {
 }
 
 const DEFAULT_CATEGORIES: Category[] = [
-  { id: 1, name: '建筑工程', icon: 'building', count: 0, color: '#2563EB' },
-  { id: 2, name: 'IT服务', icon: 'laptop-code', count: 0, color: '#059669' },
-  { id: 3, name: '医疗设备', icon: 'hospital', count: 0, color: '#DC2626' },
-  { id: 4, name: '教育培训', icon: 'graduation-cap', count: 0, color: '#7C3AED' },
-  { id: 5, name: '交通运输', icon: 'truck', count: 0, color: '#EA580C' },
-  { id: 6, name: '环保能源', icon: 'leaf', count: 0, color: '#16A34A' },
-  { id: 7, name: '政府采购', icon: 'landmark', count: 0, color: '#0891B2' },
-  { id: 'more', name: '更多', icon: 'ellipsis', count: 0, color: '#6B7280' },
+  { id: 1, name: '建筑工程', icon: 'building', count: 0, color: '#2563EB', bgColor: '#EFF6FF' },
+  { id: 2, name: 'IT服务', icon: 'laptop-code', count: 0, color: '#059669', bgColor: '#ECFDF5' },
+  { id: 3, name: '医疗设备', icon: 'hospital', count: 0, color: '#DC2626', bgColor: '#FEF2F2' },
+  { id: 4, name: '教育培训', icon: 'graduation-cap', count: 0, color: '#7C3AED', bgColor: '#F5F3FF' },
+  { id: 5, name: '交通运输', icon: 'truck', count: 0, color: '#EA580C', bgColor: '#FFF7ED' },
+  { id: 6, name: '环保能源', icon: 'leaf', count: 0, color: '#16A34A', bgColor: '#F0FDF4' },
+  { id: 7, name: '政府采购', icon: 'landmark', count: 0, color: '#0891B2', bgColor: '#ECFEFF' },
+  { id: 'more', name: '更多', icon: 'ellipsis', count: 0, color: '#6B7280', bgColor: '#F3F4F6' },
 ];
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -69,9 +70,15 @@ const CATEGORY_ICONS: Record<string, string> = {
   '农林牧渔': 'seedling',
 };
 
-const CATEGORY_COLORS: string[] = [
-  '#2563EB', '#059669', '#DC2626', '#7C3AED', 
-  '#EA580C', '#16A34A', '#0891B2', '#6366F1'
+const CATEGORY_COLORS: Array<{ color: string; bgColor: string }> = [
+  { color: '#2563EB', bgColor: '#EFF6FF' },
+  { color: '#059669', bgColor: '#ECFDF5' },
+  { color: '#DC2626', bgColor: '#FEF2F2' },
+  { color: '#7C3AED', bgColor: '#F5F3FF' },
+  { color: '#EA580C', bgColor: '#FFF7ED' },
+  { color: '#16A34A', bgColor: '#F0FDF4' },
+  { color: '#0891B2', bgColor: '#ECFEFF' },
+  { color: '#6366F1', bgColor: '#EEF2FF' },
 ];
 
 export default function DiscoverScreen() {
@@ -127,14 +134,25 @@ export default function DiscoverScreen() {
       const data = await res.json();
 
       if (data.success && data.data) {
-        const mappedCategories: Category[] = data.data.slice(0, 7).map((industry: Industry, index: number) => ({
-          id: industry.id,
-          name: industry.name,
-          icon: CATEGORY_ICONS[industry.name] || 'folder',
-          count: 0,
-          color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
-        }));
-        mappedCategories.push({ id: 'more', name: '更多', icon: 'ellipsis', count: 0, color: '#6B7280' });
+        const mappedCategories: Category[] = data.data.slice(0, 7).map((industry: Industry, index: number) => {
+          const colorConfig = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+          return {
+            id: industry.id,
+            name: industry.name,
+            icon: CATEGORY_ICONS[industry.name] || 'folder',
+            count: 0,
+            color: colorConfig.color,
+            bgColor: colorConfig.bgColor,
+          };
+        });
+        mappedCategories.push({ 
+          id: 'more', 
+          name: '更多', 
+          icon: 'ellipsis', 
+          count: 0, 
+          color: '#6B7280', 
+          bgColor: '#F3F4F6' 
+        });
         setCategories(mappedCategories);
       }
     } catch (error) {
@@ -238,21 +256,18 @@ export default function DiscoverScreen() {
 
   if (loading && !refreshing) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
+      <Screen backgroundColor="#FAFAFA" statusBarStyle="dark" safeAreaEdges={['left', 'right', 'bottom']}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
-            <View style={styles.appTitleWrapper}>
-              <View style={styles.appLogo}>
+            <View style={styles.brandSection}>
+              <View style={styles.brandIcon}>
                 <FontAwesome6 name="gavel" size={18} color="#FFFFFF" />
               </View>
-              <View style={styles.appTitleContainer}>
-                <Text style={styles.appTitle}>招采</Text>
-                <Text style={[styles.appTitle, styles.appTitleAccent]}>易</Text>
+              <View style={styles.brandTextContainer}>
+                <Text style={styles.brandTitle}>招采易</Text>
+                <Text style={styles.brandSubtitle}>招标采购信息平台</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>
-              <FontAwesome6 name="magnifying-glass" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.loadingContainer}>
@@ -264,22 +279,27 @@ export default function DiscoverScreen() {
   }
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
+    <Screen backgroundColor="#FAFAFA" statusBarStyle="dark" safeAreaEdges={['left', 'right', 'bottom']}>
       <View style={{ flex: 1 }}>
-        {/* Header */}
+        {/* Header - 白色极简设计 */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
-            <View style={styles.appTitleWrapper}>
-              <View style={styles.appLogo}>
+            <View style={styles.brandSection}>
+              <View style={styles.brandIcon}>
                 <FontAwesome6 name="gavel" size={18} color="#FFFFFF" />
               </View>
-              <View style={styles.appTitleContainer}>
-                <Text style={styles.appTitle}>招采</Text>
-                <Text style={[styles.appTitle, styles.appTitleAccent]}>易</Text>
+              <View style={styles.brandTextContainer}>
+                <Text style={styles.brandTitle}>招采易</Text>
+                <Text style={styles.brandSubtitle}>招标采购信息平台</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>
-              <FontAwesome6 name="magnifying-glass" size={16} color="#FFFFFF" />
+            <TouchableOpacity 
+              style={styles.searchButton} 
+              onPress={() => router.navigate('/search')}
+              activeOpacity={0.7}
+            >
+              <FontAwesome6 name="magnifying-glass" size={14} color="#9CA3AF" />
+              <Text style={styles.searchPlaceholder}>搜索招标信息...</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -310,9 +330,10 @@ export default function DiscoverScreen() {
                   key={category.id}
                   style={styles.categoryItem}
                   onPress={() => handleCategoryPress(category)}
+                  activeOpacity={0.7}
                 >
-                  <View style={[styles.categoryIcon, { backgroundColor: `${category.color}10` }]}>
-                    <FontAwesome6 name={category.icon} size={20} color={category.color} />
+                  <View style={[styles.categoryIconWrapper, { backgroundColor: category.bgColor }]}>
+                    <FontAwesome6 name={category.icon} size={22} color={category.color} />
                   </View>
                   <Text style={styles.categoryName}>{category.name}</Text>
                   {category.count > 0 && (
@@ -339,11 +360,11 @@ export default function DiscoverScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.featureIcon, { backgroundColor: '#EFF6FF' }]}>
+                <View style={[styles.featureIconWrapper, { backgroundColor: '#EFF6FF' }]}>
                   <FontAwesome6 name="address-book" size={24} color="#2563EB" />
                 </View>
                 <View style={styles.featureContent}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={styles.featureTitleRow}>
                     <Text style={styles.featureTitle}>潜在客户</Text>
                     <View style={styles.vipTag}>
                       <FontAwesome6 name="crown" size={8} color="#D97706" />
@@ -352,7 +373,9 @@ export default function DiscoverScreen() {
                   </View>
                   <Text style={styles.featureDesc}>查找招标方/中标方联系方式</Text>
                 </View>
-                <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+                <View style={styles.featureArrow}>
+                  <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" />
+                </View>
               </TouchableOpacity>
               
               {/* 前期项目 */}
@@ -365,11 +388,11 @@ export default function DiscoverScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <View style={[styles.featureIcon, { backgroundColor: '#FEF3C7' }]}>
+                <View style={[styles.featureIconWrapper, { backgroundColor: '#FEF3C7' }]}>
                   <FontAwesome6 name="clipboard-list" size={24} color="#D97706" />
                 </View>
                 <View style={styles.featureContent}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={styles.featureTitleRow}>
                     <Text style={styles.featureTitle}>前期项目</Text>
                     <View style={styles.vipTag}>
                       <FontAwesome6 name="crown" size={8} color="#D97706" />
@@ -378,7 +401,9 @@ export default function DiscoverScreen() {
                   </View>
                   <Text style={styles.featureDesc}>筹建/备案项目信息查询</Text>
                 </View>
-                <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
+                <View style={styles.featureArrow}>
+                  <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" />
+                </View>
               </TouchableOpacity>
             </View>
           </View>
