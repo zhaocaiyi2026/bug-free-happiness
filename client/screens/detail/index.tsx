@@ -398,7 +398,9 @@ export default function DetailScreen() {
         )}
 
         {/* 免责声明 */}
-        <Disclaimer />
+        <View style={styles.disclaimerWrap}>
+          <Disclaimer />
+        </View>
       </ScrollView>
 
       {/* 底部操作栏 */}

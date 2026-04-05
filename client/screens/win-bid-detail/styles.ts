@@ -309,5 +309,11 @@ export const createStyles = (theme: Theme) => {
       color: '#9CA3AF',
       marginTop: Spacing.md,
     },
+    // 免责声明包装
+    disclaimerWrap: {
+      marginHorizontal: Spacing.md,
+      marginTop: Spacing.lg,
+      marginBottom: Spacing.md,
+    },
   });
 };

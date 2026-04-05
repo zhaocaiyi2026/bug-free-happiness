@@ -59,7 +59,7 @@ export default function FeedbackScreen() {
   };
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

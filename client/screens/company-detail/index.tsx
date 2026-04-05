@@ -248,7 +248,7 @@ export default function CompanyDetailScreen() {
   };
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <View style={styles.headerTop}>

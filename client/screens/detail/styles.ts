@@ -344,5 +344,11 @@ export const createStyles = (theme: Theme) => {
       fontSize: 14,
       color: '#6B7280',
     },
+    // 免责声明包装
+    disclaimerWrap: {
+      marginHorizontal: Spacing.md,
+      marginTop: Spacing.lg,
+      marginBottom: Spacing.md,
+    },
   });
 };

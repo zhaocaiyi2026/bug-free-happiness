@@ -159,7 +159,7 @@ export default function FilterSelectScreen() {
 
   if (loading) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>

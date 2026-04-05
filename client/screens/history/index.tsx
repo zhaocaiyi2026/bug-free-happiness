@@ -141,7 +141,7 @@ export default function HistoryScreen() {
 
   if (loading) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -159,7 +159,7 @@ export default function HistoryScreen() {
   }
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
       <View style={{ flex: 1 }}>
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>

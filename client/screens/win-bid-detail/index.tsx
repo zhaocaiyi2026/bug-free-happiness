@@ -129,7 +129,7 @@ export default function WinBidDetailScreen() {
 
   if (loading) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#059669" />
           <Text style={styles.loadingText}>加载中...</Text>
@@ -329,7 +329,7 @@ export default function WinBidDetailScreen() {
         )}
 
         {/* 免责声明 */}
-        <View style={styles.sectionCard}>
+        <View style={styles.disclaimerWrap}>
           <Disclaimer mode="compact" />
         </View>
       </ScrollView>
