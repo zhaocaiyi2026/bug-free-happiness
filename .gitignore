@@ -13,3 +13,7 @@ node-compile-cache/
 
 # APK files (too large for GitHub)
 *.apk
+
+# Environment files (contain secrets)
+.env
+server/.env
