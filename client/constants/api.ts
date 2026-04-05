@@ -3,14 +3,27 @@
  * 
  * 统一管理后端 API 基础 URL
  * 
- * 所有平台统一使用线上公网地址，不依赖本地后端
+ * 优先级：Constants.expoConfig.extra > 硬编码线上地址
  */
 
-// 线上公网地址
-const PRODUCTION_URL = 'https://4dedb0b5-952a-4a4c-a211-0bf5165689d2.dev.coze.site';
+import { Constants } from 'expo-constants';
 
-// 导出 API 基础 URL（统一使用线上地址）
-export const API_BASE_URL = PRODUCTION_URL;
+// 从 app.config.ts 的 extra 字段获取后端地址
+const getConfigUrl = (): string => {
+  try {
+    const extra = Constants.expoConfig?.extra as { expoPublicBackendBaseUrl?: string } | undefined;
+    if (extra?.expoPublicBackendBaseUrl) {
+      return extra.expoPublicBackendBaseUrl;
+    }
+  } catch (e) {
+    console.warn('[API] 无法读取 expoConfig.extra:', e);
+  }
+  // 默认线上地址
+  return 'https://4dedb0b5-952a-4a4c-a211-0bf5165689d2.dev.coze.site';
+};
+
+// 导出 API 基础 URL
+export const API_BASE_URL = getConfigUrl();
 
 // 调试日志
 console.log('[API] Backend URL:', API_BASE_URL);
