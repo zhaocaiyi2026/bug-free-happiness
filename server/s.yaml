@@ -11,11 +11,15 @@ resources:
     props:
       region: ${vars.region}
       functionName: zcy-api
-      description: 招标信息聚合API服务
-      runtime: nodejs18
+      description: 招标信息聚合API服务（Docker容器）
+      runtime: custom-container
       code: ./
-      handler: index.handler
-      memorySize: 512
+      customContainerConfig:
+        image: registry.cn-hongkong.aliyuncs.com/zcy/zcy-api:latest
+        command: '["node", "dist/index.js"]'
+        args: '[]'
+        port: 9000
+      memorySize: 1024
       timeout: 60
       instanceConcurrency: 10
       environmentVariables:

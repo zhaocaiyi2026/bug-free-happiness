@@ -7,7 +7,6 @@ import 'dotenv/config'; // 加载.env环境变量
 import express from "express";
 import cors from "cors";
 import path from "path";
-import serverless from 'serverless-http';
 import bidsRouter from './routes/bids';
 import winBidsRouter from './routes/win-bids';
 import commonRouter from './routes/common';
@@ -157,53 +156,16 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// 启动服务器（仅在非函数计算环境中）
-if (!process.env.FC_FUNCTION_NAME) {
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`Server listening at http://0.0.0.0:${port}/`);
-    
-    // 启动数据同步调度器（官方数据源）
-    if (process.env.NODE_ENV === 'production' || process.env.ENABLE_DATA_SYNC === 'true') {
-      console.log('Auto-starting data sync scheduler...');
-      startDataSyncScheduler();
-    }
-  });
-}
+// 启动服务器
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server listening at http://0.0.0.0:${port}/`);
+  
+  // 启动数据同步调度器（官方数据源）
+  if (process.env.NODE_ENV === 'production' || process.env.ENABLE_DATA_SYNC === 'true') {
+    console.log('Auto-starting data sync scheduler...');
+    startDataSyncScheduler();
+  }
+});
 
 // 导出app供测试使用
 export default app;
-
-// 阿里云函数计算HTTP Handler - 使用serverless-http
-const wrappedHandler = serverless(app, {
-  binary: ['*/*'],
-});
-
-// 阿里云函数计算的handler格式
-export const handler = async (req: any, res: any, context: any) => {
-  console.log('[FC Handler] Received request:', req.method, req.path);
-  
-  // 转换阿里云请求格式为serverless-http期望的格式
-  const event = {
-    httpMethod: req.method || 'GET',
-    path: req.path || '/',
-    queryStringParameters: req.queries || {},
-    headers: req.headers || {},
-    body: req.body || '',
-    isBase64Encoded: true,
-  };
-  
-  try {
-    const result = await wrappedHandler(event, context);
-    
-    // 发送响应
-    res.setStatusCode(result.statusCode);
-    for (const key in result.headers) {
-      res.setHeader(key, result.headers[key]);
-    }
-    res.send(result.body);
-  } catch (error) {
-    console.error('[FC Handler] Error:', error);
-    res.setStatusCode(500);
-    res.send(JSON.stringify({ error: 'Internal Server Error' }));
-  }
-};

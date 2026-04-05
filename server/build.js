@@ -2,26 +2,49 @@ import * as esbuild from 'esbuild';
 import fs from 'fs';
 
 try {
-  // 编译为CommonJS格式，target设为Node.js 18
+  // 编译为ESM格式（Docker容器支持完整Node.js环境）
   await esbuild.build({
     entryPoints: ['src/index.ts'],
     bundle: true,
     platform: 'node',
-    target: ['node18'],
-    format: 'cjs',
-    outfile: 'dist/index.js',
+    target: ['node20'],
+    format: 'esm',
+    outdir: 'dist',
+    external: [
+      // 外部依赖（运行时安装）
+      '@alicloud/nlp-automl20191111',
+      '@alicloud/openapi-client',
+      '@supabase/supabase-js',
+      'axios',
+      'cheerio',
+      'cors',
+      'coze-coding-dev-sdk',
+      'dayjs',
+      'dotenv',
+      'drizzle-orm',
+      'drizzle-zod',
+      'express',
+      'multer',
+      'node-cron',
+      'pg',
+      'playwright',
+      'playwright-extra',
+      'puppeteer-core',
+      'puppeteer-extra-plugin-stealth',
+      'zod',
+    ],
     banner: {
-      js: `// Built for Alibaba Cloud FC Node.js 18
+      js: `// Built for Docker Container Deployment
 `,
     },
   });
   
-  // 创建dist目录下的package.json，指定为CommonJS
+  // 创建dist目录下的package.json
   const distPkg = {
-    name: 'zcy-api-dist',
+    name: 'zcy-api',
     version: '1.0.0',
     main: 'index.js',
-    type: 'commonjs'
+    type: 'module'
   };
   fs.writeFileSync('dist/package.json', JSON.stringify(distPkg, null, 2));
   
