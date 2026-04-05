@@ -70,16 +70,42 @@ router.post('/', async (req: Request, res: Response) => {
         const sourceUrl = cleanItem['详情链接']?.trim() || '';
         const content = cleanItem['完整内容'];
 
-        // 2. 查重（基于 source_url 或标题）
-        const { data: existing } = await supabase
-          .from('bids')
-          .select('id, title')
-          .or(`source_url.eq.${sourceUrl},title.eq.${title}`)
-          .maybeSingle();
+        // 2. 查重机制（双重校验）
+        // 优先级：source_url > 标题
+        let isDuplicate = false;
+        let duplicateReason = '';
 
-        if (existing) {
+        // 2.1 如果有 sourceUrl，用 URL 精确查重
+        if (sourceUrl && sourceUrl.length > 10) {
+          const { data: existingByUrl } = await supabase
+            .from('bids')
+            .select('id, title')
+            .eq('source_url', sourceUrl)
+            .maybeSingle();
+          
+          if (existingByUrl) {
+            isDuplicate = true;
+            duplicateReason = 'URL相同';
+          }
+        }
+
+        // 2.2 用标题查重（标题完全相同视为重复）
+        if (!isDuplicate && title.length > 5) {
+          const { data: existingByTitle } = await supabase
+            .from('bids')
+            .select('id, title, source')
+            .eq('title', title)
+            .maybeSingle();
+          
+          if (existingByTitle) {
+            isDuplicate = true;
+            duplicateReason = '标题相同';
+          }
+        }
+
+        if (isDuplicate) {
           results.duplicate++;
-          console.log(`[CSV导入] 重复数据跳过: ${title.substring(0, 50)}...`);
+          console.log(`[CSV导入] 重复数据跳过 (${duplicateReason}): ${title.substring(0, 50)}...`);
           continue;
         }
 
