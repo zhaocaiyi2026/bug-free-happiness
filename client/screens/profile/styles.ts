@@ -74,10 +74,11 @@ export const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: 'rgba(255, 215, 0, 0.25)',
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: 3,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
       borderRadius: BorderRadius.full,
       marginTop: Spacing.xs,
+      alignSelf: 'flex-start',
     },
     vipBadgeText: {
       fontSize: 11,
