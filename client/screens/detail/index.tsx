@@ -212,8 +212,12 @@ export default function DetailScreen() {
   const daysRemaining = getDaysRemaining(bid.deadline);
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right']}>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + insets.bottom }]} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
@@ -382,7 +386,7 @@ export default function DetailScreen() {
         )}
 
         {/* 免责声明 */}
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { marginBottom: Spacing.sm }]}>
           <Disclaimer mode="compact" />
         </View>
       </ScrollView>

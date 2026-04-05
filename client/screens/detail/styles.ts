@@ -8,7 +8,7 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#F5F5F5',
     },
     scrollContent: {
-      paddingBottom: 80,
+      paddingBottom: Spacing['2xl'],  // 基础底部间距
     },
     // 紧凑型 Header
     header: {
