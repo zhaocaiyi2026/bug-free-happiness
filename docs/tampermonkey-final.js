@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         政府采购 - 一键入库
 // @namespace    http://tampermonkey.net/
-// @version      2.1
-// @description  全国政府采购网站通用提取入库工具
+// @version      2.2
+// @description  全国政府采购网站通用提取入库工具（支持动态渲染页面）
 // @author       Your App
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
@@ -97,9 +97,56 @@
         return '未知';
     }
     
+    // ==================== 等待内容加载 ====================
+    
+    function waitForContent(timeout = 5000) {
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+            
+            const checkContent = () => {
+                // 政采云平台常用的内容选择器
+                const selectors = [
+                    '.article-content', '.notice-content', '.content',
+                    '.detail-content', '.text-content', '.main-content',
+                    '#content', '#zoom',
+                    '.zcy-content', '.notice-detail', '.detail-box',
+                    '.bid-content', '.info-content', '.article-body',
+                    'article', '.article', '.post-content',
+                    // 政采云特有
+                    '[class*="detail"]', '[class*="article"]', '[class*="notice"]'
+                ];
+                
+                for (const sel of selectors) {
+                    const el = document.querySelector(sel);
+                    if (el && el.innerText.trim().length > 200) {
+                        console.log('[政府采购] 找到内容区域:', sel, '长度:', el.innerText.length);
+                        return resolve(el);
+                    }
+                }
+                
+                // 检查是否超时
+                if (Date.now() - startTime > timeout) {
+                    console.log('[政府采购] 等待超时，使用当前页面内容');
+                    return resolve(null);
+                }
+                
+                // 继续等待
+                setTimeout(checkContent, 500);
+            };
+            
+            checkContent();
+        });
+    }
+    
     // ==================== 提取数据 ====================
     
-    function extractData() {
+    async function extractData() {
+        // 等待内容加载
+        await waitForContent(3000);
+        
+        // 额外等待一下，确保 Vue 渲染完成
+        await new Promise(r => setTimeout(r, 1000));
+        
         // 提取标题
         let title = '';
         const titleSelectors = [
@@ -118,23 +165,25 @@
         // 提取内容 - 优先查找政府采购专用内容区域
         let content = '';
         
-        // 政府采购网站常用的内容选择器
+        // 政府采购网站常用的内容选择器（按优先级排序）
         const contentSelectors = [
-            // 通用政府采购内容区域
-            '.article-content', '.notice-content', '.content',
-            '.detail-content', '.text-content', '.main-content',
-            '#content', '#zoom',
-            // 政采云平台
+            // 政采云平台专用
+            '.article-content', '.notice-content', '.detail-content',
             '.zcy-content', '.notice-detail', '.detail-box',
+            // 通用政府采购内容区域
+            '.content', '.text-content', '.main-content',
+            '#content', '#zoom',
             // 公共资源交易
             '.bid-content', '.info-content', '.article-body',
             // 通用
-            'article', '.article', '.post-content'
+            'article', '.article', '.post-content',
+            // 备用：任何包含大量文本的元素
+            '[class*="detail"]', '[class*="article"]', '[class*="notice"]'
         ];
         
         for (const sel of contentSelectors) {
             const el = document.querySelector(sel);
-            if (el && el.innerText.trim().length > 50) {
+            if (el && el.innerText.trim().length > 200) {
                 content = el.innerText.trim();
                 console.log('[政府采购] 使用选择器:', sel, '内容长度:', content.length);
                 break;
@@ -142,7 +191,9 @@
         }
         
         // 如果还是没找到，尝试更智能的方式
-        if (!content || content.length < 50) {
+        if (!content || content.length < 200) {
+            console.log('[政府采购] 内容提取不足，尝试智能提取...');
+            
             // 查找包含关键信息的最大文本块
             const body = document.body.cloneNode(true);
             
@@ -172,8 +223,9 @@
             text = text.replace(/\s+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
             
             // 如果内容太短，可能是全屏遮罩或空页面
-            if (text.length > 100) {
+            if (text.length > 200) {
                 content = text;
+                console.log('[政府采购] 智能提取内容长度:', content.length);
             }
         }
         
@@ -208,17 +260,17 @@
         }
         
         // 判断类型
-        const text = (title + ' ' + content.substring(0, 500)).toLowerCase();
+        const textLower = (title + ' ' + content.substring(0, 500)).toLowerCase();
         let type = '招标公告';
-        if (text.includes('中标') || text.includes('成交')) type = '中标公告';
-        else if (text.includes('更正') || text.includes('变更') || text.includes('澄清')) type = '更正公告';
-        else if (text.includes('废标') || text.includes('终止') || text.includes('流标')) type = '废标公告';
-        else if (text.includes('竞争性谈判')) type = '竞争性谈判';
-        else if (text.includes('竞争性磋商')) type = '竞争性磋商';
-        else if (text.includes('询价')) type = '询价公告';
-        else if (text.includes('单一来源')) type = '单一来源';
-        else if (text.includes('采购意向')) type = '采购意向';
-        else if (text.includes('合同')) type = '合同公告';
+        if (textLower.includes('中标') || textLower.includes('成交')) type = '中标公告';
+        else if (textLower.includes('更正') || textLower.includes('变更') || textLower.includes('澄清')) type = '更正公告';
+        else if (textLower.includes('废标') || textLower.includes('终止') || textLower.includes('流标')) type = '废标公告';
+        else if (textLower.includes('竞争性谈判')) type = '竞争性谈判';
+        else if (textLower.includes('竞争性磋商')) type = '竞争性磋商';
+        else if (textLower.includes('询价')) type = '询价公告';
+        else if (textLower.includes('单一来源')) type = '单一来源';
+        else if (textLower.includes('采购意向')) type = '采购意向';
+        else if (textLower.includes('合同')) type = '合同公告';
         
         const province = extractProvince();
         const source = document.title.split(/[-_|]/).pop().trim() || window.location.hostname;
@@ -360,8 +412,8 @@
         console.log('[政府采购] 按钮已创建');
     }
     
-    function updatePreview() {
-        const data = extractData();
+    async function updatePreview() {
+        const data = await extractData();
         document.getElementById('gp-preview-title').textContent = 
             data['标题'].substring(0, 30) + (data['标题'].length > 30 ? '...' : '');
         document.getElementById('gp-preview-type').textContent = data['类型'];
@@ -375,11 +427,14 @@
         
         const btn = document.getElementById('gp-import-btn');
         btn.className = 'processing';
-        btn.innerHTML = '<span>⏳</span><span>处理中...</span>';
+        btn.innerHTML = '<span>⏳</span><span>等待页面加载...</span>';
         
         try {
-            const data = extractData();
+            // 等待页面内容加载完成
+            const data = await extractData();
             console.log('[政府采购] 提取数据:', data);
+            
+            btn.innerHTML = '<span>⏳</span><span>正在入库...</span>';
             
             const result = await sendToAPI(data);
             
