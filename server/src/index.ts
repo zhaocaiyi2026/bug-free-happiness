@@ -7,7 +7,12 @@ import 'dotenv/config'; // 加载.env环境变量
 import express from "express";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
 import bidsRouter from './routes/bids';
+
+// ES 模块兼容：定义 __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import winBidsRouter from './routes/win-bids';
 import commonRouter from './routes/common';
 import authRouter from './routes/auth';
@@ -40,9 +45,6 @@ import syncStatusRouter from './routes/sync-status';
 import bidAutoFetchRouter from './routes/bid-auto-fetch';
 import { createCollector, collectAndSave } from './services/compliant-collector';
 import { startDataSyncScheduler } from './services/data-sources';
-
-// CommonJS兼容：使用__dirname（esbuild会自动注入）
-declare const __dirname: string;
 
 const app = express();
 // 阿里云函数计算Custom Runtime端口，默认9000
