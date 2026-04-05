@@ -1,5 +1,4 @@
 # 招采易API服务 - Docker镜像 (支持Playwright)
-# 基于Node.js 20 + Playwright
 # 适用于 Render 部署（根目录为 server）
 
 # ==================== 构建阶段 ====================
@@ -11,10 +10,13 @@ RUN npm install -g pnpm
 WORKDIR /app
 
 # 复制package文件
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
+
+# 创建 pnpm-lock.yaml（如果没有）
+RUN pnpm install --lockfile-only 2>/dev/null || true
 
 # 安装依赖
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # 复制源代码
 COPY . .
@@ -31,10 +33,10 @@ RUN npm install -g pnpm
 WORKDIR /app
 
 # 复制package文件
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
-# 安装生产依赖（包含playwright）
-RUN pnpm install --prod --frozen-lockfile
+# 安装生产依赖
+RUN pnpm install --prod
 
 # 复制构建产物
 COPY --from=builder /app/dist ./dist
