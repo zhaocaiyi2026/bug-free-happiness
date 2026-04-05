@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         政府采购 - 一键入库
 // @namespace    http://tampermonkey.net/
-// @version      2.3
-// @description  全国政府采购网站通用提取入库工具（支持动态渲染页面，智能等待内容加载）
+// @version      2.4
+// @description  全国政府采购网站通用提取入库工具（激进内容提取策略）
 // @author       Your App
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
@@ -12,8 +12,6 @@
 
 (function() {
     'use strict';
-    
-    // ==================== 配置 ====================
     
     const API_URL = 'https://4dedb0b5-952a-4a4c-a211-0bf5165689d2.dev.coze.site/api/v1/csv-import';
     
@@ -51,203 +49,143 @@
         '新疆': '新疆维吾尔自治区', 'xinjiang': '新疆维吾尔自治区', 'xj': '新疆维吾尔自治区',
     };
     
-    // ==================== 检测是否是政府采购网站 ====================
-    
     function isGovProcurementSite() {
         const url = window.location.href.toLowerCase();
         const title = document.title.toLowerCase();
         const bodyText = document.body.innerText.substring(0, 2000).toLowerCase();
-        
-        const keywords = ['政府采购', '公共资源交易', '招标', '投标', '采购公告', '中标公告', '竞争性谈判', '竞争性磋商', '询价', '公开招标', 'ccgp', 'ggzy', 'ztb', 'procurement', 'tender', 'bid'];
-        const domainPatterns = ['.gov.cn', 'ccgp', 'ggzy', 'ztb', 'ggzyjy', 'jczb', 'publicresources', 'procurement', 'tender'];
-        
-        const hasDomainPattern = domainPatterns.some(p => url.includes(p));
-        const hasKeyword = keywords.some(k => title.includes(k) || bodyText.includes(k) || url.includes(k));
-        
-        return hasDomainPattern || hasKeyword;
+        const keywords = ['政府采购', '公共资源交易', '招标', '投标', '采购公告', '中标公告', '竞争性谈判', '竞争性磋商', '询价', '公开招标', 'ccgp', 'ggzy', 'ztb'];
+        const domainPatterns = ['.gov.cn', 'ccgp', 'ggzy', 'ztb', 'ggzyjy', 'jczb'];
+        return domainPatterns.some(p => url.includes(p)) || keywords.some(k => title.includes(k) || bodyText.includes(k) || url.includes(k));
     }
-    
-    // ==================== 提取省份 ====================
     
     function extractProvince() {
         const url = window.location.href.toLowerCase();
         const title = document.title;
         const bodyText = document.body.innerText.substring(0, 3000);
-        
         for (const [key, province] of Object.entries(PROVINCE_MAP)) {
-            if (url.includes(key.toLowerCase()) || title.includes(key) || bodyText.includes(key)) {
-                return province;
-            }
+            if (url.includes(key.toLowerCase()) || title.includes(key) || bodyText.includes(key)) return province;
         }
         return '未知';
     }
     
-    // ==================== 智能等待内容加载 ====================
+    // ==================== 激进内容提取策略 ====================
     
-    function waitForContent(maxWait = 10000) {
+    function findLargestContentElement() {
+        console.log('[政府采购] 开始激进内容搜索...');
+        
+        const keywords = ['采购', '招标', '磋商', '谈判', '联系人', '预算', '资格要求', '投标', '中标', '公告'];
+        
+        // 策略1: 遍历所有元素，找到包含关键词最多的最长文本块
+        let bestElement = null;
+        let bestScore = 0;
+        let bestText = '';
+        
+        const allElements = document.querySelectorAll('div, section, article, main, p, span');
+        
+        for (const el of allElements) {
+            const text = el.innerText || '';
+            if (text.length < 200) continue;
+            
+            // 计算关键词匹配分数
+            let score = 0;
+            for (const kw of keywords) {
+                const count = (text.match(new RegExp(kw, 'g')) || []).length;
+                score += count;
+            }
+            
+            // 如果分数高且文本长度合理，更新最佳结果
+            if (score > 2 && text.length > bestScore) {
+                bestScore = text.length;
+                bestElement = el;
+                bestText = text;
+            }
+        }
+        
+        if (bestElement && bestText.length > 500) {
+            console.log('[政府采购] 找到最佳内容块，长度:', bestText.length, '关键词分数:', keywords.filter(k => bestText.includes(k)).length);
+            return bestText;
+        }
+        
+        // 策略2: 如果没找到，使用全文
+        console.log('[政府采购] 使用全文兜底');
+        return document.body.innerText.trim();
+    }
+    
+    function waitForDynamicContent(maxWait = 15000) {
         return new Promise((resolve) => {
             const startTime = Date.now();
-            let lastLength = 0;
+            let lastContent = '';
             let stableCount = 0;
             
-            const checkContent = () => {
-                // 政采云平台 - 尝试多种选择器
-                const selectors = [
-                    // 政采云专用
-                    '.article-content', '.notice-content', '.detail-content',
-                    '.zcy-content', '.notice-detail', '.detail-box',
-                    // 通用
-                    '.content', '.text-content', '.main-content',
-                    '#content', '#zoom',
-                    '.bid-content', '.info-content', '.article-body',
-                    'article', '.article', '.post-content',
-                    // 备用
-                    '[class*="detail"]', '[class*="article"]', '[class*="notice"]',
-                    // 政采云可能的容器
-                    '.preview-line', '.comp-wrapper'
-                ];
+            const check = () => {
+                const currentContent = findLargestContentElement();
+                const keywordCount = ['采购', '招标', '磋商', '联系人', '预算'].filter(k => currentContent.includes(k)).length;
                 
-                for (const sel of selectors) {
-                    const el = document.querySelector(sel);
-                    if (el) {
-                        const text = el.innerText.trim();
-                        // 检查是否包含实质性内容（不只是页脚）
-                        const hasKeyContent = text.includes('采购') || 
-                                             text.includes('招标') || 
-                                             text.includes('磋商') ||
-                                             text.includes('联系人') ||
-                                             text.includes('预算') ||
-                                             text.includes('资格要求');
-                        
-                        if (text.length > 500 && hasKeyContent) {
-                            console.log('[政府采购] 找到有效内容:', sel, '长度:', text.length);
-                            return resolve(el);
-                        }
-                    }
+                console.log('[政府采购] 当前内容长度:', currentContent.length, '关键词数:', keywordCount);
+                
+                // 如果找到包含多个关键词的长内容，认为加载完成
+                if (currentContent.length > 1000 && keywordCount >= 3) {
+                    console.log('[政府采购] 内容加载完成');
+                    return resolve(currentContent);
                 }
                 
-                // 检查页面整体内容是否稳定
-                const bodyText = document.body.innerText.trim();
-                if (bodyText.length === lastLength) {
+                // 检查内容是否稳定
+                if (currentContent === lastContent) {
                     stableCount++;
-                    if (stableCount >= 3) {
-                        console.log('[政府采购] 页面内容已稳定，长度:', bodyText.length);
-                        return resolve(null);
+                    if (stableCount >= 4) {
+                        console.log('[政府采购] 内容已稳定');
+                        return resolve(currentContent);
                     }
                 } else {
-                    lastLength = bodyText.length;
+                    lastContent = currentContent;
                     stableCount = 0;
                 }
                 
-                // 超时检查
+                // 超时
                 if (Date.now() - startTime > maxWait) {
-                    console.log('[政府采购] 等待超时，当前内容长度:', bodyText.length);
-                    return resolve(null);
+                    console.log('[政府采购] 等待超时');
+                    return resolve(currentContent);
                 }
                 
-                setTimeout(checkContent, 500);
+                setTimeout(check, 500);
             };
             
-            checkContent();
+            check();
         });
     }
     
-    // ==================== 提取数据 ====================
-    
     async function extractData() {
-        console.log('[政府采购] 开始提取数据...');
+        console.log('[政府采购] 开始提取数据 v2.4...');
         
-        // 智能等待内容加载
-        await waitForContent(8000);
+        // 等待动态内容加载
+        let content = await waitForDynamicContent(10000);
         
-        // 额外等待确保Vue渲染完成
-        await new Promise(r => setTimeout(r, 2000));
+        // 额外等待
+        await new Promise(r => setTimeout(r, 1500));
         
-        console.log('[政府采购] 开始解析页面...');
+        // 再次尝试提取
+        const finalContent = findLargestContentElement();
+        if (finalContent.length > content.length) {
+            content = finalContent;
+        }
+        
+        console.log('[政府采购] 最终内容长度:', content.length);
         
         // 提取标题
         let title = '';
-        const titleSelectors = ['h1', 'h2.title', '.article-title', '.notice-title', '.content-title', '[class*="title"]'];
+        const titleSelectors = ['h1', 'h2', '.article-title', '.notice-title', '.content-title', '[class*="title"]'];
         for (const sel of titleSelectors) {
             const el = document.querySelector(sel);
             if (el && el.innerText.trim().length > 5) {
-                title = el.innerText.trim();
-                break;
-            }
-        }
-        if (!title) title = document.title.split(/[-_|【\[]/)[0].trim();
-        
-        console.log('[政府采购] 标题:', title);
-        
-        // 提取内容 - 多策略尝试
-        let content = '';
-        
-        // 策略1：政采云专用选择器
-        const contentSelectors = [
-            '.article-content', '.notice-content', '.detail-content',
-            '.zcy-content', '.notice-detail', '.detail-box',
-            '.content', '.text-content', '.main-content',
-            '#content', '#zoom', '.bid-content', '.info-content', '.article-body',
-            'article', '.article', '.post-content'
-        ];
-        
-        for (const sel of contentSelectors) {
-            const el = document.querySelector(sel);
-            if (el) {
-                const text = el.innerText.trim();
-                // 必须包含关键内容才采用
-                const hasKeyContent = text.includes('采购') || text.includes('招标') || 
-                                     text.includes('磋商') || text.includes('联系人');
-                if (text.length > 500 && hasKeyContent) {
-                    content = text;
-                    console.log('[政府采购] 选择器提取成功:', sel, '长度:', content.length);
+                const t = el.innerText.trim();
+                // 标题通常比较短
+                if (t.length < 200) {
+                    title = t;
                     break;
                 }
             }
         }
-        
-        // 策略2：智能全文提取（如果选择器没找到）
-        if (!content || content.length < 500) {
-            console.log('[政府采购] 尝试智能全文提取...');
-            
-            const body = document.body.cloneNode(true);
-            
-            // 移除无关元素
-            const removeSelectors = [
-                'nav', 'header', 'footer', '.nav', '.header', '.footer', 
-                '.sidebar', '.menu', '.comment', '.ad', '.ads',
-                '.navigation', '.breadcrumb', '.pagination',
-                'script', 'style', 'noscript', 'iframe',
-                '.hidden', '.no-print', '.print-only',
-                '[class*="menu"]', '[class*="nav"]', '[class*="header"]',
-                '[class*="footer"]', '[class*="sidebar"]',
-                '#gp-import-container', '#gp-import-btn', '#gp-status'
-            ];
-            
-            removeSelectors.forEach(s => {
-                try { body.querySelectorAll(s).forEach(el => el.remove()); } catch (e) {}
-            });
-            
-            let text = body.innerText || body.textContent || '';
-            text = text.replace(/\s+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-            
-            // 检查是否包含关键内容
-            const hasKeyContent = text.includes('采购') || text.includes('招标') || 
-                                 text.includes('磋商') || text.includes('联系人') ||
-                                 text.includes('预算') || text.includes('资格');
-            
-            if (text.length > 500 && hasKeyContent) {
-                content = text;
-                console.log('[政府采购] 智能提取成功，长度:', content.length);
-            }
-        }
-        
-        // 策略3：如果还是没有有效内容，提示用户
-        if (!content || content.length < 500) {
-            console.log('[政府采购] 警告：内容提取不足，长度:', content.length);
-            // 使用全文作为兜底
-            content = document.body.innerText.trim().replace(/\s+/g, ' ');
-        }
+        if (!title) title = document.title.split(/[-_|【\[]/)[0].trim();
         
         // 清理内容
         content = content
@@ -258,11 +196,8 @@
             .replace(/let\s+\w+\s*=\s*[^;]+;/g, '')
             .replace(/<!--[\s\S]*?-->/g, '')
             .replace(/\s+/g, ' ')
-            .trim();
-        
-        content = content.substring(0, 50000);
-        
-        console.log('[政府采购] 最终内容长度:', content.length);
+            .trim()
+            .substring(0, 50000);
         
         // 提取日期
         let date = new Date().toISOString().split('T')[0];
@@ -275,8 +210,8 @@
         const textLower = (title + ' ' + content.substring(0, 500)).toLowerCase();
         let type = '招标公告';
         if (textLower.includes('中标') || textLower.includes('成交')) type = '中标公告';
-        else if (textLower.includes('更正') || textLower.includes('变更') || textLower.includes('澄清')) type = '更正公告';
-        else if (textLower.includes('废标') || textLower.includes('终止') || textLower.includes('流标')) type = '废标公告';
+        else if (textLower.includes('更正') || textLower.includes('变更')) type = '更正公告';
+        else if (textLower.includes('废标') || textLower.includes('终止')) type = '废标公告';
         else if (textLower.includes('竞争性谈判')) type = '竞争性谈判';
         else if (textLower.includes('竞争性磋商')) type = '竞争性磋商';
         else if (textLower.includes('询价')) type = '询价公告';
@@ -284,21 +219,16 @@
         else if (textLower.includes('采购意向')) type = '采购意向';
         else if (textLower.includes('合同')) type = '合同公告';
         
-        const province = extractProvince();
-        const source = document.title.split(/[-_|]/).pop().trim() || window.location.hostname;
-        
         return {
             '标题': title,
             '类型': type,
-            '省份': province,
+            '省份': extractProvince(),
             '发布时间': date,
-            '来源': source,
+            '来源': document.title.split(/[-_|]/).pop().trim() || window.location.hostname,
             '详情链接': window.location.href,
             '完整内容': content
         };
     }
-    
-    // ==================== 发送 API ====================
     
     function sendToAPI(data) {
         return new Promise((resolve, reject) => {
@@ -307,21 +237,17 @@
                 url: API_URL,
                 headers: { 'Content-Type': 'application/json' },
                 data: JSON.stringify({ data: [data] }),
-                onload: (res) => {
-                    try { resolve(JSON.parse(res.responseText)); } catch (e) { reject(e); }
-                },
+                onload: (res) => { try { resolve(JSON.parse(res.responseText)); } catch (e) { reject(e); } },
                 onerror: reject
             });
         });
     }
     
-    // ==================== UI ====================
-    
     let isProcessing = false;
     
     function createButton() {
         if (document.getElementById('gp-import-container')) return;
-        if (!isGovProcurementSite()) { console.log('[政府采购] 非政府采购网站'); return; }
+        if (!isGovProcurementSite()) return;
         
         const container = document.createElement('div');
         container.id = 'gp-import-container';
@@ -357,7 +283,7 @@
         container.addEventListener('mouseenter', () => { status.classList.add('show'); updatePreview(); });
         container.addEventListener('mouseleave', () => { status.classList.remove('show'); });
         
-        console.log('[政府采购] 按钮已创建');
+        console.log('[政府采购] 按钮已创建 v2.4');
     }
     
     async function updatePreview() {
@@ -365,7 +291,7 @@
         document.getElementById('gp-preview-title').textContent = data['标题'].substring(0, 25) + (data['标题'].length > 25 ? '...' : '');
         document.getElementById('gp-preview-type').textContent = data['类型'];
         document.getElementById('gp-preview-province').textContent = data['省份'];
-        document.getElementById('gp-preview-content').textContent = data['完整内容'].substring(0, 100) + '... (' + data['完整内容'].length + '字)';
+        document.getElementById('gp-preview-content').textContent = data['完整内容'].length + ' 字';
     }
     
     async function handleImport() {
@@ -374,11 +300,11 @@
         
         const btn = document.getElementById('gp-import-btn');
         btn.className = 'processing';
-        btn.innerHTML = '<span>⏳</span><span>等待页面加载...</span>';
+        btn.innerHTML = '<span>⏳</span><span>提取内容中...</span>';
         
         try {
             const data = await extractData();
-            console.log('[政府采购] 提取完成:', data);
+            console.log('[政府采购] 提取完成:', data['标题'], '内容长度:', data['完整内容'].length);
             
             btn.innerHTML = '<span>⏳</span><span>正在入库...</span>';
             
@@ -399,11 +325,9 @@
         }
     }
     
-    // ==================== 初始化 ====================
-    
     function init() {
-        console.log('[政府采购] 脚本加载 v2.3');
-        if (document.readyState === 'complete') { createButton(); } else { window.addEventListener('load', createButton); }
+        console.log('[政府采购] 脚本加载 v2.4');
+        if (document.readyState === 'complete') createButton(); else window.addEventListener('load', createButton);
         setTimeout(createButton, 1000);
         setTimeout(createButton, 3000);
         setTimeout(createButton, 5000);
