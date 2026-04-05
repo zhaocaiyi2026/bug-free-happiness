@@ -8,11 +8,11 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
+import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
 import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -162,22 +162,18 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
         </View>
-      </View>
+      </Screen>
     );
   }
 
   const userInitial = user?.nickname?.charAt(0) || user?.phone?.slice(-2) || 'U';
 
   return (
-    <View style={styles.container}>
-      {/* 状态栏 - 深色文字 */}
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
       {/* 导航栏 - 白色背景，无标题 */}
       <View style={[styles.navBar, { paddingTop: insets.top }]}>
         <View style={{ width: 40 }} />
@@ -381,6 +377,6 @@ export default function ProfileScreen() {
           <Text style={[styles.menuText, { color: '#C8102E' }]}>退出登录</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }

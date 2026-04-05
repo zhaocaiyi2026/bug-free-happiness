@@ -7,11 +7,11 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
-  StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
+import { Screen } from '@/components/Screen';
 import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
@@ -202,8 +202,7 @@ export default function MessagesScreen() {
 
   if (loading && !refreshing) {
     return (
-      <View style={styles.container}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <Screen backgroundColor="#FFFFFF" statusBarStyle="dark">
         <View style={[styles.navBar, { paddingTop: insets.top }]}>
           <View style={{ width: 40 }} />
         </View>
@@ -211,15 +210,12 @@ export default function MessagesScreen() {
           <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>加载中...</Text>
         </View>
-      </View>
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* 状态栏 - 深色文字 */}
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
+    <Screen backgroundColor="#FFFFFF" statusBarStyle="dark">
       {/* 导航栏 - 白色背景，无标题 */}
       <View style={[styles.navBar, { paddingTop: insets.top }]}>
         <View style={{ width: 40 }} />
@@ -259,6 +255,6 @@ export default function MessagesScreen() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </Screen>
   );
 }
