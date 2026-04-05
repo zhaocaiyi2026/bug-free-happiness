@@ -12,9 +12,6 @@ WORKDIR /app
 # 复制package文件
 COPY package.json ./
 
-# 创建 pnpm-lock.yaml（如果没有）
-RUN pnpm install --lockfile-only 2>/dev/null || true
-
 # 安装依赖
 RUN pnpm install
 
@@ -40,7 +37,9 @@ RUN pnpm install --prod
 
 # 复制构建产物
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/public ./public
+
+# 复制 public 目录（如果存在）
+RUN mkdir -p public
 
 # 安装Playwright浏览器（仅chromium）
 RUN pnpm exec playwright install chromium
