@@ -319,6 +319,28 @@ export default function ProfileScreen() {
             <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
           </TouchableOpacity>
 
+          {/* 专属服务 */}
+          <TouchableOpacity 
+            style={styles.menuItem} 
+            onPress={() => Alert.alert('专属服务', 'VIP专属功能开发中，敬请期待！')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: 'rgba(217,119,6,0.1)' }]}>
+              <FontAwesome6 name="gem" size={18} color="#D97706" />
+            </View>
+            <Text style={styles.menuText}>专属</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginRight: 8 }}>
+              <View style={{ backgroundColor: '#FEF3C7', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                <FontAwesome6 name="crown" size={9} color="#D97706" />
+                <Text style={{ fontSize: 10, color: '#D97706', fontWeight: '700' }}>VIP</Text>
+              </View>
+              <View style={{ backgroundColor: '#DBEAFE', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                <Text style={{ fontSize: 10, color: '#2563EB', fontWeight: '600' }}>开发中</Text>
+              </View>
+            </View>
+            <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
+          </TouchableOpacity>
+
           <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => handleMenuPress('feedback')}>
             <View style={[styles.menuIcon, { backgroundColor: 'rgba(107,114,128,0.1)' }]}>
               <FontAwesome6 name="comment-dots" size={18} color="#6B7280" />
@@ -342,19 +364,9 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* 关于 */}
-        <TouchableOpacity style={[styles.menuSection, { flexDirection: 'row', alignItems: 'center', padding: Spacing.md }]} onPress={() => handleMenuPress('about')}>
-          <View style={[styles.menuIcon, { backgroundColor: '#F3F4F6' }]}>
-            <FontAwesome6 name="circle-info" size={18} color="#6B7280" />
-          </View>
-          <Text style={styles.menuText}>关于招采易</Text>
-          <Text style={{ fontSize: 13, color: '#9CA3AF', marginRight: Spacing.sm }}>v1.0.1</Text>
-          <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
-        </TouchableOpacity>
-
         {/* 设置 */}
         <TouchableOpacity 
-          style={[styles.menuSection, { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, marginTop: Spacing.sm }]} 
+          style={[styles.menuSection, { flexDirection: 'row', alignItems: 'center', padding: Spacing.md }]} 
           onPress={() => handleMenuPress('settings')}
           activeOpacity={0.7}
         >
@@ -363,6 +375,16 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.menuText}>设置</Text>
           <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
+        </TouchableOpacity>
+
+        {/* 关于 */}
+        <TouchableOpacity style={[styles.menuSection, { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, marginTop: Spacing.sm }]} onPress={() => handleMenuPress('about')}>
+          <View style={[styles.menuIcon, { backgroundColor: '#F3F4F6' }]}>
+            <FontAwesome6 name="circle-info" size={18} color="#6B7280" />
+          </View>
+          <Text style={styles.menuText}>关于招采易</Text>
+          <Text style={{ fontSize: 13, color: '#9CA3AF', marginRight: Spacing.sm }}>v1.0.1</Text>
+          <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" />
         </TouchableOpacity>
 
         {/* 退出登录 */}
