@@ -190,8 +190,11 @@ export const createStyles = (theme: Theme) => {
     },
     contentText: {
       fontSize: 13,
-      lineHeight: 22,
+      lineHeight: 20,
       color: '#4B5563',
+    },
+    contentTextWrapper: {
+      maxHeight: 300,
     },
     // 文档格式样式
     docSection: {
@@ -218,11 +221,14 @@ export const createStyles = (theme: Theme) => {
       marginLeft: Spacing.sm,
       marginBottom: Spacing.xs,
     },
-    // 文档内容样式
+    // 文档内容样式 - 限制最大高度，超出可滚动
     docContent: {
-      fontSize: 14,
-      lineHeight: 24,
+      fontSize: 13,
+      lineHeight: 20,
       color: '#374151',
+    },
+    docContentWrapper: {
+      maxHeight: 300,
     },
     // 格式化加载样式
     loadingFormatContainer: {

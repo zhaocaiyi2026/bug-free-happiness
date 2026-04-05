@@ -238,7 +238,7 @@ export default function DiscoverScreen() {
 
   if (loading && !refreshing) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <View style={styles.appTitleWrapper}>
@@ -251,7 +251,7 @@ export default function DiscoverScreen() {
               </View>
             </View>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>
-              <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
+              <FontAwesome6 name="magnifying-glass" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
@@ -264,7 +264,7 @@ export default function DiscoverScreen() {
   }
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
       <View style={{ flex: 1 }}>
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
@@ -279,7 +279,7 @@ export default function DiscoverScreen() {
               </View>
             </View>
             <TouchableOpacity style={styles.iconButton} onPress={() => router.navigate('/search')}>
-              <FontAwesome6 name="magnifying-glass" size={16} color="#1C1917" />
+              <FontAwesome6 name="magnifying-glass" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>

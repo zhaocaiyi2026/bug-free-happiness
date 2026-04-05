@@ -7,9 +7,9 @@ export const createStyles = (theme: Theme) => {
       flex: 1,
       backgroundColor: '#F5F5F5',
     },
-    // Header - 品牌增强型
+    // Header - 品牌增强型（蓝色主题，确保状态栏清晰可见）
     header: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#2563EB',
       paddingHorizontal: Spacing.lg,
       paddingTop: Spacing.md,
       paddingBottom: Spacing.sm,
@@ -39,17 +39,17 @@ export const createStyles = (theme: Theme) => {
     appTitle: {
       fontSize: 28,
       fontWeight: '800',
-      color: '#1C1917',
+      color: '#FFFFFF',
       letterSpacing: 1,
     },
     appTitleAccent: {
-      color: '#2563EB',
+      color: '#FFFFFF',
     },
     iconButton: {
       width: 40,
       height: 40,
       borderRadius: BorderRadius.md,
-      backgroundColor: '#F5F5F5',
+      backgroundColor: 'rgba(255,255,255,0.15)',
       justifyContent: 'center',
       alignItems: 'center',
     },

@@ -70,23 +70,18 @@ export default function PotentialCustomersScreen() {
   // 动态筛选示例列表（当用户选择不在示例中的选项时，替换最后一个）
   const [industryExamples, setIndustryExamples] = useState<string[]>(DEFAULT_INDUSTRY_EXAMPLES);
 
-  // 监听参数变化，更新筛选状态
+  // 监听参数变化，更新筛选状态（仅从其他页面返回时）
   useEffect(() => {
     if (params?.industry && params.industry !== selectedIndustry) {
       // 从行业筛选页面返回
       handleIndustryFromMore(params.industry);
     }
-    if (params?.customerType && ['all', 'bidder', 'winner'].includes(params.customerType)) {
-      setCustomerType(params.customerType as 'all' | 'bidder' | 'winner');
-    }
+    // 注意：不再从 params 自动设置 customerType，让用户手动控制
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  // 客户类型变化时搜索
-  useEffect(() => {
-    handleSearch();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customerType]);
+  // 注意：移除 customerType 变化时的自动搜索，避免切换冲突
+  // 用户需要手动点击搜索按钮
 
   const handleSearch = async () => {
     setPage(1);
@@ -206,12 +201,11 @@ export default function PotentialCustomersScreen() {
   };
 
   const handleIndustrySelect = () => {
-    // 点击"全部"跳转到行业筛选页面
+    // 点击"更多"跳转到行业筛选页面，不传递 customerType 避免覆盖
     router.push('/filter-select', {
       type: 'industry',
       selected: selectedIndustry,
       returnTo: 'potential-customers',
-      customerType: customerType,
     });
   };
 

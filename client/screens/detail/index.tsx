@@ -317,7 +317,13 @@ export default function DetailScreen() {
               </View>
               <Text style={styles.sectionTitle}>招标详情</Text>
             </View>
-            <Text style={styles.docContent}>{bid.formatted_content}</Text>
+            <ScrollView 
+              style={styles.docContentWrapper}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+            >
+              <Text style={styles.docContent}>{bid.formatted_content}</Text>
+            </ScrollView>
             
             {/* 来源 */}
             <View style={styles.sourceRow}>
@@ -336,9 +342,15 @@ export default function DetailScreen() {
               </View>
               <Text style={styles.sectionTitle}>项目详情</Text>
             </View>
-            <Text style={styles.contentText}>
-              {bid.content || '暂无详细信息，请联系招标方获取更多资料。'}
-            </Text>
+            <ScrollView 
+              style={styles.contentTextWrapper}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+            >
+              <Text style={styles.contentText}>
+                {bid.content || '暂无详细信息，请联系招标方获取更多资料。'}
+              </Text>
+            </ScrollView>
             
             {/* 来源 */}
             <View style={styles.sourceRow}>
@@ -396,8 +408,8 @@ export default function DetailScreen() {
           <Disclaimer mode="compact" />
         </View>
         
-        {/* 底部留白 - 必须足够大，确保免责声明完全可见 */}
-        <View style={{ height: 160 + insets.bottom }} />
+        {/* 底部留白 - 必须足够大，确保免责声明完全可见（底部栏约80px + 安全区） */}
+        <View style={{ height: 200 + insets.bottom }} />
       </ScrollView>
 
       {/* 底部操作栏 - 固定在底部 */}

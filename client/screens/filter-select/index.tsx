@@ -107,9 +107,9 @@ export default function FilterSelectScreen() {
     
     // 根据返回目标页面处理
     if (returnTo === 'potential-customers') {
+      // 只传递行业参数，不传递 customerType，让潜在客户页面自己管理
       router.replace('/potential-customers', {
         industry: itemName,
-        customerType: params?.customerType || 'all',
       });
       return;
     }
