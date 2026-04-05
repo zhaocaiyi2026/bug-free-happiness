@@ -33,8 +33,8 @@ export default function ProfileScreen() {
 
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [lastViewedFavoriteCount, setLastViewedFavoriteCount] = useState(0);
-  const [historyCount, setHistoryCount] = useState(56);
-  const [subscribeCount, setSubscribeCount] = useState(8);
+  const [historyCount, setHistoryCount] = useState(0);
+  const [subscribeCount, setSubscribeCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const hasNewFavorite = favoriteCount > lastViewedFavoriteCount;
@@ -62,6 +62,7 @@ export default function ProfileScreen() {
     try {
       await refreshUser();
 
+      // 获取收藏数量
       const favRes = await fetch(
         `${API_BASE_URL}/api/v1/favorites?userId=${user?.id || 1}&pageSize=1`
       );
@@ -69,6 +70,26 @@ export default function ProfileScreen() {
 
       if (favData.success) {
         setFavoriteCount(favData.data.total);
+      }
+
+      // 获取订阅数量
+      const subRes = await fetch(
+        `${API_BASE_URL}/api/v1/subscriptions?userId=${user?.id || 1}`
+      );
+      const subData = await subRes.json();
+
+      if (subData.success) {
+        setSubscribeCount(subData.data?.length || 0);
+      }
+
+      // 获取搜索历史数量
+      const historyRes = await fetch(
+        `${API_BASE_URL}/api/v1/search-history?userId=${user?.id || 1}`
+      );
+      const historyData = await historyRes.json();
+
+      if (historyData.success) {
+        setHistoryCount(historyData.count || 0);
       }
     } catch (error) {
       console.error('获取用户数据失败:', error);
@@ -135,7 +156,6 @@ export default function ProfileScreen() {
     { key: 'favorites', name: '收藏', icon: 'heart', color: '#C8102E', count: favoriteCount },
     { key: 'history', name: '历史', icon: 'clock-rotate-left', color: '#2563EB', count: historyCount },
     { key: 'subscribe', name: '订阅', icon: 'bookmark', color: '#059669', count: subscribeCount },
-    { key: 'settings', name: '设置', icon: 'gear', color: '#6B7280', count: 0 },
   ];
 
   const vipBenefits = ['实时推送', '数据分析', '优先客服', '专属报告'];

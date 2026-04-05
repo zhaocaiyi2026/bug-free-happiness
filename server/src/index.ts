@@ -45,6 +45,7 @@ import syncStatusRouter from './routes/sync-status';
 import bidAutoFetchRouter from './routes/bid-auto-fetch';
 import csvImportRouter from './routes/csv-import';
 import formatBidRouter from './routes/format-bid';
+import searchHistoryRouter from './routes/search-history';
 import { createCollector, collectAndSave } from './services/compliant-collector';
 import { startDataSyncScheduler } from './services/data-sources';
 
@@ -106,6 +107,7 @@ app.use('/api/v1/sync-status', syncStatusRouter);
 app.use('/api/v1/bid-auto-fetch', bidAutoFetchRouter);
 app.use('/api/v1/csv-import', csvImportRouter);
 app.use('/api/v1/format-bid', formatBidRouter);
+app.use('/api/v1/search-history', searchHistoryRouter);
 
 // 合规采集器路由
 app.post('/api/v1/compliant-collect', async (req, res) => {
