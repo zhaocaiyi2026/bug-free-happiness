@@ -238,6 +238,12 @@ export default function MessagesScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {/* 页面标题 */}
+        <View style={styles.pageTitle}>
+          <Text style={styles.pageTitleText}>消息中心</Text>
+          <Text style={styles.pageSubtitle}>查看各类消息提醒</Text>
+        </View>
+
         {/* Categories */}
         <View style={styles.categoriesContainer}>
           {categories.map(renderCategory)}

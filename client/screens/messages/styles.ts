@@ -21,6 +21,23 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '700',
       color: '#1F2937',
     },
+    // 页面标题区域
+    pageTitle: {
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    pageTitleText: {
+      fontSize: 28,
+      fontWeight: '800',
+      color: '#1F2937',
+      letterSpacing: -0.5,
+    },
+    pageSubtitle: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      marginTop: 4,
+    },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -54,7 +71,7 @@ export const createStyles = (theme: Theme) => {
     // 消息列表容器
     categoriesContainer: {
       paddingHorizontal: 16,
-      paddingTop: 12,
+      paddingTop: 8,
     },
     // 消息卡片 - 极简风格
     categoryCard: {
