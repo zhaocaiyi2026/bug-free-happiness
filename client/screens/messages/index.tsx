@@ -169,45 +169,33 @@ export default function MessagesScreen() {
         key={category.key}
         style={styles.categoryCard}
         onPress={() => handleCategoryPress(category)}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
       >
-        <View style={styles.categoryHeader}>
+        <View style={styles.iconWrapper}>
           <View style={[styles.categoryIcon, { backgroundColor: category.bgColor }]}>
-            <FontAwesome6 name={category.icon} size={24} color={category.color} />
+            <FontAwesome6 name={category.icon} size={22} color={category.color} />
           </View>
-          <View style={styles.categoryInfo}>
-            <View style={styles.categoryTitleRow}>
-              <Text style={styles.categoryTitle}>{category.title}</Text>
-              {category.count > 0 && (
-                <View style={[styles.categoryBadge, { backgroundColor: category.color }]}>
-                  <Text style={styles.categoryBadgeText}>
-                    {category.count > 99 ? '99+' : category.count}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.categoryDesc} numberOfLines={1}>
-              {category.latestMessage?.description || category.description}
-            </Text>
-          </View>
-          <View style={styles.categoryArrow}>
-            <FontAwesome6 name="chevron-right" size={16} color="#D1D5DB" />
-          </View>
-        </View>
-
-        {category.latestMessage && (
-          <View style={styles.latestMessage}>
-            <View style={[styles.latestMessageDot, { backgroundColor: category.color }]} />
-            <View style={styles.latestMessageContent}>
-              <Text style={styles.latestMessageTitle} numberOfLines={2}>
-                {category.latestMessage.title}
+          {category.count > 0 && (
+            <View style={[styles.categoryBadge, { backgroundColor: category.color }]}>
+              <Text style={styles.categoryBadgeText}>
+                {category.count > 99 ? '99+' : category.count}
               </Text>
-              <Text style={styles.latestMessageTime}>
+            </View>
+          )}
+        </View>
+        <View style={styles.categoryContent}>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.categoryTitle}>{category.title}</Text>
+            {category.latestMessage && (
+              <Text style={styles.categoryTime}>
                 {formatTime(category.latestMessage.created_at)}
               </Text>
-            </View>
+            )}
           </View>
-        )}
+          <Text style={styles.categoryMessage} numberOfLines={2}>
+            {category.latestMessage?.description || category.description}
+          </Text>
+        </View>
       </TouchableOpacity>
     );
   }, [styles]);

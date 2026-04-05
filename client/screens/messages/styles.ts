@@ -5,17 +5,16 @@ export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F7F8FA',
+      backgroundColor: '#FFFFFF',
     },
     scrollContent: {
       flexGrow: 1,
-      paddingBottom: Spacing['5xl'],
+      paddingBottom: 100,
     },
     // 导航栏
     navBar: {
       backgroundColor: '#FFFFFF',
       paddingHorizontal: Spacing.lg,
-      borderBottomWidth: 0,
     },
     navTitle: {
       fontSize: 18,
@@ -26,7 +25,7 @@ export const createStyles = (theme: Theme) => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#F7F8FA',
+      backgroundColor: '#FFFFFF',
     },
     loadingText: {
       marginTop: Spacing.sm,
@@ -37,7 +36,7 @@ export const createStyles = (theme: Theme) => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingVertical: Spacing['3xl'],
+      paddingVertical: 80,
     },
     emptyIcon: {
       width: 80,
@@ -54,93 +53,69 @@ export const createStyles = (theme: Theme) => {
     },
     // 消息列表容器
     categoriesContainer: {
-      paddingHorizontal: Spacing.md,
-      paddingTop: Spacing.sm,
+      paddingHorizontal: 16,
+      paddingTop: 12,
     },
-    // 消息卡片 - 简洁现代风格
+    // 消息卡片 - 极简风格
     categoryCard: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      marginBottom: Spacing.sm,
-      overflow: 'hidden',
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingVertical: 16,
+      paddingHorizontal: 4,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: '#F0F0F0',
+    },
+    categoryIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    categoryContent: {
+      flex: 1,
+      marginLeft: 12,
     },
     categoryHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.md,
-    },
-    categoryIcon: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    categoryInfo: {
-      flex: 1,
-      marginLeft: Spacing.md,
-      marginRight: Spacing.sm,
-    },
-    categoryTitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      justifyContent: 'space-between',
       marginBottom: 4,
     },
     categoryTitle: {
-      fontSize: 17,
+      fontSize: 16,
       fontWeight: '600',
       color: '#1F2937',
     },
+    categoryTime: {
+      fontSize: 12,
+      color: '#9CA3AF',
+    },
+    categoryMessage: {
+      fontSize: 14,
+      color: '#6B7280',
+      lineHeight: 20,
+      marginTop: 2,
+    },
     categoryBadge: {
-      marginLeft: Spacing.sm,
-      minWidth: 20,
-      height: 20,
-      borderRadius: 10,
-      paddingHorizontal: 6,
+      position: 'absolute',
+      top: -4,
+      right: -4,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
       alignItems: 'center',
       justifyContent: 'center',
+      paddingHorizontal: 5,
     },
     categoryBadgeText: {
-      fontSize: 12,
+      fontSize: 11,
       color: '#FFFFFF',
       fontWeight: '700',
     },
-    categoryDesc: {
-      fontSize: 13,
-      color: '#9CA3AF',
-      lineHeight: 18,
-    },
-    categoryArrow: {
-      marginLeft: Spacing.xs,
-    },
-    // 最新消息区域
-    latestMessage: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      paddingHorizontal: Spacing.md,
-      paddingBottom: Spacing.md,
-      marginLeft: 68,
-    },
-    latestMessageDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      marginTop: 6,
-      marginRight: Spacing.sm,
-    },
-    latestMessageContent: {
-      flex: 1,
-    },
-    latestMessageTitle: {
-      fontSize: 14,
-      color: '#374151',
-      lineHeight: 20,
-      marginBottom: 4,
-    },
-    latestMessageTime: {
-      fontSize: 12,
-      color: '#9CA3AF',
+    // 图标容器（带徽章）
+    iconWrapper: {
+      position: 'relative',
     },
   });
 };
