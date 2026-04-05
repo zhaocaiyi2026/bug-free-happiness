@@ -1,5 +1,6 @@
 # 招采易API服务 - Docker镜像 (支持Playwright)
 # 基于Node.js 20 + Playwright
+# 适用于 Render 部署（根目录为 server）
 
 # ==================== 构建阶段 ====================
 FROM node:20-alpine AS builder
@@ -11,8 +12,6 @@ WORKDIR /app
 
 # 复制package文件
 COPY package.json pnpm-lock.yaml ./
-COPY server/package.json ./server/
-COPY client/package.json ./client/
 
 # 安装依赖
 RUN pnpm install --frozen-lockfile
@@ -20,8 +19,7 @@ RUN pnpm install --frozen-lockfile
 # 复制源代码
 COPY . .
 
-# 构建服务端
-WORKDIR /app/server
+# 构建
 RUN pnpm run build
 
 # ==================== 生产镜像 ====================
@@ -34,30 +32,23 @@ WORKDIR /app
 
 # 复制package文件
 COPY package.json pnpm-lock.yaml ./
-COPY server/package.json ./server/
 
 # 安装生产依赖（包含playwright）
-WORKDIR /app/server
 RUN pnpm install --prod --frozen-lockfile
 
 # 复制构建产物
-COPY --from=builder /app/server/dist ./dist
-COPY --from=builder /app/server/public ./public
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
 
 # 安装Playwright浏览器（仅chromium）
 RUN pnpm exec playwright install chromium
 
 # 环境变量
 ENV NODE_ENV=production
-ENV PORT=9000
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PORT=9091
 
 # 暴露端口
-EXPOSE 9000
-
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:9000/api/v1/health || exit 1
+EXPOSE 9091
 
 # 启动命令
 CMD ["node", "dist/index.js"]
