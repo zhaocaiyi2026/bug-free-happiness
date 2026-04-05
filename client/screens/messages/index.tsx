@@ -169,11 +169,11 @@ export default function MessagesScreen() {
         key={category.key}
         style={styles.categoryCard}
         onPress={() => handleCategoryPress(category)}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
       >
         <View style={styles.categoryHeader}>
           <View style={[styles.categoryIcon, { backgroundColor: category.bgColor }]}>
-            <FontAwesome6 name={category.icon} size={20} color={category.color} />
+            <FontAwesome6 name={category.icon} size={24} color={category.color} />
           </View>
           <View style={styles.categoryInfo}>
             <View style={styles.categoryTitleRow}>
@@ -186,19 +186,26 @@ export default function MessagesScreen() {
                 </View>
               )}
             </View>
-            <Text style={styles.categoryDesc}>{category.description}</Text>
+            <Text style={styles.categoryDesc} numberOfLines={1}>
+              {category.latestMessage?.description || category.description}
+            </Text>
           </View>
-          <FontAwesome6 name="chevron-right" size={16} color="#D1D5DB" />
+          <View style={styles.categoryArrow}>
+            <FontAwesome6 name="chevron-right" size={16} color="#D1D5DB" />
+          </View>
         </View>
 
         {category.latestMessage && (
           <View style={styles.latestMessage}>
-            <Text style={styles.latestMessageTitle} numberOfLines={1}>
-              {category.latestMessage.description}
-            </Text>
-            <Text style={styles.latestMessageTime}>
-              {formatTime(category.latestMessage.created_at)}
-            </Text>
+            <View style={[styles.latestMessageDot, { backgroundColor: category.color }]} />
+            <View style={styles.latestMessageContent}>
+              <Text style={styles.latestMessageTitle} numberOfLines={2}>
+                {category.latestMessage.title}
+              </Text>
+              <Text style={styles.latestMessageTime}>
+                {formatTime(category.latestMessage.created_at)}
+              </Text>
+            </View>
           </View>
         )}
       </TouchableOpacity>
@@ -243,12 +250,6 @@ export default function MessagesScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>消息中心</Text>
-          <Text style={styles.headerSubtitle}>查看各类消息提醒</Text>
-        </View>
-
         {/* Categories */}
         <View style={styles.categoriesContainer}>
           {categories.map(renderCategory)}
