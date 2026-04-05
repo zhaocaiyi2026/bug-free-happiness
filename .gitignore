@@ -10,3 +10,6 @@ expo-env.d.ts
 logs/
 *.tsbuildinfo
 node-compile-cache/
+
+# APK files (too large for GitHub)
+*.apk
