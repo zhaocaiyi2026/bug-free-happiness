@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: zcy-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: singapore
+    plan: free
+    disk:
+      name: data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "9000"
+      - key: COZE_SUPABASE_URL
+        sync: false
+      - key: COZE_SUPABASE_ANON_KEY
+        sync: false
+      - key: ALIYUN_ACCESS_KEY_ID
+        sync: false
+      - key: ALIYUN_ACCESS_KEY_SECRET
+        sync: false
+      - key: APISPACE_API_KEY
+        sync: false
+    healthCheckPath: /api/v1/health
