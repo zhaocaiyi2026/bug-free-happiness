@@ -85,9 +85,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/82d1d27a-9a18-4271-995f-606a09996296"
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "experiments": {
       "typedRoutes": true
     }
