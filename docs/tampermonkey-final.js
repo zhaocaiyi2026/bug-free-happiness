@@ -115,28 +115,79 @@
         }
         if (!title) title = document.title.split(/[-_|【\[]/)[0].trim();
         
-        // 提取内容
+        // 提取内容 - 优先查找政府采购专用内容区域
         let content = '';
+        
+        // 政府采购网站常用的内容选择器
         const contentSelectors = [
+            // 通用政府采购内容区域
             '.article-content', '.notice-content', '.content',
-            '.detail-content', '[class*="content"]', 'article',
-            '.main-content', '#content', '.text-content'
+            '.detail-content', '.text-content', '.main-content',
+            '#content', '#zoom',
+            // 政采云平台
+            '.zcy-content', '.notice-detail', '.detail-box',
+            // 公共资源交易
+            '.bid-content', '.info-content', '.article-body',
+            // 通用
+            'article', '.article', '.post-content'
         ];
+        
         for (const sel of contentSelectors) {
             const el = document.querySelector(sel);
-            if (el && el.innerText.trim().length > 100) {
+            if (el && el.innerText.trim().length > 50) {
                 content = el.innerText.trim();
+                console.log('[政府采购] 使用选择器:', sel, '内容长度:', content.length);
                 break;
             }
         }
-        if (!content) {
+        
+        // 如果还是没找到，尝试更智能的方式
+        if (!content || content.length < 50) {
+            // 查找包含关键信息的最大文本块
             const body = document.body.cloneNode(true);
-            ['nav', 'header', 'footer', '.nav', '.header', '.footer', 
-             '.sidebar', '.menu', '.comment', '.ad', '.ads'].forEach(s => {
-                body.querySelectorAll(s).forEach(el => el.remove());
+            
+            // 移除无关元素
+            const removeSelectors = [
+                'nav', 'header', 'footer', '.nav', '.header', '.footer', 
+                '.sidebar', '.menu', '.comment', '.ad', '.ads',
+                '.navigation', '.breadcrumb', '.pagination',
+                'script', 'style', 'noscript', 'iframe',
+                '.hidden', '.no-print', '.print-only',
+                '[class*="menu"]', '[class*="nav"]', '[class*="header"]',
+                '[class*="footer"]', '[class*="sidebar"]',
+                // 猴子按钮
+                '#gp-import-container', '#gp-import-btn', '#gp-status'
+            ];
+            
+            removeSelectors.forEach(s => {
+                try {
+                    body.querySelectorAll(s).forEach(el => el.remove());
+                } catch (e) {}
             });
-            content = body.innerText.trim();
+            
+            // 获取纯文本
+            let text = body.innerText || body.textContent || '';
+            
+            // 清理多余空白
+            text = text.replace(/\s+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+            
+            // 如果内容太短，可能是全屏遮罩或空页面
+            if (text.length > 100) {
+                content = text;
+            }
         }
+        
+        // 清理内容中的CSS和JS代码
+        content = content
+            .replace(/\.[a-zA-Z-]+\s*\{[^}]*\}/g, '')  // 移除CSS
+            .replace(/function\s*\([^)]*\)\s*\{[^}]*\}/g, '')  // 移除JS函数
+            .replace(/var\s+\w+\s*=\s*[^;]+;/g, '')  // 移除变量声明
+            .replace(/const\s+\w+\s*=\s*[^;]+;/g, '')
+            .replace(/let\s+\w+\s*=\s*[^;]+;/g, '')
+            .replace(/<!--[\s\S]*?-->/g, '')  // 移除HTML注释
+            .replace(/\s+/g, ' ')  // 合并空白
+            .trim();
+        
         content = content.substring(0, 50000);
         
         // 提取日期
