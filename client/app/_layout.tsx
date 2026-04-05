@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack, useSegments, useRootNavigationState, useRouter, useNavigationContainerRef } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { LogBox, View, StyleSheet } from 'react-native';
+import { LogBox, View, StyleSheet, Alert, Platform } from 'react-native';
+import * as Updates from 'expo-updates';
 import Toast from 'react-native-toast-message';
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ColorSchemeProvider } from '@/hooks/useColorScheme';
@@ -11,6 +12,40 @@ import { SplashScreen } from '@/components/SplashScreen';
 LogBox.ignoreLogs([
   "TurboModuleRegistry.getEnforcing(...): 'RNMapsAirModule' could not be found",
 ]);
+
+// OTA 更新检查
+function useOTAUpdate() {
+  useEffect(() => {
+    // 仅在非开发环境检查更新
+    if (__DEV__) return;
+    
+    const checkUpdate = async () => {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          const result = await Updates.fetchUpdateAsync();
+          if (result.isNew) {
+            Alert.alert(
+              '发现新版本',
+              '已下载更新，是否立即重启应用？',
+              [
+                { text: '稍后', style: 'cancel' },
+                { 
+                  text: '立即重启', 
+                  onPress: () => Updates.reloadAsync() 
+                }
+              ]
+            );
+          }
+        }
+      } catch (error) {
+        console.log('[OTA] 检查更新失败:', error);
+      }
+    };
+    
+    checkUpdate();
+  }, []);
+}
 
 // 认证重定向组件
 function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -53,6 +88,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  // 启用 OTA 热更新检查
+  useOTAUpdate();
+  
   return (
     <AuthProvider>
       <ColorSchemeProvider>

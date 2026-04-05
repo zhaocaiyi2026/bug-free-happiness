@@ -77,8 +77,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           "microphonePermission": `招采易App需要访问麦克风以录制视频声音。`,
           "recordAudioAndroid": true
         }
-      ]
+      ],
+      "expo-updates"
     ],
+    "updates": {
+      "enabled": true,
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/82d1d27a-9a18-4271-995f-606a09996296"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "experiments": {
       "typedRoutes": true
     }
