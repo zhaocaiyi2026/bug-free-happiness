@@ -203,8 +203,10 @@ export default function MessagesScreen() {
   if (loading && !refreshing) {
     return (
       <Screen backgroundColor="#FFFFFF" statusBarStyle="dark">
-        <View style={[styles.navBar, { paddingTop: insets.top }]}>
-          <View style={{ width: 40 }} />
+        <View style={[styles.navBar, { paddingTop: insets.top + Spacing.sm }]}>
+          <View style={styles.navBarContent}>
+            <Text style={styles.navBarTitle}>消息中心</Text>
+          </View>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
@@ -216,9 +218,12 @@ export default function MessagesScreen() {
 
   return (
     <Screen backgroundColor="#FFFFFF" statusBarStyle="dark">
-      {/* 导航栏 - 白色背景，无标题 */}
-      <View style={[styles.navBar, { paddingTop: insets.top }]}>
-        <View style={{ width: 40 }} />
+      {/* 导航栏 */}
+      <View style={[styles.navBar, { paddingTop: insets.top + Spacing.sm }]}>
+        <View style={styles.navBarContent}>
+          <Text style={styles.navBarTitle}>消息中心</Text>
+          <Text style={styles.navBarSubtitle}>查看各类消息提醒</Text>
+        </View>
       </View>
 
       <ScrollView
@@ -234,12 +239,6 @@ export default function MessagesScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* 页面标题 */}
-        <View style={styles.pageTitle}>
-          <Text style={styles.pageTitleText}>消息中心</Text>
-          <Text style={styles.pageSubtitle}>查看各类消息提醒</Text>
-        </View>
-
         {/* Categories */}
         <View style={styles.categoriesContainer}>
           {categories.map(renderCategory)}

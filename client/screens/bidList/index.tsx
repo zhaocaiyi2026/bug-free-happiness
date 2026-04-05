@@ -304,7 +304,7 @@ export default function BidListScreen() {
   if (loading) {
     return (
       <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+        <View style={[styles.header, isWinBidList && styles.winHeader, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <FontAwesome6 name="arrow-left" size={16} color="#FFFFFF" />
@@ -322,7 +322,7 @@ export default function BidListScreen() {
   }
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
       <View style={{ flex: 1 }}>
         {/* Header */}
         <View style={[styles.header, isWinBidList && styles.winHeader, { paddingTop: insets.top + Spacing.sm }]}>

@@ -15,28 +15,23 @@ export const createStyles = (theme: Theme) => {
     navBar: {
       backgroundColor: '#FFFFFF',
       paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6',
     },
-    navTitle: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: '#1F2937',
+    navBarContent: {
+      flexDirection: 'column',
     },
-    // 页面标题区域
-    pageTitle: {
-      paddingHorizontal: 16,
-      paddingTop: 16,
-      paddingBottom: 8,
-    },
-    pageTitleText: {
-      fontSize: 28,
+    navBarTitle: {
+      fontSize: 24,
       fontWeight: '800',
       color: '#1F2937',
       letterSpacing: -0.5,
     },
-    pageSubtitle: {
-      fontSize: 14,
+    navBarSubtitle: {
+      fontSize: 13,
       color: '#9CA3AF',
-      marginTop: 4,
+      marginTop: 2,
     },
     loadingContainer: {
       flex: 1,
