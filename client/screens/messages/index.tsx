@@ -7,14 +7,14 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
-import { Screen } from '@/components/Screen';
+import { createStyles } from './styles';
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Spacing } from '@/constants/theme';
-import { createStyles } from './styles';
 
 interface Message {
   id: number;
@@ -72,7 +72,6 @@ export default function MessagesScreen() {
   };
 
   const processCategories = (messages: Message[]) => {
-    // 分类统计
     const deadlineMessages = messages.filter(m => m.title.includes('截止'));
     const winbidMessages = messages.filter(m => m.title.includes('中标'));
     const matchMessages = messages.filter(m => m.title.includes('匹配'));
@@ -132,19 +131,15 @@ export default function MessagesScreen() {
   const handleCategoryPress = (category: MessageCategory) => {
     switch (category.key) {
       case 'deadline':
-        // 招标截止提醒 → 跳转到紧急招标列表
         router.push('/bidList', { type: 'urgent' });
         break;
       case 'winbid':
-        // 中标公告提醒 → 跳转到中标列表
         router.push('/bidList', { type: 'win' });
         break;
       case 'match':
-        // 新招标匹配 → 跳转到今日新增列表
         router.push('/bidList', { type: 'today' });
         break;
       case 'system':
-        // 系统通知 → 跳转到消息列表
         router.push('/message-list', { category: category.key });
         break;
       default:
@@ -178,7 +173,7 @@ export default function MessagesScreen() {
       >
         <View style={styles.categoryHeader}>
           <View style={[styles.categoryIcon, { backgroundColor: category.bgColor }]}>
-            <FontAwesome6 name={category.icon} size={22} color={category.color} />
+            <FontAwesome6 name={category.icon} size={20} color={category.color} />
           </View>
           <View style={styles.categoryInfo}>
             <View style={styles.categoryTitleRow}>
@@ -198,8 +193,7 @@ export default function MessagesScreen() {
 
         {category.latestMessage && (
           <View style={styles.latestMessage}>
-            <View style={styles.latestMessageDot} />
-            <Text style={styles.latestMessageText} numberOfLines={1}>
+            <Text style={styles.latestMessageTitle} numberOfLines={1}>
               {category.latestMessage.description}
             </Text>
             <Text style={styles.latestMessageTime}>
@@ -213,26 +207,32 @@ export default function MessagesScreen() {
 
   if (loading && !refreshing) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
-        <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-          <Text style={styles.headerTitle}>消息</Text>
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={[styles.navBar, { paddingTop: insets.top }]}>
+          <Text style={styles.navTitle}>消息</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>加载中...</Text>
         </View>
-      </Screen>
+      </View>
     );
   }
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
+    <View style={styles.container}>
+      {/* 状态栏 - 深色文字 */}
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      
+      {/* 导航栏 - 白色背景 */}
+      <View style={[styles.navBar, { paddingTop: insets.top }]}>
+        <Text style={styles.navTitle}>消息</Text>
+      </View>
+
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingTop: insets.top + Spacing.sm },
-        ]}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -245,7 +245,7 @@ export default function MessagesScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>消息</Text>
+          <Text style={styles.headerTitle}>消息中心</Text>
           <Text style={styles.headerSubtitle}>查看各类消息提醒</Text>
         </View>
 
@@ -254,14 +254,16 @@ export default function MessagesScreen() {
           {categories.map(renderCategory)}
         </View>
 
-        {/* Tips */}
-        <View style={styles.tipsCard}>
-          <FontAwesome6 name="lightbulb" size={16} color="#F59E0B" />
-          <Text style={styles.tipsText}>
-            点击分类查看相关项目列表
-          </Text>
-        </View>
+        {/* Empty State */}
+        {categories.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIcon}>
+              <FontAwesome6 name="bell-slash" size={32} color="#9CA3AF" />
+            </View>
+            <Text style={styles.emptyText}>暂无消息</Text>
+          </View>
+        )}
       </ScrollView>
-    </Screen>
+    </View>
   );
 }

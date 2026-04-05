@@ -404,7 +404,7 @@ export default function DetailScreen() {
       {/* 底部操作栏 */}
       <View style={[styles.bottomBar, { paddingBottom: Spacing.md + insets.bottom }]}>
         <TouchableOpacity 
-          style={[styles.bottomButton, styles.collectButton, isFavorite && styles.collectButtonActive]}
+          style={[styles.collectButton, isFavorite && styles.collectButtonActive]}
           onPress={handleToggleFavorite}
         >
           <FontAwesome6 
@@ -418,7 +418,7 @@ export default function DetailScreen() {
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={[styles.bottomButton, styles.callButton]}
+          style={styles.callButton}
           onPress={() => handleCall(bid.contact_phone || '')}
         >
           <FontAwesome6 name="phone" size={16} color="#FFFFFF" />

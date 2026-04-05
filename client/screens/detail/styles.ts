@@ -280,50 +280,57 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#FFFFFF',
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.sm,
-      paddingBottom: Spacing.md,
       borderTopWidth: 1,
       borderTopColor: '#E5E7EB',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: 0.08,
+      shadowOpacity: 0.06,
       shadowRadius: 8,
       elevation: 8,
     },
-    bottomButton: {
+    // 收藏按钮 - 次要按钮
+    collectButton: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: Spacing.sm,
-      borderRadius: BorderRadius.md,
-      marginHorizontal: 4,
-    },
-    callButton: {
-      backgroundColor: '#2563EB',
-    },
-    callButtonText: {
-      color: '#FFFFFF',
-      fontSize: 14,
-      fontWeight: '600',
-      marginLeft: Spacing.xs,
-    },
-    collectButton: {
+      paddingVertical: Spacing.sm + 2,
+      borderRadius: 12,
       backgroundColor: '#F3F4F6',
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
-    },
-    collectButtonText: {
-      color: '#374151',
-      fontSize: 14,
-      fontWeight: '600',
-      marginLeft: Spacing.xs,
+      marginRight: Spacing.sm,
     },
     collectButtonActive: {
       backgroundColor: '#FEF2F2',
-      borderColor: '#FECACA',
+    },
+    collectButtonText: {
+      color: '#6B7280',
+      fontSize: 14,
+      fontWeight: '600',
+      marginLeft: Spacing.xs,
     },
     collectButtonTextActive: {
       color: '#DC2626',
+    },
+    // 电话按钮 - 主要按钮
+    callButton: {
+      flex: 2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: Spacing.sm + 2,
+      borderRadius: 12,
+      backgroundColor: '#2563EB',
+      shadowColor: '#2563EB',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    callButtonText: {
+      color: '#FFFFFF',
+      fontSize: 15,
+      fontWeight: '700',
+      marginLeft: Spacing.xs,
     },
     // 加载状态
     loadingContainer: {
