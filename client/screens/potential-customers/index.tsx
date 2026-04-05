@@ -401,11 +401,11 @@ export default function PotentialCustomersScreen() {
   // 非VIP用户显示提示
   if (!hasVipAccess) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+      <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
           <View style={styles.headerTop}>
             <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-              <FontAwesome6 name="arrow-left" size={18} color="#FFFFFF" />
+              <FontAwesome6 name="arrow-left" size={18} color="#2563EB" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>潜在客户</Text>
             <View style={styles.headerRight} />
@@ -427,12 +427,12 @@ export default function PotentialCustomersScreen() {
   }
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="light">
+    <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <FontAwesome6 name="arrow-left" size={18} color="#FFFFFF" />
+            <FontAwesome6 name="arrow-left" size={18} color="#2563EB" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>潜在客户</Text>
           <View style={styles.headerRight} />

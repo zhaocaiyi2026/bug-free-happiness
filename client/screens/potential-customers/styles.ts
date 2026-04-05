@@ -9,9 +9,11 @@ export const createStyles = (theme: Theme) => {
     },
     // Header
     header: {
-      backgroundColor: '#2563EB',
+      backgroundColor: '#FFFFFF',
       paddingHorizontal: Spacing.md,
       paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
     },
     headerTop: {
       flexDirection: 'row',
@@ -23,14 +25,14 @@ export const createStyles = (theme: Theme) => {
       width: 36,
       height: 36,
       borderRadius: BorderRadius.md,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: '#F3F4F6',
       justifyContent: 'center',
       alignItems: 'center',
     },
     headerTitle: {
       fontSize: 18,
       fontWeight: '700',
-      color: '#FFFFFF',
+      color: '#1C1917',
     },
     headerRight: {
       width: 40,
