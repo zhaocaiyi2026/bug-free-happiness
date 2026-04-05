@@ -619,7 +619,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.appTitleRow}>
                   <Text style={styles.appTitle}>招采易</Text>
-                  <Text style={styles.appSubtitle}>一站式招标采购信息平台</Text>
+                  <Text style={styles.appSubtitle}>一站式招标采购信息平台 v1.0.1</Text>
                 </View>
               </View>
               <View style={styles.headerActions}>

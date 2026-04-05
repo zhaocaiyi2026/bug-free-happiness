@@ -190,6 +190,36 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* VIP卡片 - 紧跟用户卡片 */}
+        <View style={styles.vipCard}>
+          <View style={styles.vipHeader}>
+            <View style={styles.vipIcon}>
+              <FontAwesome6 name="crown" size={18} color="#FFFFFF" />
+            </View>
+            <View>
+              <Text style={styles.vipTitle}>VIP会员服务</Text>
+              <Text style={styles.vipDesc}>
+                {user?.vip_level && user.vip_level > 0
+                  ? VIP_LEVELS[user.vip_level]
+                  : '开通VIP，解锁全部高级功能'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.vipBenefits}>
+            {vipBenefits.map((benefit, index) => (
+              <View key={index} style={styles.vipBenefit}>
+                <FontAwesome6 name="check" size={10} color="#92400E" />
+                <Text style={styles.vipBenefitText}>{benefit}</Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity style={styles.vipButton} onPress={handleUpgradeVIP}>
+            <Text style={styles.vipButtonText}>
+              {user?.vip_level && user.vip_level > 0 ? '续费升级' : '立即开通'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* 统计卡片 */}
         <View style={styles.statsCard}>
           <TouchableOpacity 
@@ -243,36 +273,6 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
-
-        {/* VIP卡片 */}
-        <View style={styles.vipCard}>
-          <View style={styles.vipHeader}>
-            <View style={styles.vipIcon}>
-              <FontAwesome6 name="crown" size={18} color="#FFFFFF" />
-            </View>
-            <View>
-              <Text style={styles.vipTitle}>VIP会员服务</Text>
-              <Text style={styles.vipDesc}>
-                {user?.vip_level && user.vip_level > 0
-                  ? VIP_LEVELS[user.vip_level]
-                  : '开通VIP，解锁全部高级功能'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.vipBenefits}>
-            {vipBenefits.map((benefit, index) => (
-              <View key={index} style={styles.vipBenefit}>
-                <FontAwesome6 name="check" size={10} color="#92400E" />
-                <Text style={styles.vipBenefitText}>{benefit}</Text>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacity style={styles.vipButton} onPress={handleUpgradeVIP}>
-            <Text style={styles.vipButtonText}>
-              {user?.vip_level && user.vip_level > 0 ? '续费升级' : '立即开通'}
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* 菜单列表 */}
