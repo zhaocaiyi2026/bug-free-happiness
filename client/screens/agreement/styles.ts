@@ -32,7 +32,7 @@ export const createStyles = (theme: Theme) => {
     },
     content: {
       padding: Spacing.lg,
-      paddingBottom: Spacing['3xl'],
+      paddingBottom: Spacing['4xl'],
     },
     sectionTitle: {
       marginTop: Spacing.lg,

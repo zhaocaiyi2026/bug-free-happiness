@@ -23,6 +23,7 @@ function getLLMClient(): LLMClient {
  * 2. 查重（基于 source_url 或标题）
  * 3. 从内容中提取联系人和电话
  * 4. 入库
+ * 5. 自动调用豆包大模型格式化
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
@@ -43,8 +44,10 @@ router.post('/', async (req: Request, res: Response) => {
       duplicate: 0,
       extracted: 0,
       imported: 0,
+      formatted: 0,
       failed: 0,
-      errors: [] as string[]
+      errors: [] as string[],
+      importedIds: [] as number[]
     };
 
     for (const item of items) {
@@ -118,9 +121,11 @@ router.post('/', async (req: Request, res: Response) => {
         };
 
         // 5. 入库
-        const { error: insertError } = await supabase
+        const { data: insertedBid, error: insertError } = await supabase
           .from('bids')
-          .insert(bidData);
+          .insert(bidData)
+          .select('id')
+          .single();
 
         if (insertError) {
           results.failed++;
@@ -128,7 +133,8 @@ router.post('/', async (req: Request, res: Response) => {
           console.error('[CSV导入] 入库失败:', insertError);
         } else {
           results.imported++;
-          console.log(`[CSV导入] 成功入库: ${title.substring(0, 50)}...`);
+          results.importedIds.push(insertedBid.id);
+          console.log(`[CSV导入] 成功入库: ${title.substring(0, 50)}... ID: ${insertedBid.id}`);
         }
 
       } catch (error: any) {
@@ -138,7 +144,15 @@ router.post('/', async (req: Request, res: Response) => {
       }
     }
 
-    console.log(`[CSV导入] 完成: 总计=${results.total}, 重复=${results.duplicate}, 提取=${results.extracted}, 入库=${results.imported}, 失败=${results.failed}`);
+    // 6. 后台异步格式化（不阻塞响应）
+    if (results.importedIds.length > 0) {
+      // 异步执行格式化，不等待结果
+      formatBidsAsync(results.importedIds).catch(err => {
+        console.error('[CSV导入] 后台格式化错误:', err);
+      });
+    }
+
+    console.log(`[CSV导入] 完成: 总计=${results.total}, 重复=${results.duplicate}, 入库=${results.imported}, 失败=${results.failed}`);
 
     return res.json({
       success: true,
@@ -153,6 +167,129 @@ router.post('/', async (req: Request, res: Response) => {
     });
   }
 });
+
+/**
+ * 异步格式化多条招标公告
+ */
+async function formatBidsAsync(ids: number[]): Promise<void> {
+  const supabase = getSupabaseClient();
+  const llm = getLLMClient();
+
+  console.log(`[格式化] 开始后台格式化 ${ids.length} 条数据`);
+
+  for (const id of ids) {
+    try {
+      // 获取数据
+      const { data: bid, error: fetchError } = await supabase
+        .from('bids')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !bid) {
+        console.error(`[格式化] 获取数据失败: ${id}`);
+        continue;
+      }
+
+      console.log(`[格式化] 处理: ${bid.title}`);
+
+      // 调用豆包大模型格式化
+      const messages = [
+        {
+          role: 'system' as const,
+          content: `你是一个专业的招标公告格式化助手。请将招标公告内容整理成清晰的结构化格式。`
+        },
+        {
+          role: 'user' as const,
+          content: `请将以下招标公告内容格式化为标准的结构化格式。
+
+要求：
+1. 按章节整理内容（项目概况、供应商资格要求、获取招标文件、投标截止时间、联系方式等）
+2. 提取关键信息（项目名称、采购人、预算金额、联系人、联系电话等）
+3. 清理HTML标签、多余空格和换行
+4. 保持原文核心信息不变
+
+原文标题：${bid.title}
+
+原文内容：
+${bid.content?.substring(0, 8000) || '无内容'}
+
+请以以下JSON格式返回：
+{
+  "formatted_content": "格式化后的内容（使用换行分隔章节）",
+  "purchaser": "采购人",
+  "budget": "预算金额（数字，单位元）",
+  "contact_person": "联系人",
+  "contact_phone": "联系电话",
+  "deadline": "投标截止时间（格式：YYYY-MM-DD HH:mm:ss）",
+  "project_code": "项目编号"
+}`
+        }
+      ];
+
+      const response = await llm.invoke(messages, {
+        model: 'doubao-seed-1-6-lite-251015',
+        temperature: 0.3
+      });
+
+      const formatResult = response.content;
+
+      // 解析返回结果
+      let parsedResult: any = {};
+      try {
+        const jsonMatch = formatResult.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsedResult = JSON.parse(jsonMatch[0]);
+        }
+      } catch (e) {
+        console.error('[格式化] JSON解析失败');
+      }
+
+      // 更新数据库
+      const updateData: any = {};
+      if (parsedResult.formatted_content) {
+        updateData.formatted_content = parsedResult.formatted_content;
+      }
+      if (parsedResult.purchaser) {
+        updateData.purchaser_name = parsedResult.purchaser;
+      }
+      if (parsedResult.budget && !isNaN(Number(parsedResult.budget))) {
+        updateData.budget = Number(parsedResult.budget);
+      }
+      if (parsedResult.contact_person) {
+        updateData.contact_person = parsedResult.contact_person;
+      }
+      if (parsedResult.contact_phone) {
+        updateData.contact_phone = parsedResult.contact_phone;
+      }
+      if (parsedResult.project_code) {
+        updateData.project_code = parsedResult.project_code;
+      }
+      
+      // 处理deadline - 验证时间格式
+      if (parsedResult.deadline) {
+        const deadlineDate = new Date(parsedResult.deadline);
+        if (!isNaN(deadlineDate.getTime())) {
+          updateData.deadline = parsedResult.deadline;
+        }
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await supabase
+          .from('bids')
+          .update(updateData)
+          .eq('id', id);
+        
+        console.log(`[格式化] 完成: ${bid.title.substring(0, 30)}...`);
+      }
+
+    } catch (error: any) {
+      console.error(`[格式化] 失败 ID ${id}:`, error.message);
+    }
+  }
+
+  console.log(`[格式化] 后台格式化完成`);
+}
 
 /**
  * 从内容中提取联系人和电话等信息
@@ -173,7 +310,7 @@ function extractInfo(content: string): any {
   }
 
   // 提取预算金额
-  const budgetMatch = content.match(/预算金额[：:]\s*(\d+(?:\.\d+)?)\s*(万元|元)?/);
+  const budgetMatch = content.match(/预算金额[：:（(元）)]*\s*(\d+(?:\.\d+)?)\s*(万元|元)?/);
   if (budgetMatch) {
     const num = parseFloat(budgetMatch[1]);
     const unit = budgetMatch[2];

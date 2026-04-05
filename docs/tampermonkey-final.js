@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         吉林政府采购网 iframe 公告提取
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
 // @connect      *
@@ -23,6 +23,7 @@
     btn.style.fontSize = '14px';
     btn.style.borderRadius = '25px';
     btn.style.cursor = 'pointer';
+    btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
     document.body.appendChild(btn);
 
     btn.onclick = async function() {
@@ -49,7 +50,7 @@
             // 提取标题
             let title = document.title.split(/[-_|【\[]/)[0].trim();
             
-            // 步骤1：入库
+            // 入库（后端会自动调用豆包大模型格式化）
             btn.innerText = '⏳ 入库中...';
             
             const result = await new Promise((resolve, reject) => {
@@ -77,39 +78,9 @@
                 throw new Error(result.error || '入库失败');
             }
             
-            // 步骤2：格式化（获取最新入库的ID）
-            btn.innerText = '⏳ 格式化中...';
-            
-            // 查询刚入库的数据ID
-            const latestBid = await new Promise((resolve, reject) => {
-                GM_xmlhttpRequest({
-                    method: 'GET',
-                    url: API_BASE + '/bids?pageSize=1',
-                    onload: (res) => {
-                        try {
-                            const data = JSON.parse(res.responseText);
-                            resolve(data.data[0]);
-                        } catch(e) { reject(e); }
-                    },
-                    onerror: reject
-                });
-            });
-            
-            // 调用格式化API
-            await new Promise((resolve, reject) => {
-                GM_xmlhttpRequest({
-                    method: 'POST',
-                    url: API_BASE + '/format-bid/' + latestBid.id,
-                    onload: (res) => {
-                        try {
-                            const data = JSON.parse(res.responseText);
-                            if (data.success) resolve(data);
-                            else reject(new Error('格式化失败'));
-                        } catch(e) { reject(e); }
-                    },
-                    onerror: reject
-                });
-            });
+            // 显示结果
+            const msg = `入库成功！\n总计: ${result.data.total}\n入库: ${result.data.imported}\n重复: ${result.data.duplicate}\n\n后端正在自动格式化中...`;
+            alert(msg);
 
             btn.innerText = '✅ 完成！';
             btn.style.background = '#10b981';
