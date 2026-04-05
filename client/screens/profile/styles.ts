@@ -33,12 +33,10 @@ export const createStyles = (theme: Theme) => {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    // 用户卡片 - 蓝色背景
+    // 用户卡片 - 蓝色背景延伸到顶部
     userCard: {
       backgroundColor: '#2563EB',
-      marginHorizontal: Spacing.md,
-      marginTop: Spacing.md,
-      borderRadius: BorderRadius.lg,
+      paddingHorizontal: Spacing.lg,
       padding: Spacing.lg,
     },
     userMain: {
@@ -75,7 +73,7 @@ export const createStyles = (theme: Theme) => {
     vipBadge: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: 'rgba(255, 215, 0, 0.25)',
       paddingHorizontal: Spacing.sm,
       paddingVertical: 3,
       borderRadius: BorderRadius.full,
@@ -86,6 +84,13 @@ export const createStyles = (theme: Theme) => {
       color: '#FFD700',
       fontWeight: '600',
       marginLeft: 4,
+    },
+    // 普通会员标签样式
+    normalBadge: {
+      backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    },
+    normalBadgeText: {
+      color: '#FFFFFF',
     },
     // 统计卡片
     statsCard: {
@@ -187,9 +192,10 @@ export const createStyles = (theme: Theme) => {
     },
     // VIP卡片
     vipCard: {
-      backgroundColor: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+      backgroundColor: '#FEF3C7',
       marginHorizontal: Spacing.md,
       marginTop: Spacing.md,
+      marginBottom: Spacing.xs,
       borderRadius: BorderRadius.lg,
       padding: Spacing.md,
       borderWidth: 1,

@@ -118,7 +118,11 @@ export default function ProfileScreen() {
         router.push('/feedback');
         break;
       case 'exclusive':
-        Alert.alert('专属服务', 'VIP专属功能开发中，敬请期待！');
+        if (Platform.OS === 'web') {
+          window.alert('专属服务\n\nVIP专属功能开发中，敬请期待！');
+        } else {
+          Alert.alert('专属服务', 'VIP专属功能开发中，敬请期待！');
+        }
         break;
       case 'logout':
         if (Platform.OS === 'web') {
@@ -166,30 +170,26 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
+      <Screen backgroundColor="#2563EB" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
+          <ActivityIndicator size="large" color="#FFFFFF" />
         </View>
       </Screen>
     );
   }
 
   const userInitial = user?.nickname?.charAt(0) || user?.phone?.slice(-2) || 'U';
+  const vipLevel = user?.vip_level ?? 0;
 
   return (
-    <Screen backgroundColor="#F5F5F5" statusBarStyle="dark">
-      {/* 导航栏 - 白色背景，无标题 */}
-      <View style={[styles.navBar, { paddingTop: insets.top }]}>
-        <View style={{ width: 40 }} />
-      </View>
-
+    <Screen backgroundColor="#2563EB" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
       <ScrollView 
         style={styles.container} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* 用户卡片 - 蓝色背景 */}
-        <View style={styles.userCard}>
+        {/* 用户卡片 - 蓝色背景延伸到顶部 */}
+        <View style={[styles.userCard, { paddingTop: Spacing.md + (insets.top > 0 ? insets.top : 0) }]}>
           <View style={styles.userMain}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>{userInitial}</Text>
@@ -197,12 +197,18 @@ export default function ProfileScreen() {
             <View style={styles.userInfo}>
               <Text style={styles.nickname}>{user?.nickname || '招标用户'}</Text>
               <Text style={styles.phone}>{user?.phone?.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') || '未登录'}</Text>
-              {(user?.vip_level ?? 0) > 0 && (
-                <View style={styles.vipBadge}>
-                  <FontAwesome6 name="crown" size={12} color="#FFD700" solid />
-                  <Text style={styles.vipBadgeText}>{VIP_LEVELS[user?.vip_level || 0]}</Text>
-                </View>
-              )}
+              {/* 始终显示会员等级标签 */}
+              <View style={[styles.vipBadge, vipLevel === 0 && styles.normalBadge]}>
+                <FontAwesome6 
+                  name={vipLevel > 0 ? "crown" : "user"} 
+                  size={12} 
+                  color={vipLevel > 0 ? "#FFD700" : "#FFFFFF"} 
+                  solid 
+                />
+                <Text style={[styles.vipBadgeText, vipLevel === 0 && styles.normalBadgeText]}>
+                  {VIP_LEVELS[vipLevel]}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
