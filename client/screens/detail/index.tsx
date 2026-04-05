@@ -391,17 +391,17 @@ export default function DetailScreen() {
           </View>
         )}
 
-        {/* 免责声明 - 给足够的底部空间 */}
+        {/* 免责声明 */}
         <View style={[styles.sectionCard, { marginBottom: Spacing.lg }]}>
           <Disclaimer mode="compact" />
         </View>
         
-        {/* 底部留白 - 确保内容不被底部栏遮挡 */}
-        <View style={{ height: 80 + insets.bottom }} />
+        {/* 底部留白 - 必须足够大，确保免责声明完全可见 */}
+        <View style={{ height: 160 + insets.bottom }} />
       </ScrollView>
 
       {/* 底部操作栏 - 固定在底部 */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.sm }]}>
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.md }]}>
         <TouchableOpacity
           style={[styles.actionButton, styles.secondaryButton]}
           onPress={handleToggleFavorite}

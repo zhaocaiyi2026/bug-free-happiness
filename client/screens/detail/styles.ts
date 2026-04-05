@@ -293,7 +293,7 @@ export const createStyles = (theme: Theme) => {
       fontSize: 12,
       color: '#6B7280',
     },
-    // 底部操作栏 - 紧凑型
+    // 底部操作栏 - 固定在底部，需要足够的内容间距
     bottomBar: {
       position: 'absolute',
       bottom: 0,
@@ -304,6 +304,12 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.sm,
       paddingBottom: Spacing.lg,
+      // 添加阴影，增强层次感
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      elevation: 8,
     },
     actionButton: {
       flex: 1,
