@@ -175,113 +175,20 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       flex: 1,
     },
+    quickItemValue: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#FFFFFF',
+    },
     quickItemText: {
       fontSize: 12,
-      color: '#FFFFFF',
-      marginTop: 4,
+      color: 'rgba(255, 255, 255, 0.8)',
+      marginTop: 2,
     },
     quickDivider: {
       width: 1,
       height: 24,
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    },
-    // 统计卡片
-    statsCard: {
-      backgroundColor: '#FFFFFF',
-      marginHorizontal: Spacing.md,
-      marginTop: Spacing.md,
-      borderRadius: BorderRadius.lg,
-      padding: Spacing.md,
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-    },
-    statItem: {
-      alignItems: 'center',
-      flex: 1,
-    },
-    statValue: {
-      fontSize: 22,
-      fontWeight: '700',
-      color: '#1F2937',
-    },
-    statLabel: {
-      fontSize: 12,
-      color: '#6B7280',
-      marginTop: 2,
-    },
-    statDivider: {
-      width: 1,
-      height: 30,
-      backgroundColor: '#E5E7EB',
-    },
-    // 服务入口
-    servicesSection: {
-      backgroundColor: '#FFFFFF',
-      marginHorizontal: Spacing.md,
-      marginTop: Spacing.md,
-      borderRadius: BorderRadius.lg,
-      padding: Spacing.md,
-    },
-    sectionTitle: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: '#1F2937',
-      marginBottom: Spacing.sm,
-    },
-    servicesGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-    },
-    serviceItem: {
-      width: '25%',
-      alignItems: 'center',
-      paddingVertical: Spacing.sm,
-    },
-    serviceIcon: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: Spacing.xs,
-    },
-    serviceName: {
-      fontSize: 12,
-      color: '#374151',
-    },
-    serviceBadge: {
-      position: 'absolute',
-      top: -2,
-      right: 8,
-      backgroundColor: '#DC2626',
-      borderRadius: 10,
-      minWidth: 18,
-      height: 18,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 4,
-    },
-    serviceBadgeText: {
-      fontSize: 10,
-      color: '#FFFFFF',
-      fontWeight: '600',
-    },
-    vipTagSmall: {
-      position: 'absolute',
-      top: -4,
-      right: 4,
-      backgroundColor: '#FEF3C7',
-      borderRadius: 6,
-      paddingHorizontal: 4,
-      paddingVertical: 2,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 2,
-    },
-    vipTagSmallText: {
-      fontSize: 8,
-      color: '#D97706',
-      fontWeight: '700',
     },
     // VIP卡片
     vipCard: {
@@ -297,7 +204,10 @@ export const createStyles = (theme: Theme) => {
     vipHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: Spacing.sm,
+    },
+    vipHeaderContent: {
+      flex: 1,
+      marginLeft: Spacing.sm,
     },
     vipIcon: {
       width: 36,
@@ -306,16 +216,16 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#F59E0B',
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: Spacing.sm,
     },
     vipTitle: {
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '700',
       color: '#92400E',
     },
     vipDesc: {
-      fontSize: 12,
+      fontSize: 11,
       color: '#B45309',
+      marginTop: 2,
     },
     vipBenefits: {
       flexDirection: 'row',
@@ -329,21 +239,20 @@ export const createStyles = (theme: Theme) => {
       marginBottom: Spacing.xs,
     },
     vipBenefitText: {
-      fontSize: 12,
+      fontSize: 11,
       color: '#92400E',
       marginLeft: 4,
     },
     vipButton: {
       backgroundColor: '#F59E0B',
       borderRadius: BorderRadius.md,
-      paddingVertical: Spacing.sm,
-      paddingHorizontal: Spacing.lg,
-      marginTop: Spacing.sm,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
       alignItems: 'center',
     },
     vipButtonText: {
       color: '#FFFFFF',
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '600',
     },
     // 菜单列表
@@ -378,8 +287,48 @@ export const createStyles = (theme: Theme) => {
       fontSize: 15,
       color: '#1F2937',
     },
+    menuBadge: {
+      backgroundColor: '#DC2626',
+      borderRadius: 10,
+      minWidth: 18,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      marginRight: Spacing.sm,
+    },
+    menuBadgeText: {
+      fontSize: 11,
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
     menuArrow: {
       marginLeft: Spacing.sm,
+    },
+    comingBadge: {
+      backgroundColor: '#DBEAFE',
+      borderRadius: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      marginRight: Spacing.sm,
+    },
+    comingBadgeText: {
+      fontSize: 10,
+      color: '#2563EB',
+      fontWeight: '700',
+    },
+    vipTagSmall: {
+      backgroundColor: '#FEF3C7',
+      borderRadius: 6,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: Spacing.sm,
+    },
+    vipTagSmallText: {
+      fontSize: 10,
+      color: '#D97706',
+      fontWeight: '700',
+      marginLeft: 2,
     },
     // 加载状态
     loadingContainer: {

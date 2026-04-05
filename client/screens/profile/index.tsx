@@ -160,13 +160,6 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const services = [
-    { key: 'favorites', name: '收藏', icon: 'heart', color: '#C8102E', count: favoriteCount },
-    { key: 'history', name: '历史', icon: 'clock-rotate-left', color: '#2563EB', count: historyCount },
-    { key: 'subscribe', name: '订阅', icon: 'bookmark', color: '#059669', count: subscribeCount },
-    { key: 'exclusive', name: '专属', icon: 'gem', color: '#D97706', count: 0, isVip: true, isDev: true },
-  ];
-
   const vipBenefits = ['实时推送', '数据分析', '优先客服', '专属报告'];
 
   if (loading) {
@@ -270,37 +263,41 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
           
-          {/* 快捷入口行 */}
+          {/* 快捷入口行 - 统计数据 */}
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/favorites')}>
-              <FontAwesome6 name="heart" size={16} color="#FFFFFF" />
+            <TouchableOpacity style={styles.quickItem} onPress={async () => {
+              await AsyncStorage.setItem(FAVORITE_VIEWED_KEY, String(favoriteCount));
+              setLastViewedFavoriteCount(favoriteCount);
+              router.navigate('/favorites');
+            }}>
+              <Text style={styles.quickItemValue}>{favoriteCount}</Text>
               <Text style={styles.quickItemText}>收藏</Text>
             </TouchableOpacity>
             <View style={styles.quickDivider} />
             <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/history')}>
-              <FontAwesome6 name="clock-rotate-left" size={16} color="#FFFFFF" />
+              <Text style={styles.quickItemValue}>{historyCount}</Text>
               <Text style={styles.quickItemText}>历史</Text>
             </TouchableOpacity>
             <View style={styles.quickDivider} />
             <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/subscribe')}>
-              <FontAwesome6 name="bookmark" size={16} color="#FFFFFF" />
+              <Text style={styles.quickItemValue}>{subscribeCount}</Text>
               <Text style={styles.quickItemText}>订阅</Text>
             </TouchableOpacity>
             <View style={styles.quickDivider} />
             <TouchableOpacity style={styles.quickItem} onPress={() => Alert.alert('邀请好友', '分享给好友，双方各得50积分！')}>
-              <FontAwesome6 name="gift" size={16} color="#FFFFFF" />
-              <Text style={styles.quickItemText}>邀请</Text>
+              <FontAwesome6 name="gift" size={18} color="#FFD700" />
+              <Text style={styles.quickItemText}>邀请有礼</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* VIP卡片 - 紧跟用户卡片 */}
+        {/* VIP卡片 */}
         <View style={styles.vipCard}>
           <View style={styles.vipHeader}>
             <View style={styles.vipIcon}>
               <FontAwesome6 name="crown" size={18} color="#FFFFFF" />
             </View>
-            <View>
+            <View style={styles.vipHeaderContent}>
               <Text style={styles.vipTitle}>VIP会员服务</Text>
               <Text style={styles.vipDesc}>
                 {user?.vip_level && user.vip_level > 0
@@ -308,6 +305,11 @@ export default function ProfileScreen() {
                   : '开通VIP，解锁全部高级功能'}
               </Text>
             </View>
+            <TouchableOpacity style={styles.vipButton} onPress={handleUpgradeVIP}>
+              <Text style={styles.vipButtonText}>
+                {user?.vip_level && user.vip_level > 0 ? '续费' : '开通'}
+              </Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.vipBenefits}>
             {vipBenefits.map((benefit, index) => (
@@ -317,90 +319,24 @@ export default function ProfileScreen() {
               </View>
             ))}
           </View>
-          <TouchableOpacity style={styles.vipButton} onPress={handleUpgradeVIP}>
-            <Text style={styles.vipButtonText}>
-              {user?.vip_level && user.vip_level > 0 ? '续费升级' : '立即开通'}
-            </Text>
-          </TouchableOpacity>
         </View>
 
-        {/* 统计卡片 */}
-        <View style={styles.statsCard}>
-          <TouchableOpacity 
-            style={styles.statItem} 
-            onPress={async () => {
-              await AsyncStorage.setItem(FAVORITE_VIEWED_KEY, String(favoriteCount));
-              setLastViewedFavoriteCount(favoriteCount);
-              router.navigate('/favorites');
-            }}
-          >
-            <Text style={styles.statValue}>{favoriteCount}</Text>
-            <Text style={styles.statLabel}>收藏项目</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <TouchableOpacity 
-            style={styles.statItem}
-            onPress={() => Alert.alert('我的积分', `当前积分：${user?.points || 0}\n\n积分可通过以下方式获取：\n• 每日签到 +10积分\n• 邀请好友 +50积分\n• 完善资料 +20积分`)}
-          >
-            <Text style={styles.statValue}>{user?.points || 0}</Text>
-            <Text style={styles.statLabel}>我的积分</Text>
-          </TouchableOpacity>
-          <View style={styles.statDivider} />
-          <TouchableOpacity 
-            style={styles.statItem}
-            onPress={() => router.push('/subscribe')}
-          >
-            <Text style={styles.statValue}>{subscribeCount}</Text>
-            <Text style={styles.statLabel}>订阅关键词</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 服务入口 */}
-        <View style={styles.servicesSection}>
-          <Text style={styles.sectionTitle}>我的服务</Text>
-          <View style={styles.servicesGrid}>
-            {services.map((service) => (
-              <TouchableOpacity
-                key={service.key}
-                style={styles.serviceItem}
-                onPress={() => handleMenuPress(service.key)}
-              >
-                <View style={[styles.serviceIcon, { backgroundColor: `${service.color}15` }]}>
-                  <FontAwesome6 name={service.icon} size={20} color={service.color} />
-                </View>
-                <Text style={styles.serviceName}>{service.name}</Text>
-                {service.isVip && (
-                  <View style={styles.vipTagSmall}>
-                    <FontAwesome6 name="crown" size={8} color="#D97706" />
-                    <Text style={styles.vipTagSmallText}>VIP</Text>
-                  </View>
-                )}
-                {service.count > 0 && (
-                  <View style={styles.serviceBadge}>
-                    <Text style={styles.serviceBadgeText}>{service.count}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* 菜单列表 */}
+        {/* 功能菜单 */}
         <View style={styles.menuSection}>
-          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuPress('favorites')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/favorites')}>
             <View style={[styles.menuIcon, { backgroundColor: 'rgba(200,16,46,0.1)' }]}>
               <FontAwesome6 name="heart" size={18} color="#C8102E" />
             </View>
             <Text style={styles.menuText}>我的收藏</Text>
             {newFavoriteCount > 0 && (
-              <View style={{ backgroundColor: '#DC2626', borderRadius: 10, minWidth: 18, paddingHorizontal: 6, paddingVertical: 2, marginRight: 8 }}>
-                <Text style={{ fontSize: 11, color: '#FFFFFF', fontWeight: '600' }}>{newFavoriteCount > 99 ? '99+' : newFavoriteCount}</Text>
+              <View style={styles.menuBadge}>
+                <Text style={styles.menuBadgeText}>{newFavoriteCount > 99 ? '99+' : newFavoriteCount}</Text>
               </View>
             )}
             <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuPress('history')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/history')}>
             <View style={[styles.menuIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
               <FontAwesome6 name="clock-rotate-left" size={18} color="#2563EB" />
             </View>
@@ -408,11 +344,56 @@ export default function ProfileScreen() {
             <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuPress('subscribe')}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/subscribe')}>
             <View style={[styles.menuIcon, { backgroundColor: 'rgba(5,150,105,0.1)' }]}>
               <FontAwesome6 name="bookmark" size={18} color="#059669" />
             </View>
             <Text style={styles.menuText}>订阅管理</Text>
+            <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('中标记录', '您参与投标的项目中标信息将在这里展示。')}>
+            <View style={[styles.menuIcon, { backgroundColor: 'rgba(234,179,8,0.1)' }]}>
+              <FontAwesome6 name="trophy" size={18} color="#EAB308" />
+            </View>
+            <Text style={styles.menuText}>中标记录</Text>
+            <View style={styles.comingBadge}>
+              <Text style={styles.comingBadgeText}>NEW</Text>
+            </View>
+            <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={() => Alert.alert('关注企业', '您关注的企业发布的新招标信息会优先推送给您。')}>
+            <View style={[styles.menuIcon, { backgroundColor: 'rgba(168,85,247,0.1)' }]}>
+              <FontAwesome6 name="building" size={18} color="#A855F7" />
+            </View>
+            <Text style={styles.menuText}>关注企业</Text>
+            <View style={styles.comingBadge}>
+              <Text style={styles.comingBadgeText}>NEW</Text>
+            </View>
+            <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
+          </TouchableOpacity>
+        </View>
+
+        {/* 其他功能 */}
+        <View style={styles.menuSection}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => Alert.alert('数据报告', `您的使用统计：\n\n• 浏览项目：${historyCount}个\n• 收藏项目：${favoriteCount}个\n• 订阅关键词：${subscribeCount}个\n• 累计积分：${userPoints}分`)}>
+            <View style={[styles.menuIcon, { backgroundColor: 'rgba(59,130,246,0.1)' }]}>
+              <FontAwesome6 name="chart-pie" size={18} color="#3B82F6" />
+            </View>
+            <Text style={styles.menuText}>数据报告</Text>
+            <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuPress('exclusive')}>
+            <View style={[styles.menuIcon, { backgroundColor: 'rgba(217,119,6,0.1)' }]}>
+              <FontAwesome6 name="gem" size={18} color="#D97706" />
+            </View>
+            <Text style={styles.menuText}>专属服务</Text>
+            <View style={styles.vipTagSmall}>
+              <FontAwesome6 name="crown" size={8} color="#D97706" />
+              <Text style={styles.vipTagSmallText}>VIP</Text>
+            </View>
             <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
           </TouchableOpacity>
 
@@ -423,20 +404,6 @@ export default function ProfileScreen() {
             <Text style={styles.menuText}>意见反馈</Text>
             <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
           </TouchableOpacity>
-
-          {/* 管理员入口 */}
-          {user?.role === 'admin' && (
-            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/user-manage')}>
-              <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
-                <FontAwesome6 name="users-gear" size={18} color="#D97706" />
-              </View>
-              <Text style={styles.menuText}>用户管理</Text>
-              <View style={{ backgroundColor: '#FEF3C7', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2, marginRight: 8 }}>
-                <Text style={{ fontSize: 11, color: '#D97706', fontWeight: '600' }}>管理员</Text>
-              </View>
-              <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* 设置 */}
@@ -451,6 +418,23 @@ export default function ProfileScreen() {
           <Text style={styles.menuText}>设置</Text>
           <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
         </TouchableOpacity>
+
+        {/* 管理员入口 */}
+        {user?.role === 'admin' && (
+          <TouchableOpacity 
+            style={[styles.menuSection, { flexDirection: 'row', alignItems: 'center', padding: Spacing.md }]} 
+            onPress={() => router.push('/user-manage')}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
+              <FontAwesome6 name="users-gear" size={18} color="#D97706" />
+            </View>
+            <Text style={styles.menuText}>用户管理</Text>
+            <View style={{ backgroundColor: '#FEF3C7', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 2, marginRight: 8 }}>
+              <Text style={{ fontSize: 11, color: '#D97706', fontWeight: '600' }}>管理员</Text>
+            </View>
+            <FontAwesome6 name="chevron-right" size={14} color="#9CA3AF" style={styles.menuArrow} />
+          </TouchableOpacity>
+        )}
 
         {/* 关于 */}
         <TouchableOpacity style={[styles.menuSection, { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, marginTop: Spacing.sm }]} onPress={() => handleMenuPress('about')}>
