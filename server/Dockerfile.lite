@@ -1,0 +1,54 @@
+# 招采易API服务 - 轻量版 Docker镜像（无Playwright）
+# 适用于 Render 免费版部署（512MB 内存限制）
+# 注意：此版本不支持 Playwright 采集功能
+
+# ==================== 构建阶段 ====================
+FROM node:20-alpine AS builder
+
+# 安装pnpm
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+# 复制package文件
+COPY package.json ./
+
+# 安装依赖
+RUN pnpm install
+
+# 复制源代码
+COPY . .
+
+# 构建
+RUN pnpm run build
+
+# ==================== 生产镜像 ====================
+FROM node:20-alpine
+
+# 安装pnpm
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+# 复制package文件
+COPY package.json ./
+
+# 安装生产依赖（排除 playwright）
+RUN pnpm install --prod --ignore-scripts && \
+    pnpm remove playwright playwright-extra puppeteer-core puppeteer-extra-plugin-stealth 2>/dev/null || true
+
+# 复制构建产物
+COPY --from=builder /app/dist ./dist
+
+# 复制 public 目录（如果存在）
+RUN mkdir -p public
+
+# 环境变量
+ENV NODE_ENV=production
+ENV PORT=9091
+
+# 暴露端口
+EXPOSE 9091
+
+# 启动命令
+CMD ["node", "dist/index.js"]
