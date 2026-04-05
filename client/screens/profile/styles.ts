@@ -168,6 +168,23 @@ export const createStyles = (theme: Theme) => {
       color: '#FFFFFF',
       fontWeight: '600',
     },
+    vipTagSmall: {
+      position: 'absolute',
+      top: -4,
+      right: 4,
+      backgroundColor: '#FEF3C7',
+      borderRadius: 6,
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
+    vipTagSmallText: {
+      fontSize: 8,
+      color: '#D97706',
+      fontWeight: '700',
+    },
     // VIP卡片
     vipCard: {
       backgroundColor: 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
