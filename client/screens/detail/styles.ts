@@ -229,12 +229,12 @@ export const createStyles = (theme: Theme) => {
       marginRight: Spacing.sm,
     },
     contactLabel: {
-      fontSize: 12,
+      fontSize: 13,
       color: '#6B7280',
       width: 60,
     },
     contactValue: {
-      fontSize: 13,
+      fontSize: 14,
       color: '#1F2937',
       flex: 1,
     },
@@ -244,8 +244,8 @@ export const createStyles = (theme: Theme) => {
     },
     // 内容文本
     docContent: {
-      fontSize: 13,
-      lineHeight: 22,
+      fontSize: 15,
+      lineHeight: 26,
       color: '#374151',
     },
     // 来源行
