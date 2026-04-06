@@ -97,6 +97,7 @@ export default function MessagesScreen() {
 
       const counts = unreadData.success ? unreadData.data : { deadline: 0, winbid: 0, match: 0, system: 0 };
 
+      // 未读数量清零显示，但保留消息内容
       const categoryList: MessageCategory[] = [
         {
           key: 'deadline',
@@ -105,7 +106,7 @@ export default function MessagesScreen() {
           color: '#EC4899',
           bgColor: '#FDF2F8',
           description: '投标截止日期临近的项目提醒',
-          count: counts.deadline,
+          count: 0, // 未读数量清零
           latestMessage: deadlineList.success?.data?.list?.[0],
         },
         {
@@ -115,7 +116,7 @@ export default function MessagesScreen() {
           color: '#F59E0B',
           bgColor: '#FFFBEB',
           description: '关注项目的最新中标公告',
-          count: counts.winbid,
+          count: 0, // 未读数量清零
           latestMessage: winbidList.success?.data?.list?.[0],
         },
         {
@@ -125,7 +126,7 @@ export default function MessagesScreen() {
           color: '#10B981',
           bgColor: '#ECFDF5',
           description: '符合订阅条件的新招标项目',
-          count: counts.match,
+          count: 0, // 未读数量清零
           latestMessage: matchList.success?.data?.list?.[0],
         },
         {
@@ -135,7 +136,7 @@ export default function MessagesScreen() {
           color: '#2563EB',
           bgColor: '#EFF6FF',
           description: '系统更新与账户相关通知',
-          count: counts.system,
+          count: 0, // 未读数量清零
           latestMessage: systemList.success?.data?.list?.[0],
         },
       ];

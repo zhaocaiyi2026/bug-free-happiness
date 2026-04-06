@@ -138,5 +138,10 @@ export const createStyles = (theme: Theme) => {
       fontSize: 14,
       color: '#9CA3AF',
     },
+    emptySubtext: {
+      fontSize: 12,
+      color: '#D1D5DB',
+      marginTop: Spacing.sm,
+    },
   });
 };

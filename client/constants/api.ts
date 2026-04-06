@@ -3,10 +3,10 @@
  * 
  * 统一管理后端 API 基础 URL
  * 
- * 优先级：Constants.expoConfig.extra > 硬编码线上地址
+ * 优先级：Constants.expoConfig?.extra > 硬编码线上地址
  */
 
-import { Constants } from 'expo-constants';
+import Constants from 'expo-constants';
 
 // 从 app.config.ts 的 extra 字段获取后端地址
 const getConfigUrl = (): string => {

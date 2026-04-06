@@ -375,14 +375,16 @@ export default function HomeScreen() {
     }
   };
 
-  // 选择省份后的处理
-  const handleProvinceSelect = async (province: Province) => {
+  // 选择省份后的处理 - 立即切换到城市选择页面，不等待加载
+  const handleProvinceSelect = (province: Province) => {
     setSelectedProvince(province);
     setSelectedCity(null);
     
-    // 加载该省份的城市列表
-    await fetchCities(province.id);
+    // 立即切换到城市选择页面
     setLocationStep('city');
+    
+    // 异步加载城市列表
+    fetchCities(province.id);
   };
 
   // 选择城市后的处理 - 只保存选择，不跳转标签不加载数据
