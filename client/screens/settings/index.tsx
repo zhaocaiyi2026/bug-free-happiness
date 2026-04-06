@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/contexts/AuthContext';
 import { Screen } from '@/components/Screen';
 import { FontAwesome6 } from '@expo/vector-icons';
+import { Spacing } from '@/constants/theme';
 import { createStyles } from './styles';
 
 export default function SettingsScreen() {
