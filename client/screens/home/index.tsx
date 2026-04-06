@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
   Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect } from 'expo-router';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useTheme } from '@/hooks/useTheme';
 import { Screen } from '@/components/Screen';
@@ -319,33 +318,16 @@ export default function HomeScreen() {
     }
   };
 
-  // 页面聚焦时获取数据
-  // 每次进入页面或从详情页返回时，都刷新数据以确保显示最新内容
-  useFocusEffect(
-    useCallback(() => {
-      // 刷新统计数据
-      fetchStats();
-      fetchProvinces();
-      
-      // 根据当前标签刷新数据
-      const currentFilter = activeFilterRef.current;
-      if (currentFilter === 'all') {
-        fetchData(1, 'all', undefined, undefined, true);
-      } else if (currentFilter === 'province') {
-        if (selectedProvince) {
-          fetchData(1, 'province', selectedProvince.name, undefined, true);
-        }
-      } else if (currentFilter === 'city') {
-        if (selectedProvince && selectedCity) {
-          fetchData(1, 'city', selectedProvince.name, selectedCity.name, true);
-        }
-      } else if (currentFilter === 'provinceWin') {
-        if (selectedProvince) {
-          fetchData(1, 'provinceWin', selectedProvince.name, undefined, true);
-        }
-      }
-    }, [selectedProvince, selectedCity])
-  );
+  // 页面首次加载时获取数据
+  // 使用 useEffect 而非 useFocusEffect，避免从详情页返回时自动刷新
+  useEffect(() => {
+    // 刷新统计数据
+    fetchStats();
+    fetchProvinces();
+    
+    // 首次加载获取数据
+    fetchData(1, 'all', undefined, undefined, true);
+  }, []);
 
   const handleFilterPress = async (filterKey: string) => {
     // 如果点击的是当前已选中的标签，不做任何操作
