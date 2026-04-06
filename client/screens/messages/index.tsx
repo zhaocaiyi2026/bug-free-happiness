@@ -69,22 +69,18 @@ export default function MessagesScreen() {
         method: 'POST',
       }).catch(err => console.log('消息生成触发失败:', err));
       
-      // 获取各类消息数量
-      const [deadlineRes, winbidRes, matchRes, systemRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=deadline`),
-        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=winbid`),
-        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=match`),
-        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&type=system`),
-      ]);
+      // 获取各分类未读数量
+      /**
+       * 服务端文件：server/src/routes/messages.ts
+       * 接口：GET /api/v1/messages/unread-by-type
+       * Query 参数：userId: number
+       */
+      const unreadRes = await fetch(
+        `${API_BASE_URL}/api/v1/messages/unread-by-type?userId=1`
+      );
+      const unreadData = await unreadRes.json();
 
-      const [deadlineData, winbidData, matchData, systemData] = await Promise.all([
-        deadlineRes.json(),
-        winbidRes.json(),
-        matchRes.json(),
-        systemRes.json(),
-      ]);
-
-      // 获取各类最新消息（带完整列表）
+      // 获取各类最新消息
       const [deadlineListRes, winbidListRes, matchListRes, systemListRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=deadline`),
         fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=winbid`),
@@ -99,6 +95,8 @@ export default function MessagesScreen() {
         systemListRes.json(),
       ]);
 
+      const counts = unreadData.success ? unreadData.data : { deadline: 0, winbid: 0, match: 0, system: 0 };
+
       const categoryList: MessageCategory[] = [
         {
           key: 'deadline',
@@ -107,7 +105,7 @@ export default function MessagesScreen() {
           color: '#EC4899',
           bgColor: '#FDF2F8',
           description: '投标截止日期临近的项目提醒',
-          count: deadlineData.success ? deadlineData.data.total : 0,
+          count: counts.deadline,
           latestMessage: deadlineList.success?.data?.list?.[0],
         },
         {
@@ -117,7 +115,7 @@ export default function MessagesScreen() {
           color: '#F59E0B',
           bgColor: '#FFFBEB',
           description: '关注项目的最新中标公告',
-          count: winbidData.success ? winbidData.data.total : 0,
+          count: counts.winbid,
           latestMessage: winbidList.success?.data?.list?.[0],
         },
         {
@@ -127,7 +125,7 @@ export default function MessagesScreen() {
           color: '#10B981',
           bgColor: '#ECFDF5',
           description: '符合订阅条件的新招标项目',
-          count: matchData.success ? matchData.data.total : 0,
+          count: counts.match,
           latestMessage: matchList.success?.data?.list?.[0],
         },
         {
@@ -137,7 +135,7 @@ export default function MessagesScreen() {
           color: '#2563EB',
           bgColor: '#EFF6FF',
           description: '系统更新与账户相关通知',
-          count: systemData.success ? systemData.data.total : 0,
+          count: counts.system,
           latestMessage: systemList.success?.data?.list?.[0],
         },
       ];

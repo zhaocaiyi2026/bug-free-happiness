@@ -195,6 +195,121 @@ router.put('/read-all', async (req, res) => {
 });
 
 /**
+ * 按分类标记消息已读
+ * Query参数：
+ * - subType: string (消息子类型：deadline/winbid/match)
+ * - userId: number (用户ID)
+ */
+router.put('/read-by-type', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const { subType, userId } = req.query;
+
+    if (!subType) {
+      return res.status(400).json({
+        success: false,
+        message: 'subType参数不能为空',
+      });
+    }
+
+    // 构建查询条件
+    let query = client
+      .from('messages')
+      .update({ is_read: true })
+      .eq('is_read', false);
+
+    // 用户筛选
+    if (userId) {
+      query = query.or(`user_id.is.null,user_id.eq.${userId}`);
+    }
+
+    // 按类型筛选
+    if (subType === 'system') {
+      query = query.eq('type', 'system');
+    } else {
+      // deadline, winbid, match
+      query = query.contains('data', { subType: subType as string });
+    }
+
+    const { error } = await query;
+
+    if (error) {
+      throw new Error(`标记已读失败: ${error.message}`);
+    }
+
+    res.json({
+      success: true,
+      message: '标记已读成功',
+    });
+  } catch (error) {
+    console.error('按类型标记已读失败:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : '按类型标记已读失败',
+    });
+  }
+});
+
+/**
+ * 获取各分类未读消息数量
+ * Query参数：
+ * - userId: number (用户ID)
+ */
+router.get('/unread-by-type', async (req, res) => {
+  try {
+    const client = getSupabaseClient();
+    const { userId } = req.query;
+
+    // 构建基础查询
+    let baseQuery = client
+      .from('messages')
+      .select('id, type, data', { count: 'exact' })
+      .eq('is_read', false);
+
+    if (userId) {
+      baseQuery = baseQuery.or(`user_id.is.null,user_id.eq.${userId}`);
+    }
+
+    const { data, error } = await baseQuery;
+
+    if (error) {
+      throw new Error(`查询未读消息失败: ${error.message}`);
+    }
+
+    // 统计各类型未读数量
+    const counts = {
+      deadline: 0,
+      winbid: 0,
+      match: 0,
+      system: 0,
+      total: data?.length || 0,
+    };
+
+    data?.forEach((msg: any) => {
+      if (msg.type === 'system') {
+        counts.system++;
+      } else if (msg.data?.subType) {
+        const st = msg.data.subType as string;
+        if (st === 'deadline') counts.deadline++;
+        else if (st === 'winbid') counts.winbid++;
+        else if (st === 'match') counts.match++;
+      }
+    });
+
+    res.json({
+      success: true,
+      data: counts,
+    });
+  } catch (error) {
+    console.error('获取未读消息数量失败:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : '获取未读消息数量失败',
+    });
+  }
+});
+
+/**
  * 生成消息提醒（手动触发）
  * Query参数：
  * - type: string (消息类型：deadline/winbid/match/all，默认all)

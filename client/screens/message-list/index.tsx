@@ -75,7 +75,25 @@ export default function MessageListScreen() {
 
   useEffect(() => {
     fetchMessages();
+    // 进入页面时，标记该分类下所有消息为已读
+    markAllAsRead();
   }, [categoryKey]);
+
+  /**
+   * 服务端文件：server/src/routes/messages.ts
+   * 接口：PUT /api/v1/messages/read-by-type
+   * Query 参数：subType: string, userId: number
+   */
+  const markAllAsRead = async () => {
+    try {
+      await fetch(
+        `${API_BASE_URL}/api/v1/messages/read-by-type?subType=${categoryKey}&userId=1`,
+        { method: 'PUT' }
+      );
+    } catch (error) {
+      console.error('标记已读失败:', error);
+    }
+  };
 
   const fetchMessages = async () => {
     try {
@@ -95,7 +113,12 @@ export default function MessageListScreen() {
       const data = await res.json();
 
       if (data.success) {
-        setMessages(data.data.list as Message[]);
+        // 进入后全部标记为已读，所以显示时都是已读状态
+        const readMessages = (data.data.list as Message[]).map(msg => ({
+          ...msg,
+          is_read: true
+        }));
+        setMessages(readMessages);
       }
     } catch (error) {
       console.error('获取消息列表失败:', error);
@@ -110,26 +133,7 @@ export default function MessageListScreen() {
     fetchMessages();
   };
 
-  const handleMarkRead = async (messageId: number) => {
-    try {
-      await fetch(
-        `${API_BASE_URL}/api/v1/messages/${messageId}/read`,
-        { method: 'PUT' }
-      );
-
-      setMessages(messages.map((msg) =>
-        msg.id === messageId ? { ...msg, is_read: true } : msg
-      ));
-    } catch (error) {
-      console.error('标记已读失败:', error);
-    }
-  };
-
   const handleMessagePress = (message: Message) => {
-    if (!message.is_read) {
-      handleMarkRead(message.id);
-    }
-
     const msgData = message.data || {};
     
     // 根据消息类型和子类型跳转
@@ -156,6 +160,10 @@ export default function MessageListScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
+            /**
+             * 服务端文件：server/src/routes/messages.ts
+             * 接口：DELETE /api/v1/messages/:id
+             */
             const res = await fetch(
               `${API_BASE_URL}/api/v1/messages/${messageId}`,
               { method: 'DELETE' }
@@ -195,7 +203,7 @@ export default function MessageListScreen() {
   const renderMessage = useCallback(({ item }: { item: Message }) => {
     return (
       <TouchableOpacity
-        style={[styles.messageCard, !item.is_read && styles.messageCardUnread]}
+        style={styles.messageCard}
         onPress={() => handleMessagePress(item)}
         onLongPress={() => handleDeleteMessage(item.id)}
         activeOpacity={0.7}
@@ -204,7 +212,7 @@ export default function MessageListScreen() {
           <FontAwesome6 name={config.icon} size={18} color={config.color} />
         </View>
         <View style={styles.messageContent}>
-          <Text style={[styles.messageTitle, !item.is_read && styles.messageTitleUnread]}>
+          <Text style={styles.messageTitle}>
             {item.title}
           </Text>
           <Text style={styles.messageDesc} numberOfLines={2}>
@@ -212,7 +220,6 @@ export default function MessageListScreen() {
           </Text>
           <Text style={styles.messageTime}>{formatTime(item.created_at)}</Text>
         </View>
-        {!item.is_read && <View style={[styles.unreadDot, { backgroundColor: config.color }]} />}
       </TouchableOpacity>
     );
   }, [styles, config]);
