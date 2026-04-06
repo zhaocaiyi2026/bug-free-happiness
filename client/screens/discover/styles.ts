@@ -5,7 +5,7 @@ export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#FAFAFA',
+      backgroundColor: '#F5F7FA',
     },
     // ========== 新设计：白色极简导航 ==========
     header: {
@@ -92,7 +92,7 @@ export const createStyles = (theme: Theme) => {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: Spacing.md + 2,
+      marginBottom: Spacing.md,
     },
     sectionTitle: {
       fontSize: 16,
@@ -105,72 +105,60 @@ export const createStyles = (theme: Theme) => {
       color: '#2563EB',
       fontWeight: '600',
     },
-    // ========== 分类宫格 ==========
-    categoryGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginHorizontal: -4,
+    // ========== 分类长条列表 ==========
+    categoryList: {
+      gap: Spacing.sm,
     },
     categoryItem: {
-      width: '25%',
+      flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: Spacing.sm + 2,
-      paddingHorizontal: 4,
+      backgroundColor: '#F9FAFB',
+      borderRadius: 14,
+      padding: Spacing.md,
     },
     categoryIconWrapper: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
+      width: 44,
+      height: 44,
+      borderRadius: 12,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: Spacing.xs + 2,
-      // 柔和阴影
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 6,
-      elevation: 2,
+      marginRight: Spacing.md,
+    },
+    categoryContent: {
+      flex: 1,
     },
     categoryName: {
-      fontSize: 12,
-      color: '#374151',
+      fontSize: 15,
+      color: '#1F2937',
       fontWeight: '600',
-      textAlign: 'center',
     },
-    categoryCount: {
-      fontSize: 10,
+    categoryDesc: {
+      fontSize: 12,
       color: '#9CA3AF',
-      marginTop: 1,
+      marginTop: 2,
     },
-    // ========== 特色功能区 ==========
+    categoryArrow: {
+      marginLeft: Spacing.sm,
+    },
+    // ========== 特色功能区 - 长条卡片 ==========
     featureGrid: {
-      gap: Spacing.sm + 2,
+      gap: Spacing.sm,
     },
     featureCard: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: '#FFFFFF',
       borderRadius: 16,
-      padding: Spacing.md + 2,
-      // 柔和阴影
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 3,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: '#F3F4F6',
     },
     featureIconWrapper: {
-      width: 52,
-      height: 52,
+      width: 48,
+      height: 48,
       borderRadius: 14,
       justifyContent: 'center',
       alignItems: 'center',
-      // 柔和阴影
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 2,
     },
     featureContent: {
       flex: 1,
@@ -209,84 +197,67 @@ export const createStyles = (theme: Theme) => {
     featureArrow: {
       marginLeft: Spacing.sm,
     },
-    // ========== 招标卡片网格 ==========
-    bidGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginHorizontal: -4,
+    // ========== 招标卡片 - 长条状 ==========
+    bidList: {
+      gap: Spacing.sm,
     },
     bidCard: {
-      width: '50%',
-      padding: 4,
-    },
-    bidCardContent: {
-      flex: 1,
       backgroundColor: '#FFFFFF',
-      borderRadius: 14,
-      padding: Spacing.sm + 4,
-      // 柔和阴影
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 6,
-      elevation: 2,
+      borderRadius: 16,
+      padding: Spacing.md,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      borderWidth: 1,
+      borderColor: '#F3F4F6',
     },
     bidCardUrgent: {
-      borderWidth: 0,
+      borderLeftWidth: 4,
+      borderLeftColor: '#DC2626',
       backgroundColor: '#FFFBFC',
-      // 紧急卡片特殊阴影
-      shadowColor: '#EF4444',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 6,
-      elevation: 3,
     },
-    cardHeader: {
-      flexDirection: 'row',
+    bidCardLeft: {
+      flex: 1,
+      marginRight: Spacing.md,
+    },
+    bidCardRight: {
+      alignItems: 'flex-end',
       justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: Spacing.xs + 2,
+      minWidth: 80,
     },
-    categoryTag: {
+    bidTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#1F2937',
+      lineHeight: 22,
+      marginBottom: Spacing.xs,
+    },
+    bidMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginBottom: Spacing.xs,
+    },
+    bidTag: {
       backgroundColor: 'rgba(37, 99, 235, 0.08)',
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 6,
     },
-    categoryTagText: {
-      fontSize: 10,
+    bidTagText: {
+      fontSize: 11,
       color: '#2563EB',
-      fontWeight: '600',
+      fontWeight: '500',
     },
-    typeTag: {
-      backgroundColor: 'rgba(37, 99, 235, 0.12)',
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 6,
-    },
-    typeTagText: {
-      fontSize: 10,
-      color: '#2563EB',
-      fontWeight: '700',
-    },
-    bidTitle: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: '#1F2937',
-      lineHeight: 18,
-      marginBottom: Spacing.xs + 2,
+    bidLocation: {
+      fontSize: 12,
+      color: '#94A3B8',
     },
     bidBudget: {
       fontSize: 18,
       fontWeight: '800',
       color: '#2563EB',
-      marginBottom: 3,
-      letterSpacing: -0.5,
-    },
-    bidMeta: {
-      fontSize: 11,
-      color: '#9CA3AF',
-      marginBottom: 2,
+      marginBottom: 4,
     },
     bidDeadline: {
       fontSize: 11,
@@ -318,71 +289,6 @@ export const createStyles = (theme: Theme) => {
     emptyText: {
       fontSize: 14,
       color: '#9CA3AF',
-    },
-    // ========== 弹窗样式 ==========
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.4)',
-      justifyContent: 'flex-end',
-    },
-    modalContent: {
-      backgroundColor: '#FFFFFF',
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      maxHeight: '60%',
-      paddingBottom: Spacing['2xl'],
-    },
-    modalHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: Spacing.lg,
-      paddingVertical: Spacing.md + 2,
-      borderBottomWidth: 0,
-    },
-    modalTitle: {
-      fontSize: 17,
-      fontWeight: '700',
-      color: '#111827',
-    },
-    modalCloseButton: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: '#F3F4F6',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    modalList: {
-      paddingHorizontal: Spacing.md,
-    },
-    modalItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.sm,
-      borderRadius: 12,
-      marginBottom: 4,
-    },
-    modalItemActive: {
-      backgroundColor: 'rgba(37, 99, 235, 0.08)',
-    },
-    modalItemText: {
-      fontSize: 15,
-      color: '#374151',
-    },
-    modalItemTextActive: {
-      color: '#2563EB',
-      fontWeight: '600',
-    },
-    modalCheckIcon: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: '#2563EB',
-      justifyContent: 'center',
-      alignItems: 'center',
     },
   });
 };

@@ -5,7 +5,7 @@ export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#F5F7FA',
     },
     scrollContent: {
       flexGrow: 1,
@@ -16,8 +16,12 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#FFFFFF',
       paddingHorizontal: Spacing.lg,
       paddingBottom: Spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6',
+      borderBottomWidth: 0,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.04,
+      shadowRadius: 8,
+      elevation: 2,
     },
     navBarContent: {
       flexDirection: 'column',
@@ -37,7 +41,7 @@ export const createStyles = (theme: Theme) => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#F5F7FA',
     },
     loadingText: {
       marginTop: Spacing.sm,
@@ -54,10 +58,15 @@ export const createStyles = (theme: Theme) => {
       width: 80,
       height: 80,
       borderRadius: 40,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: '#FFFFFF',
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: Spacing.lg,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
     },
     emptyText: {
       fontSize: 15,
@@ -65,28 +74,33 @@ export const createStyles = (theme: Theme) => {
     },
     // 消息列表容器
     categoriesContainer: {
-      paddingHorizontal: 16,
-      paddingTop: 8,
+      paddingHorizontal: Spacing.md,
+      paddingTop: Spacing.md,
+      gap: Spacing.sm,
     },
-    // 消息卡片 - 极简风格
+    // 消息卡片 - 长条状卡片风格
     categoryCard: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      paddingVertical: 16,
-      paddingHorizontal: 4,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: '#F0F0F0',
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      padding: Spacing.md,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.04,
+      shadowRadius: 8,
+      elevation: 2,
     },
     categoryIcon: {
       width: 48,
       height: 48,
-      borderRadius: 12,
+      borderRadius: 14,
       justifyContent: 'center',
       alignItems: 'center',
     },
     categoryContent: {
       flex: 1,
-      marginLeft: 12,
+      marginLeft: Spacing.md,
     },
     categoryHeader: {
       flexDirection: 'row',
@@ -96,7 +110,7 @@ export const createStyles = (theme: Theme) => {
     },
     categoryTitle: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: '700',
       color: '#1F2937',
     },
     categoryTime: {
@@ -128,6 +142,11 @@ export const createStyles = (theme: Theme) => {
     // 图标容器（带徽章）
     iconWrapper: {
       position: 'relative',
+    },
+    // 右侧箭头
+    categoryArrow: {
+      marginLeft: Spacing.sm,
+      alignSelf: 'center',
     },
   });
 };

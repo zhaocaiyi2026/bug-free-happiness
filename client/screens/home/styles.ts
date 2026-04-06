@@ -189,45 +189,47 @@ export const createStyles = (theme: Theme) => {
       backgroundColor: '#E2E8F0',
     },
     
-    // ==================== Quick Actions ====================
+    // ==================== Quick Actions - 长条状标签 ====================
     quickActionsSection: {
       paddingHorizontal: Spacing.lg,
-      marginBottom: Spacing.md,
+      marginBottom: Spacing.sm,
     },
-    quickActionsGrid: {
+    quickActionsRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginHorizontal: -2,
+      gap: Spacing.sm,
     },
-    quickActionCard: {
-      width: '25%',
-      paddingHorizontal: 2,
+    quickActionTab: {
+      flex: 1,
+      flexDirection: 'row',
       alignItems: 'center',
-    },
-    quickActionIconWrapper: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
       justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: Spacing.xs,
+      paddingVertical: Spacing.sm + 2,
+      paddingHorizontal: Spacing.sm,
+      borderRadius: 12,
+      backgroundColor: '#FFFFFF',
       ...Platform.select({
         ios: {
           shadowColor: '#1E40AF',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 6,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.06,
+          shadowRadius: 4,
         },
         android: {
-          elevation: 2,
+          elevation: 1,
         },
       }),
     },
-    quickActionLabel: {
-      fontSize: 10,
+    quickActionTabActive: {
+      backgroundColor: '#2563EB',
+    },
+    quickActionTabText: {
+      fontSize: 12,
       fontWeight: '600',
       color: '#64748B',
-      textAlign: 'center',
+      marginLeft: 4,
+    },
+    quickActionTabTextActive: {
+      color: '#FFFFFF',
     },
     
     // ==================== Bid List ====================
@@ -235,17 +237,15 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.lg,
       paddingBottom: Spacing['5xl'],
     },
-    columnWrapper: {
-      justifyContent: 'space-between',
-    },
     
-    // ==================== Bid Card ====================
+    // ==================== Bid Card - 长条状 ====================
     bidCard: {
-      flex: 1,
       backgroundColor: '#FFFFFF',
       borderRadius: 16,
       padding: Spacing.md,
-      margin: 3,
+      marginBottom: Spacing.sm,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
       ...Platform.select({
         ios: {
           shadowColor: '#1E40AF',
@@ -259,58 +259,58 @@ export const createStyles = (theme: Theme) => {
       }),
     },
     bidCardUrgent: {
-      borderLeftWidth: 3,
+      borderLeftWidth: 4,
       borderLeftColor: '#DC2626',
     },
     bidCardWin: {
-      borderLeftWidth: 3,
+      borderLeftWidth: 4,
       borderLeftColor: '#059669',
       backgroundColor: '#FAFEFC',
     },
-    cardHeader: {
-      flexDirection: 'row',
+    bidCardLeft: {
+      flex: 1,
+      marginRight: Spacing.md,
+    },
+    bidCardRight: {
+      alignItems: 'flex-end',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: Spacing.sm,
-    },
-    categoryTag: {
-      backgroundColor: 'rgba(37, 99, 235, 0.08)',
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: 4,
-      borderRadius: 6,
-    },
-    categoryTagText: {
-      fontSize: 11,
-      color: '#2563EB',
-      fontWeight: '600',
-    },
-    typeTagContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    typeTag: {
-      backgroundColor: 'rgba(37, 99, 235, 0.12)',
-      paddingHorizontal: Spacing.sm,
-      paddingVertical: 4,
-      borderRadius: 6,
-    },
-    typeTagWin: {
-      backgroundColor: 'rgba(5, 150, 105, 0.15)',
-    },
-    typeTagText: {
-      fontSize: 11,
-      color: '#2563EB',
-      fontWeight: '700',
-    },
-    typeTagTextWin: {
-      color: '#059669',
+      height: '100%',
+      minWidth: 80,
     },
     bidTitle: {
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: '600',
       color: '#1E293B',
-      lineHeight: 20,
-      marginBottom: Spacing.sm,
+      lineHeight: 22,
+      marginBottom: Spacing.xs,
+    },
+    bidMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginBottom: Spacing.xs,
+    },
+    bidTag: {
+      backgroundColor: 'rgba(37, 99, 235, 0.08)',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+    },
+    bidTagText: {
+      fontSize: 11,
+      color: '#2563EB',
+      fontWeight: '500',
+    },
+    bidTagWin: {
+      backgroundColor: 'rgba(5, 150, 105, 0.1)',
+    },
+    bidTagWinText: {
+      color: '#059669',
+    },
+    bidLocation: {
+      fontSize: 12,
+      color: '#94A3B8',
     },
     bidBudget: {
       fontSize: 18,
@@ -326,11 +326,7 @@ export const createStyles = (theme: Theme) => {
       color: '#059669',
       fontWeight: '500',
       marginBottom: 4,
-    },
-    bidMeta: {
-      fontSize: 11,
-      color: '#94A3B8',
-      marginBottom: 2,
+      textAlign: 'right',
     },
     bidDeadline: {
       fontSize: 11,

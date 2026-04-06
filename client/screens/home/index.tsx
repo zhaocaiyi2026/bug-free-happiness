@@ -539,32 +539,45 @@ export default function HomeScreen() {
         onPress={() => handleBidPress(item.id, isWinBid)}
         activeOpacity={0.7}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.categoryTag}>
-            <Text style={styles.categoryTagText} numberOfLines={1}>
-              {displayIndustry?.slice(0, 6) || '项目'}
-            </Text>
-          </View>
-          <View style={styles.typeTagContainer}>
-            <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
-              <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]}>
+        {/* 左侧信息 */}
+        <View style={styles.bidCardLeft}>
+          <Text style={styles.bidTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <View style={styles.bidMetaRow}>
+            <View style={[styles.bidTag, isWinBid && styles.bidTagWin]}>
+              <Text style={[styles.bidTagText, isWinBid && styles.bidTagWinText]}>
+                {displayIndustry?.slice(0, 6) || '项目'}
+              </Text>
+            </View>
+            <View style={[styles.bidTag, isWinBid && styles.bidTagWin]}>
+              <Text style={[styles.bidTagText, isWinBid && styles.bidTagWinText]}>
                 {displayType}
               </Text>
             </View>
           </View>
-        </View>
-        <Text style={styles.bidTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <Text style={[styles.bidBudget, isWinBid && styles.bidBudgetWin]}>{formatBudget(item.budget)}元</Text>
-        {isWinBid && item.winCompany && (
-          <Text style={styles.bidWinCompany} numberOfLines={1}>
-            中标单位: {item.winCompany}
+          <Text style={styles.bidLocation} numberOfLines={1}>
+            {item.province} · {item.city}
           </Text>
-        )}
-        <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
-        {!isWinBid && item.deadline && <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>}
-        {isWinBid && item.publish_date && <Text style={styles.bidPublishDate}>发布 {formatDeadline(item.publish_date)}</Text>}
+        </View>
+        
+        {/* 右侧金额和日期 */}
+        <View style={styles.bidCardRight}>
+          <Text style={[styles.bidBudget, isWinBid && styles.bidBudgetWin]} numberOfLines={1}>
+            {formatBudget(item.budget)}
+          </Text>
+          {isWinBid && item.winCompany && (
+            <Text style={styles.bidWinCompany} numberOfLines={1}>
+              {item.winCompany}
+            </Text>
+          )}
+          {!isWinBid && item.deadline && (
+            <Text style={styles.bidDeadline}>截止 {formatDeadline(item.deadline)}</Text>
+          )}
+          {isWinBid && item.publish_date && (
+            <Text style={styles.bidPublishDate}>{formatDeadline(item.publish_date)}</Text>
+          )}
+        </View>
       </TouchableOpacity>
     );
   }, [styles, handleBidPress]);
@@ -695,33 +708,26 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Quick Actions - 四宫格卡片 */}
+        {/* Quick Actions - 横向长条标签 */}
         <View style={styles.quickActionsSection}>
-          <View style={styles.quickActionsGrid}>
+          <View style={styles.quickActionsRow}>
             {quickActions.map((action) => {
               const isActive = activeFilter === action.key;
               return (
                 <TouchableOpacity
                   key={action.key}
-                  style={[styles.quickActionCard]}
+                  style={[styles.quickActionTab, isActive && styles.quickActionTabActive]}
                   onPress={() => handleFilterPress(action.key)}
                   activeOpacity={0.7}
                 >
-                  <View style={[
-                    styles.quickActionIconWrapper,
-                    { 
-                      backgroundColor: isActive ? action.activeBgColor : action.bgColor,
-                    }
-                  ]}>
-                    <FontAwesome6 
-                      name={action.icon as any} 
-                      size={16} 
-                      color={isActive ? '#FFFFFF' : action.color} 
-                    />
-                  </View>
+                  <FontAwesome6 
+                    name={action.icon as any} 
+                    size={14} 
+                    color={isActive ? '#FFFFFF' : action.color} 
+                  />
                   <Text style={[
-                    styles.quickActionLabel,
-                    isActive && { color: action.color }
+                    styles.quickActionTabText,
+                    isActive && styles.quickActionTabTextActive
                   ]}>
                     {action.label}
                   </Text>
@@ -736,8 +742,6 @@ export default function HomeScreen() {
           data={bids}
           renderItem={renderBidItem}
           keyExtractor={(item, index) => `${item.id}-${index}`}
-          numColumns={2}
-          columnWrapperStyle={styles.columnWrapper}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           refreshControl={

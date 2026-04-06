@@ -5,33 +5,10 @@ export const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F5F5F5',
+      backgroundColor: '#F5F7FA',
     },
     scrollContent: {
       paddingBottom: Spacing['5xl'],
-    },
-    // 导航栏 - 白色背景
-    navBar: {
-      backgroundColor: '#FFFFFF',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: Spacing.lg,
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-    },
-    navTitle: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: '#1F2937',
-    },
-    settingButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: '#F3F4F6',
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     // 用户卡片 - 蓝色背景延伸到顶部
     userCard: {
@@ -39,21 +16,28 @@ export const createStyles = (theme: Theme) => {
       paddingHorizontal: Spacing.lg,
       padding: Spacing.lg,
       paddingBottom: 0,
+      borderBottomLeftRadius: 24,
+      borderBottomRightRadius: 24,
     },
     userMain: {
       flexDirection: 'row',
       alignItems: 'flex-start',
     },
     avatar: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       backgroundColor: '#FFFFFF',
       justifyContent: 'center',
       alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
     },
     avatarText: {
-      fontSize: 24,
+      fontSize: 22,
       fontWeight: '700',
       color: '#2563EB',
     },
@@ -90,7 +74,7 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       backgroundColor: 'rgba(255, 215, 0, 0.25)',
       paddingHorizontal: 8,
-      paddingVertical: 2,
+      paddingVertical: 3,
       borderRadius: BorderRadius.full,
     },
     vipBadgeText: {
@@ -111,7 +95,7 @@ export const createStyles = (theme: Theme) => {
       alignItems: 'center',
       backgroundColor: 'rgba(255, 215, 0, 0.15)',
       paddingHorizontal: 8,
-      paddingVertical: 2,
+      paddingVertical: 3,
       borderRadius: BorderRadius.full,
     },
     pointsText: {
@@ -160,7 +144,7 @@ export const createStyles = (theme: Theme) => {
     signedInText: {
       color: 'rgba(255, 255, 255, 0.5)',
     },
-    // 快捷入口
+    // 快捷入口 - 长条状统计
     quickActions: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -192,14 +176,19 @@ export const createStyles = (theme: Theme) => {
     },
     // VIP卡片
     vipCard: {
-      backgroundColor: '#FEF3C7',
+      backgroundColor: '#FFFFFF',
       marginHorizontal: Spacing.md,
       marginTop: Spacing.md,
       marginBottom: Spacing.xs,
-      borderRadius: BorderRadius.lg,
+      borderRadius: 16,
       padding: Spacing.md,
-      borderWidth: 1,
-      borderColor: '#FCD34D',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
+      borderLeftWidth: 4,
+      borderLeftColor: '#F59E0B',
     },
     vipHeader: {
       flexDirection: 'row',
@@ -210,10 +199,10 @@ export const createStyles = (theme: Theme) => {
       marginLeft: Spacing.sm,
     },
     vipIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: '#F59E0B',
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      backgroundColor: '#FEF3C7',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -223,7 +212,7 @@ export const createStyles = (theme: Theme) => {
       color: '#92400E',
     },
     vipDesc: {
-      fontSize: 11,
+      fontSize: 12,
       color: '#B45309',
       marginTop: 2,
     },
@@ -245,9 +234,9 @@ export const createStyles = (theme: Theme) => {
     },
     vipButton: {
       backgroundColor: '#F59E0B',
-      borderRadius: BorderRadius.md,
-      paddingVertical: 6,
-      paddingHorizontal: 12,
+      borderRadius: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
       alignItems: 'center',
     },
     vipButtonText: {
@@ -255,18 +244,23 @@ export const createStyles = (theme: Theme) => {
       fontSize: 13,
       fontWeight: '600',
     },
-    // 菜单列表
+    // 菜单列表 - 长条卡片
     menuSection: {
       backgroundColor: '#FFFFFF',
       marginHorizontal: Spacing.md,
-      marginTop: Spacing.md,
-      borderRadius: BorderRadius.lg,
+      marginTop: Spacing.sm,
+      borderRadius: 16,
       overflow: 'hidden',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.04,
+      shadowRadius: 8,
+      elevation: 2,
     },
     menuItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: Spacing.md,
+      paddingVertical: Spacing.md + 2,
       paddingHorizontal: Spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: '#F3F4F6',
@@ -275,9 +269,9 @@ export const createStyles = (theme: Theme) => {
       borderBottomWidth: 0,
     },
     menuIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: 8,
+      width: 40,
+      height: 40,
+      borderRadius: 12,
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: Spacing.md,
@@ -286,6 +280,7 @@ export const createStyles = (theme: Theme) => {
       flex: 1,
       fontSize: 15,
       color: '#1F2937',
+      fontWeight: '500',
     },
     menuBadge: {
       backgroundColor: '#DC2626',
@@ -305,9 +300,9 @@ export const createStyles = (theme: Theme) => {
     },
     comingBadge: {
       backgroundColor: '#DBEAFE',
-      borderRadius: 4,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
       marginRight: Spacing.sm,
     },
     comingBadgeText: {
@@ -318,8 +313,8 @@ export const createStyles = (theme: Theme) => {
     vipTagSmall: {
       backgroundColor: '#FEF3C7',
       borderRadius: 6,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
       flexDirection: 'row',
       alignItems: 'center',
       marginRight: Spacing.sm,

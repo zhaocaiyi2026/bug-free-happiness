@@ -226,27 +226,38 @@ export default function DiscoverScreen() {
   const renderBidCard = useCallback((bid: Bid) => (
     <TouchableOpacity
       key={bid.id}
-      style={styles.bidCard}
+      style={[styles.bidCard, bid.is_urgent && styles.bidCardUrgent]}
       onPress={() => handleBidPress(bid.id)}
       activeOpacity={0.7}
     >
-      <View style={[styles.bidCardContent, bid.is_urgent && styles.bidCardUrgent]}>
-        <View style={styles.cardHeader}>
-          <View style={styles.categoryTag}>
-            <Text style={styles.categoryTagText} numberOfLines={1}>
-              {bid.industry?.slice(0, 4) || '项目'}
-            </Text>
-          </View>
-          <View style={styles.typeTag}>
-            <Text style={styles.typeTagText}>{bid.bid_type || '招标'}</Text>
-          </View>
-        </View>
+      {/* 左侧信息 */}
+      <View style={styles.bidCardLeft}>
         <Text style={styles.bidTitle} numberOfLines={2}>
           {bid.title}
         </Text>
-        <Text style={styles.bidBudget}>{formatBudget(bid.budget)}元</Text>
-        <Text style={styles.bidMeta} numberOfLines={1}>{bid.province} · {bid.city}</Text>
-        {bid.deadline && <Text style={styles.bidDeadline}>截止 {formatDeadline(bid.deadline)}</Text>}
+        <View style={styles.bidMetaRow}>
+          <View style={styles.bidTag}>
+            <Text style={styles.bidTagText}>
+              {bid.industry?.slice(0, 6) || '项目'}
+            </Text>
+          </View>
+          <View style={styles.bidTag}>
+            <Text style={styles.bidTagText}>{bid.bid_type || '招标'}</Text>
+          </View>
+        </View>
+        <Text style={styles.bidLocation} numberOfLines={1}>
+          {bid.province} · {bid.city}
+        </Text>
+      </View>
+      
+      {/* 右侧金额和日期 */}
+      <View style={styles.bidCardRight}>
+        <Text style={styles.bidBudget} numberOfLines={1}>
+          {formatBudget(bid.budget)}
+        </Text>
+        {bid.deadline && (
+          <Text style={styles.bidDeadline}>截止 {formatDeadline(bid.deadline)}</Text>
+        )}
       </View>
     </TouchableOpacity>
   ), [styles]);
@@ -313,7 +324,7 @@ export default function DiscoverScreen() {
             />
           }
         >
-          {/* 热门行业 - 宫格 */}
+          {/* 热门行业 - 长条列表 */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>热门行业</Text>
@@ -321,7 +332,7 @@ export default function DiscoverScreen() {
                 <Text style={styles.sectionMore}>查看全部</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.categoryGrid}>
+            <View style={styles.categoryList}>
               {categories.map((category) => (
                 <TouchableOpacity
                   key={category.id}
@@ -330,12 +341,15 @@ export default function DiscoverScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={[styles.categoryIconWrapper, { backgroundColor: category.bgColor }]}>
-                    <FontAwesome6 name={category.icon} size={22} color={category.color} />
+                    <FontAwesome6 name={category.icon} size={20} color={category.color} />
                   </View>
-                  <Text style={styles.categoryName}>{category.name}</Text>
-                  {category.count > 0 && (
-                    <Text style={styles.categoryCount}>{category.count}</Text>
-                  )}
+                  <View style={styles.categoryContent}>
+                    <Text style={styles.categoryName}>{category.name}</Text>
+                    <Text style={styles.categoryDesc}>
+                      {category.count > 0 ? `${category.count}个招标项目` : '查看项目'}
+                    </Text>
+                  </View>
+                  <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" style={styles.categoryArrow} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -405,7 +419,7 @@ export default function DiscoverScreen() {
             </View>
           </View>
 
-          {/* 热门推荐 - 双列网格 */}
+          {/* 热门推荐 - 长条列表 */}
           <View style={[styles.sectionContainer, { marginBottom: Spacing.lg }]}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>热门推荐</Text>
@@ -413,7 +427,7 @@ export default function DiscoverScreen() {
                 <Text style={styles.sectionMore}>更多</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.bidGrid}>
+            <View style={styles.bidList}>
               {recommendBids.map((bid) => renderBidCard(bid))}
             </View>
             {recommendBids.length === 0 && (

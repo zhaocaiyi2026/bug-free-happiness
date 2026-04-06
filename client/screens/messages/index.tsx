@@ -186,7 +186,7 @@ export default function MessagesScreen() {
       >
         <View style={styles.iconWrapper}>
           <View style={[styles.categoryIcon, { backgroundColor: category.bgColor }]}>
-            <FontAwesome6 name={category.icon} size={22} color={category.color} />
+            <FontAwesome6 name={category.icon} size={20} color={category.color} />
           </View>
           {category.count > 0 && (
             <View style={[styles.categoryBadge, { backgroundColor: category.color }]}>
@@ -209,6 +209,7 @@ export default function MessagesScreen() {
             {category.latestMessage?.description || category.description}
           </Text>
         </View>
+        <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" style={styles.categoryArrow} />
       </TouchableOpacity>
     );
   }, [styles]);
