@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/constants/api';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
@@ -22,9 +23,8 @@ const CARD_GAP = Spacing.sm;
 const CARD_MARGIN = Spacing.sm;
 const CARD_WIDTH = (SCREEN_WIDTH - CARD_MARGIN * 2 - CARD_GAP) / 2;
 
-interface HistoryItem {
+interface Bid {
   id: number;
-  bid_id: number;
   title: string;
   budget: number | null;
   province: string | null;
@@ -32,18 +32,13 @@ interface HistoryItem {
   industry: string | null;
   deadline: string | null;
   is_urgent: boolean;
-  viewed_at: string;
 }
 
-// 模拟浏览历史数据
-const mockHistory: HistoryItem[] = [
-  { id: 1, bid_id: 101, title: '某市智慧城市建设项目招标公告', budget: 58000000, province: '广东', city: '深圳', industry: 'IT服务', deadline: '2026-04-15', is_urgent: true, viewed_at: '2026-03-28T10:00:00' },
-  { id: 2, bid_id: 102, title: '2026年度医疗设备集中采购项目', budget: 32000000, province: '北京', city: '北京', industry: '医疗设备', deadline: '2026-04-20', is_urgent: false, viewed_at: '2026-03-28T09:30:00' },
-  { id: 3, bid_id: 103, title: '城区道路改造提升工程施工招标', budget: 85000000, province: '浙江', city: '杭州', industry: '建筑工程', deadline: '2026-04-18', is_urgent: true, viewed_at: '2026-03-27T16:00:00' },
-  { id: 4, bid_id: 104, title: '新能源充电桩建设运营项目', budget: 12000000, province: '江苏', city: '南京', industry: '环保能源', deadline: '2026-04-22', is_urgent: false, viewed_at: '2026-03-27T14:00:00' },
-  { id: 5, bid_id: 105, title: '政务服务系统升级改造项目', budget: 8500000, province: '上海', city: '上海', industry: 'IT服务', deadline: '2026-04-25', is_urgent: false, viewed_at: '2026-03-26T11:00:00' },
-  { id: 6, bid_id: 106, title: '城市园林绿化养护工程招标', budget: 15000000, province: '四川', city: '成都', industry: '建筑工程', deadline: '2026-04-28', is_urgent: true, viewed_at: '2026-03-26T09:00:00' },
-];
+interface HistoryItem {
+  id: number;
+  viewed_at: string;
+  bids: Bid;
+}
 
 const formatBudget = (budget: number | null) => {
   if (!budget) return '面议';
@@ -74,28 +69,29 @@ interface HistoryItemCardProps {
 }
 
 function HistoryItemCard({ item, styles, onPress }: HistoryItemCardProps) {
+  const bid = item.bids;
   return (
     <TouchableOpacity
       style={[
         styles.bidCard,
-        item.is_urgent && styles.bidCardUrgent,
+        bid.is_urgent && styles.bidCardUrgent,
         { width: CARD_WIDTH - 4 }
       ]}
-      onPress={() => onPress(item.bid_id)}
+      onPress={() => onPress(bid.id)}
       activeOpacity={0.7}
     >
       <View style={styles.cardHeader}>
         <View style={styles.categoryTag}>
           <Text style={styles.categoryTagText} numberOfLines={1}>
-            {item.industry?.slice(0, 4) || '项目'}
+            {bid.industry?.slice(0, 4) || '项目'}
           </Text>
         </View>
       </View>
       <Text style={styles.bidTitle} numberOfLines={2}>
-        {item.title}
+        {bid.title}
       </Text>
-      <Text style={styles.bidBudget}>{formatBudget(item.budget)}元</Text>
-      <Text style={styles.bidMeta} numberOfLines={1}>{item.province} · {item.city}</Text>
+      <Text style={styles.bidBudget}>{formatBudget(bid.budget)}元</Text>
+      <Text style={styles.bidMeta} numberOfLines={1}>{bid.province} · {bid.city}</Text>
       <Text style={styles.bidTime}>浏览于 {formatViewedAt(item.viewed_at)}</Text>
     </TouchableOpacity>
   );
@@ -106,40 +102,84 @@ export default function HistoryScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const router = useSafeRouter();
   const insets = useSafeAreaInsets();
+  const [userId] = useState(1);
 
-  const [history, setHistory] = useState<HistoryItem[]>(mockHistory);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    fetchHistory();
   }, []);
+
+  /**
+   * 服务端文件：server/src/routes/browse-history.ts
+   * 接口：GET /api/v1/browse-history
+   * Query 参数：userId: number, page: number, pageSize: number
+   */
+  const fetchHistory = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        `${API_BASE_URL}/api/v1/browse-history?userId=${userId}&page=1&pageSize=50`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        setHistory(data.data.list as HistoryItem[]);
+        setTotal(data.data.total);
+      }
+    } catch (error) {
+      console.error('获取浏览历史失败:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 500);
+    fetchHistory();
   };
 
   const handleBidPress = (bidId: number) => {
     router.push('/detail', { id: bidId });
   };
 
+  /**
+   * 服务端文件：server/src/routes/browse-history.ts
+   * 接口：DELETE /api/v1/browse-history
+   * Query 参数：userId: number
+   */
   const handleClearHistory = () => {
     Alert.alert('清空历史', '确定要清空所有浏览历史吗？', [
       { text: '取消', style: 'cancel' },
       {
         text: '清空',
         style: 'destructive',
-        onPress: () => setHistory([]),
+        onPress: async () => {
+          try {
+            const res = await fetch(
+              `${API_BASE_URL}/api/v1/browse-history?userId=${userId}`,
+              { method: 'DELETE' }
+            );
+            const data = await res.json();
+
+            if (data.success) {
+              setHistory([]);
+              setTotal(0);
+            }
+          } catch (error) {
+            console.error('清空历史失败:', error);
+            Alert.alert('错误', '清空历史失败');
+          }
+        },
       },
     ]);
   };
 
-  if (loading) {
+  if (loading && !refreshing) {
     return (
       <Screen backgroundColor="#F5F5F5" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
         <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
@@ -180,7 +220,7 @@ export default function HistoryScreen() {
         <View style={styles.statsBar}>
           <View style={styles.statsItem}>
             <FontAwesome6 name="clock-rotate-left" size={14} color="#2563EB" />
-            <Text style={styles.statsText}>共 {history.length} 条浏览记录</Text>
+            <Text style={styles.statsText}>共 {total} 条浏览记录</Text>
           </View>
         </View>
 
@@ -208,6 +248,7 @@ export default function HistoryScreen() {
             <View style={styles.emptyContainer}>
               <FontAwesome6 name="clock" size={48} color="#D1D5DB" style={styles.emptyIcon} />
               <Text style={styles.emptyText}>暂无浏览记录</Text>
+              <Text style={styles.emptySubtext}>浏览过的招标信息会在这里显示</Text>
             </View>
           }
         />

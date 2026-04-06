@@ -72,6 +72,8 @@ export default function DetailScreen() {
 
       if (data.success) {
         setBid(data.data);
+        // 保存浏览历史
+        saveBrowseHistory(params.id);
       } else {
         Alert.alert('错误', data.message || '获取招标详情失败');
         router.back();
@@ -82,6 +84,24 @@ export default function DetailScreen() {
       router.back();
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * 服务端文件：server/src/routes/browse-history.ts
+   * 接口：POST /api/v1/browse-history
+   * Body 参数：userId: number, bidId: number
+   */
+  const saveBrowseHistory = async (bidId: number) => {
+    try {
+      await fetch(`${API_BASE_URL}/api/v1/browse-history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, bidId }),
+      });
+    } catch (error) {
+      // 静默失败，不影响用户体验
+      console.log('保存浏览历史失败:', error);
     }
   };
 

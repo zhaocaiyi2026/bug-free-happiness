@@ -83,14 +83,19 @@ export default function ProfileScreen() {
         setSubscribeCount(subData.data?.length || 0);
       }
 
-      // 获取搜索历史数量
+      // 获取浏览历史数量
+      /**
+       * 服务端文件：server/src/routes/browse-history.ts
+       * 接口：GET /api/v1/browse-history/count
+       * Query 参数：userId: number
+       */
       const historyRes = await fetch(
-        `${API_BASE_URL}/api/v1/search-history?userId=${user?.id || 1}`
+        `${API_BASE_URL}/api/v1/browse-history/count?userId=${user?.id || 1}`
       );
       const historyData = await historyRes.json();
 
       if (historyData.success) {
-        setHistoryCount(historyData.count || 0);
+        setHistoryCount(historyData.data?.count || 0);
       }
     } catch (error) {
       console.error('获取用户数据失败:', error);
