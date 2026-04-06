@@ -4,6 +4,12 @@
 
 import { Router } from 'express';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import {
+  generateDeadlineReminders,
+  generateWinBidReminders,
+  generateMatchReminders,
+  generateAllMessages,
+} from '@/services/message-service';
 
 const router = Router();
 
@@ -13,6 +19,7 @@ const router = Router();
  * - page: number (页码，默认1)
  * - pageSize: number (每页条数，默认20)
  * - type: string (消息类型：system/subscribe/alert)
+ * - subType: string (消息子类型：deadline/winbid/match)
  * - userId: number (用户ID)
  */
 router.get('/', async (req, res) => {
@@ -22,6 +29,7 @@ router.get('/', async (req, res) => {
       page = 1,
       pageSize = 20,
       type,
+      subType,
       userId,
     } = req.query;
 
@@ -43,6 +51,11 @@ router.get('/', async (req, res) => {
     // 类型筛选
     if (type && type !== 'all') {
       query = query.eq('type', type as string);
+    }
+
+    // 子类型筛选（通过data字段中的subType匹配）
+    if (subType) {
+      query = query.contains('data', { subType: subType as string });
     }
 
     // 分页
@@ -177,6 +190,46 @@ router.put('/read-all', async (req, res) => {
     res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : '标记全部已读失败',
+    });
+  }
+});
+
+/**
+ * 生成消息提醒（手动触发）
+ * Query参数：
+ * - type: string (消息类型：deadline/winbid/match/all，默认all)
+ */
+router.post('/generate', async (req, res) => {
+  try {
+    const { type = 'all' } = req.query;
+
+    let result;
+    switch (type) {
+      case 'deadline':
+        result = await generateDeadlineReminders();
+        break;
+      case 'winbid':
+        result = await generateWinBidReminders();
+        break;
+      case 'match':
+        result = await generateMatchReminders();
+        break;
+      case 'all':
+      default:
+        result = await generateAllMessages();
+        break;
+    }
+
+    res.json({
+      success: true,
+      data: result,
+      message: `消息生成完成`,
+    });
+  } catch (error) {
+    console.error('生成消息失败:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : '生成消息失败',
     });
   }
 });

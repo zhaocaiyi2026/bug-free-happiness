@@ -21,7 +21,16 @@ interface Message {
   type: 'system' | 'subscribe' | 'alert';
   title: string;
   description: string;
-  data?: Record<string, any>;
+  data?: {
+    bidId?: number;
+    winBidId?: number;
+    subType?: 'deadline' | 'winbid' | 'match';
+    subscriptionType?: string;
+    subscriptionValue?: string;
+    daysLeft?: number;
+    winCompany?: string;
+    winAmount?: number;
+  };
   is_read: boolean;
   created_at: string;
 }
@@ -54,15 +63,86 @@ export default function MessagesScreen() {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `${API_BASE_URL}/api/v1/messages?page=1&pageSize=100`
-      );
-      const data = await res.json();
+      
+      // 先触发消息生成（静默执行）
+      fetch(`${API_BASE_URL}/api/v1/messages/generate?type=all`, {
+        method: 'POST',
+      }).catch(err => console.log('消息生成触发失败:', err));
+      
+      // 获取各类消息数量
+      const [deadlineRes, winbidRes, matchRes, systemRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=deadline`),
+        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=winbid`),
+        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=match`),
+        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&type=system`),
+      ]);
 
-      if (data.success) {
-        const messages = data.data.list as Message[];
-        processCategories(messages);
-      }
+      const [deadlineData, winbidData, matchData, systemData] = await Promise.all([
+        deadlineRes.json(),
+        winbidRes.json(),
+        matchRes.json(),
+        systemRes.json(),
+      ]);
+
+      // 获取各类最新消息（带完整列表）
+      const [deadlineListRes, winbidListRes, matchListRes, systemListRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=deadline`),
+        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=winbid`),
+        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=match`),
+        fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&type=system`),
+      ]);
+
+      const [deadlineList, winbidList, matchList, systemList] = await Promise.all([
+        deadlineListRes.json(),
+        winbidListRes.json(),
+        matchListRes.json(),
+        systemListRes.json(),
+      ]);
+
+      const categoryList: MessageCategory[] = [
+        {
+          key: 'deadline',
+          title: '招标截止提醒',
+          icon: 'clock',
+          color: '#EC4899',
+          bgColor: '#FDF2F8',
+          description: '投标截止日期临近的项目提醒',
+          count: deadlineData.success ? deadlineData.data.total : 0,
+          latestMessage: deadlineList.success?.data?.list?.[0],
+        },
+        {
+          key: 'winbid',
+          title: '中标公告提醒',
+          icon: 'trophy',
+          color: '#F59E0B',
+          bgColor: '#FFFBEB',
+          description: '关注项目的最新中标公告',
+          count: winbidData.success ? winbidData.data.total : 0,
+          latestMessage: winbidList.success?.data?.list?.[0],
+        },
+        {
+          key: 'match',
+          title: '新招标匹配',
+          icon: 'magnifying-glass',
+          color: '#10B981',
+          bgColor: '#ECFDF5',
+          description: '符合订阅条件的新招标项目',
+          count: matchData.success ? matchData.data.total : 0,
+          latestMessage: matchList.success?.data?.list?.[0],
+        },
+        {
+          key: 'system',
+          title: '系统通知',
+          icon: 'gear',
+          color: '#2563EB',
+          bgColor: '#EFF6FF',
+          description: '系统更新与账户相关通知',
+          count: systemData.success ? systemData.data.total : 0,
+          latestMessage: systemList.success?.data?.list?.[0],
+        },
+      ];
+
+      setCategories(categoryList);
     } catch (error) {
       console.error('获取消息列表失败:', error);
     } finally {
@@ -71,80 +151,14 @@ export default function MessagesScreen() {
     }
   };
 
-  const processCategories = (messages: Message[]) => {
-    const deadlineMessages = messages.filter(m => m.title.includes('截止'));
-    const winbidMessages = messages.filter(m => m.title.includes('中标'));
-    const matchMessages = messages.filter(m => m.title.includes('匹配'));
-    const systemMessages = messages.filter(m => m.type === 'system');
-
-    const categoryList: MessageCategory[] = [
-      {
-        key: 'deadline',
-        title: '招标截止提醒',
-        icon: 'clock',
-        color: '#EC4899',
-        bgColor: '#FDF2F8',
-        description: '投标截止日期临近的项目提醒',
-        count: deadlineMessages.filter(m => !m.is_read).length,
-        latestMessage: deadlineMessages[0],
-      },
-      {
-        key: 'winbid',
-        title: '中标公告提醒',
-        icon: 'trophy',
-        color: '#F59E0B',
-        bgColor: '#FFFBEB',
-        description: '关注项目的最新中标公告',
-        count: winbidMessages.filter(m => !m.is_read).length,
-        latestMessage: winbidMessages[0],
-      },
-      {
-        key: 'match',
-        title: '新招标匹配',
-        icon: 'magnifying-glass',
-        color: '#10B981',
-        bgColor: '#ECFDF5',
-        description: '符合订阅条件的新招标项目',
-        count: matchMessages.filter(m => !m.is_read).length,
-        latestMessage: matchMessages[0],
-      },
-      {
-        key: 'system',
-        title: '系统通知',
-        icon: 'gear',
-        color: '#2563EB',
-        bgColor: '#EFF6FF',
-        description: '系统更新与账户相关通知',
-        count: systemMessages.filter(m => !m.is_read).length,
-        latestMessage: systemMessages[0],
-      },
-    ];
-
-    setCategories(categoryList);
-  };
-
   const handleRefresh = () => {
     setRefreshing(true);
     fetchMessages();
   };
 
   const handleCategoryPress = (category: MessageCategory) => {
-    switch (category.key) {
-      case 'deadline':
-        router.push('/bidList', { type: 'urgent' });
-        break;
-      case 'winbid':
-        router.push('/bidList', { type: 'win' });
-        break;
-      case 'match':
-        router.push('/bidList', { type: 'today' });
-        break;
-      case 'system':
-        router.push('/message-list', { category: category.key });
-        break;
-      default:
-        router.push('/message-list', { category: category.key });
-    }
+    // 跳转到消息列表页面，传递category参数
+    router.push('/message-list', { category: category.key });
   };
 
   const formatTime = (dateStr: string) => {

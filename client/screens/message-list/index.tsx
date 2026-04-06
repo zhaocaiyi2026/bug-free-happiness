@@ -22,35 +22,40 @@ interface Message {
   type: 'system' | 'subscribe' | 'alert';
   title: string;
   description: string;
-  data?: Record<string, any>;
+  data?: {
+    bidId?: number;
+    winBidId?: number;
+    subType?: 'deadline' | 'winbid' | 'match';
+    subscriptionType?: string;
+    subscriptionValue?: string;
+    daysLeft?: number;
+    winCompany?: string;
+    winAmount?: number;
+  };
   is_read: boolean;
   created_at: string;
 }
 
-const categoryConfig: Record<string, { title: string; icon: string; color: string; filter: (m: Message) => boolean }> = {
+const categoryConfig: Record<string, { title: string; icon: string; color: string }> = {
   deadline: {
     title: '招标截止提醒',
     icon: 'clock',
     color: '#EC4899',
-    filter: (m) => m.title.includes('截止'),
   },
   winbid: {
     title: '中标公告提醒',
     icon: 'trophy',
     color: '#F59E0B',
-    filter: (m) => m.title.includes('中标'),
   },
   match: {
     title: '新招标匹配',
     icon: 'magnifying-glass',
     color: '#10B981',
-    filter: (m) => m.title.includes('匹配'),
   },
   system: {
     title: '系统通知',
     icon: 'gear',
     color: '#2563EB',
-    filter: (m) => m.type === 'system',
   },
 };
 
@@ -75,15 +80,22 @@ export default function MessageListScreen() {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        `${API_BASE_URL}/api/v1/messages?page=1&pageSize=100`
-      );
+      
+      // 根据category构建查询参数
+      let url = `${API_BASE_URL}/api/v1/messages?page=1&pageSize=100`;
+      
+      if (categoryKey === 'system') {
+        url += '&type=system';
+      } else {
+        // deadline, winbid, match 使用 subType 筛选
+        url += `&subType=${categoryKey}`;
+      }
+
+      const res = await fetch(url);
       const data = await res.json();
 
       if (data.success) {
-        const allMessages = data.data.list as Message[];
-        const filtered = allMessages.filter(config.filter);
-        setMessages(filtered);
+        setMessages(data.data.list as Message[]);
       }
     } catch (error) {
       console.error('获取消息列表失败:', error);
@@ -118,23 +130,21 @@ export default function MessageListScreen() {
       handleMarkRead(message.id);
     }
 
-    switch (message.type) {
-      case 'alert':
-        if (message.data?.bidId) {
-          router.push('/detail', { id: message.data.bidId });
-        } else if (message.data?.winBidId) {
-          router.push('/win-bid-detail', { id: message.data.winBidId });
-        }
-        break;
-      case 'subscribe':
-        if (message.data?.industry) {
-          router.push('/search', { industry: message.data.industry });
-        } else {
-          router.push('/search');
-        }
-        break;
-      case 'system':
-        break;
+    const msgData = message.data || {};
+    
+    // 根据消息类型和子类型跳转
+    if (msgData.winBidId) {
+      // 有中标ID，跳转到中标详情
+      router.push('/win-bid-detail', { id: msgData.winBidId });
+    } else if (msgData.bidId) {
+      // 有招标ID，跳转到招标详情
+      router.push('/detail', { id: msgData.bidId });
+    } else if (categoryKey === 'match' && msgData.subscriptionValue) {
+      // 订阅匹配，跳转到搜索页面
+      router.push('/search', { 
+        keyword: msgData.subscriptionValue,
+        from: 'subscription'
+      });
     }
   };
 
