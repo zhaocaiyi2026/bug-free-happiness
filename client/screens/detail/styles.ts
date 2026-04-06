@@ -245,16 +245,10 @@ export const createStyles = (theme: Theme) => {
       fontWeight: '500',
     },
     // 内容文本
-    contentTextWrapper: {
-      maxHeight: 400,
-    },
     docContent: {
       fontSize: 13,
       lineHeight: 22,
       color: '#374151',
-    },
-    docContentWrapper: {
-      maxHeight: 500,
     },
     // 来源行
     sourceRow: {

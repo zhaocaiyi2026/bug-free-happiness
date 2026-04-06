@@ -362,13 +362,7 @@ export default function DetailScreen() {
               </View>
               <Text style={styles.sectionTitle}>招标详情</Text>
             </View>
-            <ScrollView 
-              style={styles.docContentWrapper}
-              nestedScrollEnabled
-              showsVerticalScrollIndicator
-            >
-              <Text style={styles.docContent}>{bid.formatted_content}</Text>
-            </ScrollView>
+            <Text style={styles.docContent}>{bid.formatted_content}</Text>
             
             {/* 来源 */}
             <View style={styles.sourceRow}>
@@ -387,13 +381,7 @@ export default function DetailScreen() {
               </View>
               <Text style={styles.sectionTitle}>项目详情</Text>
             </View>
-            <ScrollView 
-              style={styles.contentTextWrapper}
-              nestedScrollEnabled
-              showsVerticalScrollIndicator
-            >
-              <Text style={styles.docContent}>{bid.content}</Text>
-            </ScrollView>
+            <Text style={styles.docContent}>{bid.content}</Text>
           </View>
         )}
 
