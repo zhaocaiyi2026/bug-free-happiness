@@ -10,6 +10,7 @@ import {
   FlatList,
   SectionList,
   Modal,
+  StatusBar as RNStatusBar,
 } from 'react-native';
 import { useSafeAreaInsets, Edge } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -273,7 +274,12 @@ export const Screen = ({
   return (
     // 核心原则：严禁使用 SafeAreaView，统一使用 View + padding 手动管理
     <View style={wrapperStyle}>
-      {/* 状态栏配置：强制透明背景 + 沉浸式，以支持背景图延伸 */}
+      {/* 状态栏配置：同时使用 RN StatusBar 和 expo StatusBar 确保 Android Tab 切换时正确更新 */}
+      <RNStatusBar
+        barStyle={statusBarStyle === 'light' ? 'light-content' : 'dark-content'}
+        backgroundColor={statusBarColor}
+        translucent
+      />
       <StatusBar
         style={statusBarStyle}
         backgroundColor={statusBarColor}
