@@ -13,7 +13,6 @@ import {
   StatusBar as RNStatusBar,
 } from 'react-native';
 import { useSafeAreaInsets, Edge } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 // 引入 KeyboardAware 系列组件
 import {
   KeyboardAwareScrollView,
@@ -274,16 +273,12 @@ export const Screen = ({
   return (
     // 核心原则：严禁使用 SafeAreaView，统一使用 View + padding 手动管理
     <View style={wrapperStyle}>
-      {/* 状态栏配置：同时使用 RN StatusBar 和 expo StatusBar 确保 Android Tab 切换时正确更新 */}
+      {/* 状态栏配置：使用 RN StatusBar 确保 Android Tab 切换时正确更新 */}
       <RNStatusBar
         barStyle={statusBarStyle === 'light' ? 'light-content' : 'dark-content'}
         backgroundColor={statusBarColor}
         translucent
-      />
-      <StatusBar
-        style={statusBarStyle}
-        backgroundColor={statusBarColor}
-        translucent
+        animated
       />
 
       {/* 键盘避让：仅当外层使用 ScrollView 时启用，避免固定底部栏随键盘上移 */}
