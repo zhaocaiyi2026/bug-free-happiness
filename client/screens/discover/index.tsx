@@ -325,7 +325,7 @@ export default function DiscoverScreen() {
             />
           }
         >
-          {/* 热门行业 - 长条列表 */}
+          {/* 热门行业 - 宫格布局 */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>热门行业</Text>
@@ -333,8 +333,8 @@ export default function DiscoverScreen() {
                 <Text style={styles.sectionMore}>查看全部</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.categoryList}>
-              {categories.map((category) => (
+            <View style={styles.categoryGrid}>
+              {categories.slice(0, 8).map((category) => (
                 <TouchableOpacity
                   key={category.id}
                   style={styles.categoryItem}
@@ -344,13 +344,7 @@ export default function DiscoverScreen() {
                   <View style={[styles.categoryIconWrapper, { backgroundColor: category.bgColor }]}>
                     <FontAwesome6 name={category.icon} size={18} color={category.color} />
                   </View>
-                  <View style={styles.categoryContent}>
-                    <Text style={styles.categoryName}>{category.name}</Text>
-                    <Text style={styles.categoryDesc}>
-                      {category.count > 0 ? `${category.count}个招标项目` : '查看项目'}
-                    </Text>
-                  </View>
-                  <FontAwesome6 name="chevron-right" size={12} color="#D1D5DB" style={styles.categoryArrow} />
+                  <Text style={styles.categoryName} numberOfLines={1}>{category.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>

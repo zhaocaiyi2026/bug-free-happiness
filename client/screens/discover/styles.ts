@@ -92,38 +92,31 @@ export const createStyles = (theme: Theme) => {
       color: '#2563EB',
       fontWeight: '600',
     },
-    // ========== 分类长条列表 - 紧凑版 ==========
-    categoryList: {
-      gap: 1,
+    // ========== 分类宫格 - 紧凑版 ==========
+    categoryGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
+      marginTop: Spacing.xs,
     },
     categoryItem: {
-      flexDirection: 'row',
+      width: '23%',
       alignItems: 'center',
-      paddingVertical: Spacing.sm + 2,
+      marginBottom: Spacing.xs,
     },
     categoryIconWrapper: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: Spacing.sm,
-    },
-    categoryContent: {
-      flex: 1,
+      marginBottom: Spacing.xs,
     },
     categoryName: {
-      fontSize: 14,
-      color: '#1F2937',
-      fontWeight: '500',
-    },
-    categoryDesc: {
       fontSize: 11,
-      color: '#9CA3AF',
-      marginTop: 1,
-    },
-    categoryArrow: {
-      marginLeft: Spacing.xs,
+      color: '#374151',
+      fontWeight: '500',
+      textAlign: 'center',
     },
     // ========== 特色功能区 - 长条卡片紧凑版 ==========
     featureGrid: {
