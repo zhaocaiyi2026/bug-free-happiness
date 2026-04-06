@@ -246,26 +246,19 @@ export const createStyles = (theme: Theme) => {
       marginBottom: Spacing.sm,
       flexDirection: 'row',
       alignItems: 'center',
-      ...Platform.select({
-        ios: {
-          shadowColor: '#1E40AF',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 4,
-        },
-        android: {
-          elevation: 1,
-        },
-      }),
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
     },
     bidCardUrgent: {
       borderLeftWidth: 3,
       borderLeftColor: '#DC2626',
+      borderColor: '#FECACA',
     },
     bidCardWin: {
       borderLeftWidth: 3,
       borderLeftColor: '#059669',
       backgroundColor: '#FAFEFC',
+      borderColor: '#A7F3D0',
     },
     bidCardLeft: {
       flex: 1,

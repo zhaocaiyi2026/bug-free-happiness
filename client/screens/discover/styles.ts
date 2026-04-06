@@ -180,11 +180,14 @@ export const createStyles = (theme: Theme) => {
       padding: Spacing.sm,
       flexDirection: 'row',
       alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
     },
     bidCardUrgent: {
       borderLeftWidth: 3,
       borderLeftColor: '#DC2626',
       backgroundColor: '#FFFBFC',
+      borderColor: '#FECACA',
     },
     bidCardLeft: {
       flex: 1,
