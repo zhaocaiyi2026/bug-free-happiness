@@ -64,8 +64,9 @@ router.get('/', async (req, res) => {
     if (city) {
       query = query.eq('city', city as string);
     }
+    // 行业筛选：由于数据库中 industry 字段大多为空，改为模糊匹配标题
     if (industry) {
-      query = query.eq('industry', industry as string);
+      query = query.ilike('title', `%${industry as string}%`);
     }
     if (bidType) {
       query = query.eq('bid_type', bidType as string);
