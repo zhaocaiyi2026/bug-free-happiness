@@ -18,8 +18,8 @@ const getConfigUrl = (): string => {
   } catch (e) {
     console.warn('[API] 无法读取 expoConfig.extra:', e);
   }
-  // 默认线上地址
-  return 'https://4dedb0b5-952a-4a4c-a211-0bf5165689d2.dev.coze.site';
+  // 默认线上地址 - Render 部署
+  return 'https://zcy-api.onrender.com';
 };
 
 // 导出 API 基础 URL
