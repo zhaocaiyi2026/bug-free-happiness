@@ -313,7 +313,8 @@ export default function DiscoverScreen() {
         </View>
 
         <ScrollView 
-          style={styles.container} 
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -341,7 +342,7 @@ export default function DiscoverScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={[styles.categoryIconWrapper, { backgroundColor: category.bgColor }]}>
-                    <FontAwesome6 name={category.icon} size={20} color={category.color} />
+                    <FontAwesome6 name={category.icon} size={18} color={category.color} />
                   </View>
                   <View style={styles.categoryContent}>
                     <Text style={styles.categoryName}>{category.name}</Text>
@@ -349,7 +350,7 @@ export default function DiscoverScreen() {
                       {category.count > 0 ? `${category.count}个招标项目` : '查看项目'}
                     </Text>
                   </View>
-                  <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" style={styles.categoryArrow} />
+                  <FontAwesome6 name="chevron-right" size={12} color="#D1D5DB" style={styles.categoryArrow} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -372,20 +373,20 @@ export default function DiscoverScreen() {
                 activeOpacity={0.7}
               >
                 <View style={[styles.featureIconWrapper, { backgroundColor: '#EFF6FF' }]}>
-                  <FontAwesome6 name="address-book" size={24} color="#2563EB" />
+                  <FontAwesome6 name="address-book" size={18} color="#2563EB" />
                 </View>
                 <View style={styles.featureContent}>
                   <View style={styles.featureTitleRow}>
                     <Text style={styles.featureTitle}>潜在客户</Text>
                     <View style={styles.vipTag}>
-                      <FontAwesome6 name="crown" size={8} color="#D97706" />
+                      <FontAwesome6 name="crown" size={7} color="#D97706" />
                       <Text style={styles.vipTagText}>VIP</Text>
                     </View>
                   </View>
                   <Text style={styles.featureDesc}>查找招标方/中标方联系方式</Text>
                 </View>
                 <View style={styles.featureArrow}>
-                  <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" />
+                  <FontAwesome6 name="chevron-right" size={12} color="#D1D5DB" />
                 </View>
               </TouchableOpacity>
               
@@ -400,20 +401,20 @@ export default function DiscoverScreen() {
                 activeOpacity={0.7}
               >
                 <View style={[styles.featureIconWrapper, { backgroundColor: '#FEF3C7' }]}>
-                  <FontAwesome6 name="clipboard-list" size={24} color="#D97706" />
+                  <FontAwesome6 name="clipboard-list" size={18} color="#D97706" />
                 </View>
                 <View style={styles.featureContent}>
                   <View style={styles.featureTitleRow}>
                     <Text style={styles.featureTitle}>前期项目</Text>
                     <View style={styles.vipTag}>
-                      <FontAwesome6 name="crown" size={8} color="#D97706" />
+                      <FontAwesome6 name="crown" size={7} color="#D97706" />
                       <Text style={styles.vipTagText}>VIP</Text>
                     </View>
                   </View>
                   <Text style={styles.featureDesc}>筹建/备案项目信息查询</Text>
                 </View>
                 <View style={styles.featureArrow}>
-                  <FontAwesome6 name="chevron-right" size={14} color="#D1D5DB" />
+                  <FontAwesome6 name="chevron-right" size={12} color="#D1D5DB" />
                 </View>
               </TouchableOpacity>
             </View>
