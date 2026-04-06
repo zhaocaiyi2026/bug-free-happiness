@@ -9,6 +9,10 @@ import {
   Alert,
   Linking,
   StatusBar,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
@@ -55,6 +59,13 @@ export default function DetailScreen() {
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [userId] = useState(1);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingForm, setBookingForm] = useState({
+    name: '',
+    phone: '',
+    company: '',
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (params.id) {
@@ -215,6 +226,54 @@ export default function DetailScreen() {
     );
   };
 
+  /**
+   * 服务端文件：server/src/routes/booking.ts
+   * 接口：POST /api/v1/booking
+   * Body 参数：name: string, phone: string, company: string, projectTitle: string
+   */
+  const handleBookingSubmit = async () => {
+    if (!bookingForm.name.trim()) {
+      Alert.alert('提示', '请输入您的姓名');
+      return;
+    }
+    if (!bookingForm.phone.trim()) {
+      Alert.alert('提示', '请输入联系电话');
+      return;
+    }
+    if (!bookingForm.company.trim()) {
+      Alert.alert('提示', '请输入公司名称');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/booking`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: bookingForm.name,
+          phone: bookingForm.phone,
+          company: bookingForm.company,
+          projectTitle: bid?.title,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        Alert.alert('提交成功', '您的标书制作预约已提交，我们会尽快与您联系！');
+        setShowBookingModal(false);
+        setBookingForm({ name: '', phone: '', company: '' });
+      } else {
+        Alert.alert('提交失败', data.message || '预约失败，请稍后重试');
+      }
+    } catch (error) {
+      console.error('提交预约失败:', error);
+      Alert.alert('错误', '网络错误，请稍后重试');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.pageContainer}>
@@ -285,9 +344,16 @@ export default function DetailScreen() {
         <View style={styles.coreInfoCard}>
           {/* 预算 */}
           <View style={styles.budgetRow}>
-            <Text style={styles.budgetLabel}>项目预算</Text>
-            <Text style={styles.budgetValue}>{budget.value}</Text>
-            {budget.unit && <Text style={styles.budgetUnit}>{budget.unit}元</Text>}
+            <View style={styles.budgetLeft}>
+              <Text style={styles.budgetLabel}>项目预算</Text>
+              <Text style={styles.budgetValue}>{budget.value}</Text>
+              {budget.unit && <Text style={styles.budgetUnit}>{budget.unit}元</Text>}
+            </View>
+            {daysRemaining !== null && daysRemaining <= 7 && (
+              <View style={styles.budgetBadge}>
+                <Text style={styles.budgetBadgeText}>剩余{daysRemaining}天</Text>
+              </View>
+            )}
           </View>
 
           {/* 信息网格 */}
@@ -331,46 +397,6 @@ export default function DetailScreen() {
               </Text>
             </View>
           </View>
-        </View>
-
-        {/* 联系人信息 */}
-        <View style={styles.contactCard}>
-          <View style={styles.contactHeader}>
-            <View style={[styles.sectionIcon, { backgroundColor: 'rgba(37,99,235,0.1)' }]}>
-              <FontAwesome6 name="address-book" size={11} color="#2563EB" />
-            </View>
-            <Text style={styles.contactTitle}>联系方式</Text>
-          </View>
-          
-          <View style={styles.contactItem}>
-            <View style={styles.contactIcon}>
-              <FontAwesome6 name="user" size={12} color="#6B7280" />
-            </View>
-            <Text style={styles.contactLabel}>联系人</Text>
-            <Text style={styles.contactValue}>{bid.contact_person || '暂无'}</Text>
-          </View>
-          
-          <View style={styles.contactItem}>
-            <View style={styles.contactIcon}>
-              <FontAwesome6 name="phone" size={12} color="#2563EB" />
-            </View>
-            <Text style={styles.contactLabel}>电话</Text>
-            <TouchableOpacity onPress={() => handleCall(bid.contact_phone || '')}>
-              <Text style={[styles.contactValue, styles.contactValueLink]}>
-                {bid.contact_phone || '暂无'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          
-          {bid.contact_address && (
-            <View style={styles.contactItem}>
-              <View style={styles.contactIcon}>
-                <FontAwesome6 name="map-marker-alt" size={12} color="#6B7280" />
-              </View>
-              <Text style={styles.contactLabel}>地址</Text>
-              <Text style={styles.contactValue}>{bid.contact_address}</Text>
-            </View>
-          )}
         </View>
 
         {/* 格式化后的内容 - 优先显示后台格式化内容 */}
@@ -429,12 +455,83 @@ export default function DetailScreen() {
         
         <TouchableOpacity 
           style={styles.callButton}
-          onPress={() => handleCall(bid.contact_phone || '')}
+          onPress={() => setShowBookingModal(true)}
         >
-          <FontAwesome6 name="phone" size={16} color="#FFFFFF" />
-          <Text style={styles.callButtonText}>立即联系</Text>
+          <FontAwesome6 name="file-signature" size={16} color="#FFFFFF" />
+          <Text style={styles.callButtonText}>标书制作</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 预约对话框 */}
+      <Modal
+        visible={showBookingModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBookingModal(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>标书制作预约</Text>
+            <Text style={styles.modalSubtitle}>填写您的信息，我们会尽快与您联系</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>姓名</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="请输入您的姓名"
+                placeholderTextColor="#9CA3AF"
+                value={bookingForm.name}
+                onChangeText={(text) => setBookingForm({ ...bookingForm, name: text })}
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>联系电话</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="请输入联系电话"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="phone-pad"
+                value={bookingForm.phone}
+                onChangeText={(text) => setBookingForm({ ...bookingForm, phone: text })}
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>公司名称</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="请输入公司名称"
+                placeholderTextColor="#9CA3AF"
+                value={bookingForm.company}
+                onChangeText={(text) => setBookingForm({ ...bookingForm, company: text })}
+              />
+            </View>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={styles.modalCancelButton}
+                onPress={() => setShowBookingModal(false)}
+              >
+                <Text style={styles.modalCancelText}>取消</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.modalSubmitButton}
+                onPress={handleBookingSubmit}
+                disabled={submitting}
+              >
+                <Text style={styles.modalSubmitText}>
+                  {submitting ? '提交中...' : '预约制作'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }

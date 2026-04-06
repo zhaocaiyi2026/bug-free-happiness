@@ -74,7 +74,7 @@ export const createStyles = (theme: Theme) => {
       borderRadius: 4,
     },
     categoryText: {
-      fontSize: 11,
+      fontSize: 12,
       color: '#2563EB',
       fontWeight: '600',
     },
@@ -86,15 +86,15 @@ export const createStyles = (theme: Theme) => {
       borderRadius: 4,
     },
     urgentText: {
-      fontSize: 11,
+      fontSize: 12,
       color: '#DC2626',
       fontWeight: '600',
     },
     title: {
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '700',
       color: '#1F2937',
-      lineHeight: 24,
+      lineHeight: 26,
     },
     // 核心信息卡片
     coreInfoCard: {
@@ -106,29 +106,43 @@ export const createStyles = (theme: Theme) => {
       borderWidth: 1,
       borderColor: '#E5E7EB',
     },
-    // 预算行
+    // 预算行 - 重新设计
     budgetRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
       paddingVertical: Spacing.md,
-      backgroundColor: '#EFF6FF',
-      borderRadius: 12,
       marginBottom: Spacing.md,
     },
+    budgetLeft: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+    },
     budgetLabel: {
-      fontSize: 12,
+      fontSize: 14,
       color: '#6B7280',
       marginRight: Spacing.sm,
     },
     budgetValue: {
-      fontSize: 24,
+      fontSize: 28,
       fontWeight: '800',
       color: '#2563EB',
     },
     budgetUnit: {
-      fontSize: 13,
+      fontSize: 16,
       color: '#2563EB',
+      fontWeight: '600',
+      marginLeft: 2,
+    },
+    budgetBadge: {
+      backgroundColor: '#FEF3C7',
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      borderRadius: 8,
+    },
+    budgetBadgeText: {
+      fontSize: 12,
+      color: '#D97706',
       fontWeight: '600',
     },
     // 信息网格
@@ -138,23 +152,23 @@ export const createStyles = (theme: Theme) => {
     },
     infoItem: {
       width: '50%',
-      paddingVertical: Spacing.xs,
+      paddingVertical: Spacing.sm,
     },
     infoIcon: {
-      width: 24,
-      height: 24,
-      borderRadius: 6,
+      width: 28,
+      height: 28,
+      borderRadius: 8,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 2,
+      marginBottom: 4,
     },
     infoLabel: {
-      fontSize: 10,
+      fontSize: 12,
       color: '#9CA3AF',
-      marginBottom: 1,
+      marginBottom: 2,
     },
     infoValue: {
-      fontSize: 13,
+      fontSize: 14,
       color: '#1F2937',
       fontWeight: '500',
     },
@@ -180,16 +194,16 @@ export const createStyles = (theme: Theme) => {
       borderBottomColor: '#F3F4F6',
     },
     sectionIcon: {
-      width: 24,
-      height: 24,
-      borderRadius: 6,
+      width: 28,
+      height: 28,
+      borderRadius: 8,
       backgroundColor: 'rgba(37,99,235,0.1)',
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: Spacing.sm,
     },
     sectionTitle: {
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: '600',
       color: '#1F2937',
     },
@@ -342,5 +356,79 @@ export const createStyles = (theme: Theme) => {
       marginTop: Spacing.lg,
       marginBottom: Spacing.md,
     },
+    // ========== 预约对话框 ==========
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      padding: Spacing.lg,
+      width: '85%',
+      maxWidth: 360,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: '#1F2937',
+      textAlign: 'center',
+      marginBottom: Spacing.md,
+    },
+    modalSubtitle: {
+      fontSize: 13,
+      color: '#6B7280',
+      textAlign: 'center',
+      marginBottom: Spacing.lg,
+    },
+    inputGroup: {
+      marginBottom: Spacing.md,
+    },
+    inputLabel: {
+      fontSize: 13,
+      color: '#374151',
+      fontWeight: '500',
+      marginBottom: Spacing.xs,
+    },
+    textInput: {
+      backgroundColor: '#F9FAFB',
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      borderRadius: 12,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm + 2,
+      fontSize: 15,
+      color: '#1F2937',
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      marginTop: Spacing.md,
+      gap: Spacing.sm,
+    },
+    modalCancelButton: {
+      flex: 1,
+      paddingVertical: Spacing.sm + 2,
+      borderRadius: 12,
+      backgroundColor: '#F3F4F6',
+      alignItems: 'center',
+    },
+    modalCancelText: {
+      fontSize: 15,
+      color: '#6B7280',
+      fontWeight: '600',
+    },
+    modalSubmitButton: {
+      flex: 1,
+      paddingVertical: Spacing.sm + 2,
+      borderRadius: 12,
+      backgroundColor: '#2563EB',
+      alignItems: 'center',
+    },
+    modalSubmitText: {
+      fontSize: 15,
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
   });
-};
