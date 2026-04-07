@@ -41,8 +41,12 @@ interface Bid {
   city: string | null;
   industry: string | null;
   bid_type: string | null;
+  announcement_type?: string | null;
   deadline: string | null;
   is_urgent: boolean;
+  // 智能分类字段（后端返回）
+  classifiedType?: string;
+  typeCategory?: string;
 }
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -235,15 +239,20 @@ export default function DiscoverScreen() {
         <Text style={styles.bidTitle} numberOfLines={2}>
           {bid.title}
         </Text>
+        {/* 公告类型 + 行业类型 两个标签 */}
         <View style={styles.bidMetaRow}>
           <View style={styles.bidTag}>
             <Text style={styles.bidTagText}>
-              {bid.industry?.slice(0, 6) || '项目'}
+              {bid.classifiedType || bid.bid_type || bid.announcement_type || '招标公告'}
             </Text>
           </View>
-          <View style={styles.bidTag}>
-            <Text style={styles.bidTagText}>{bid.bid_type || '招标'}</Text>
-          </View>
+          {bid.industry && (
+            <View style={styles.bidTag}>
+              <Text style={styles.bidTagText}>
+                {bid.industry.slice(0, 6)}
+              </Text>
+            </View>
+          )}
         </View>
         <Text style={styles.bidLocation} numberOfLines={1}>
           {bid.province} · {bid.city}
@@ -414,7 +423,7 @@ export default function DiscoverScreen() {
             </View>
           </View>
 
-          {/* 热门推荐 - 长条列表 */}
+          {/* 热门推荐 - 只展示1个招标 */}
           <View style={[styles.sectionContainer, { marginBottom: Spacing.lg }]}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>热门推荐</Text>
@@ -422,9 +431,11 @@ export default function DiscoverScreen() {
                 <Text style={styles.sectionMore}>更多</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.bidList}>
-              {recommendBids.map((bid) => renderBidCard(bid))}
-            </View>
+            {recommendBids.length > 0 && (
+              <View style={styles.bidList}>
+                {renderBidCard(recommendBids[0])}
+              </View>
+            )}
             {recommendBids.length === 0 && (
               <View style={styles.emptyContainer}>
                 <FontAwesome6 name="folder-open" size={40} color="#D1D5DB" style={styles.emptyIcon} />

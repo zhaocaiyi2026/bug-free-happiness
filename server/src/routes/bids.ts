@@ -372,6 +372,128 @@ router.get('/stats', async (req, res) => {
 });
 
 /**
+ * 招标类型智能分类映射
+ */
+const BID_TYPE_CLASSIFICATIONS = {
+  // 一、采购前/采购启动
+  procurementStart: {
+    keywords: ['意向公告', '意向公示', '采购意向', '需求公示', '采购需求'],
+    label: '采购启动',
+    priority: 10
+  },
+  prequalification: {
+    keywords: ['资格预审', '资格预审公告', '供应商资格审查'],
+    label: '资格预审',
+    priority: 11
+  },
+  openBid: {
+    keywords: ['公开招标', '公开招标公告', '招标公告'],
+    label: '公开招标',
+    priority: 12
+  },
+  inviteBid: {
+    keywords: ['邀请招标', '邀请招标公告', '竞争性邀请'],
+    label: '邀请招标',
+    priority: 13
+  },
+  competitiveNegotiation: {
+    keywords: ['竞争性谈判', '竞争性谈判公告', '谈判公告'],
+    label: '竞争性谈判',
+    priority: 14
+  },
+  competitiveConsultation: {
+    keywords: ['竞争性磋商', '竞争性磋商公告', '磋商公告'],
+    label: '竞争性磋商',
+    priority: 15
+  },
+  inquiry: {
+    keywords: ['询价公告', '询价采购', '询价公告'],
+    label: '询价采购',
+    priority: 16
+  },
+  singleSource: {
+    keywords: ['单一来源', '单一来源公示', '单一来源采购公示', '单一来源公告'],
+    label: '单一来源',
+    priority: 17
+  },
+  
+  // 二、采购过程/变更
+  correction: {
+    keywords: ['更正公告', '澄清公告', '变更公告', '补充公告', '修改公告'],
+    label: '更正澄清',
+    priority: 20
+  },
+  termination: {
+    keywords: ['终止公告', '废标公告', '项目终止', '流标公告', '招标终止'],
+    label: '终止废标',
+    priority: 21
+  },
+  
+  // 三、采购结果（中标/成交）
+  winBid: {
+    keywords: ['中标公告', '中标结果', '中标候选人', '中标公示', '中标通知书'],
+    label: '中标公告',
+    priority: 30
+  },
+  dealResult: {
+    keywords: ['成交公告', '成交结果', '成交公示', '成交候选人', '成交供应商'],
+    label: '成交公告',
+    priority: 31
+  },
+  
+  // 四、采购后
+  contract: {
+    keywords: ['合同公告', '合同公示', '采购合同', '合同结果'],
+    label: '合同公告',
+    priority: 40
+  },
+  acceptance: {
+    keywords: ['验收公告', '验收结果', '验收公示', '履约验收'],
+    label: '验收公告',
+    priority: 41
+  }
+};
+
+/**
+ * 根据标题和内容智能判断招标类型
+ */
+function classifyBidType(title: string, content: string, existingType: string): { classifiedType: string; typeCategory: string } {
+  const text = `${title || ''} ${content || ''}`.toLowerCase();
+  
+  // 按优先级排序（从高到低）
+  const sortedTypes = Object.entries(BID_TYPE_CLASSIFICATIONS)
+    .sort((a, b) => b[1].priority - a[1].priority);
+  
+  for (const [, config] of sortedTypes) {
+    for (const keyword of config.keywords) {
+      if (text.includes(keyword.toLowerCase())) {
+        return {
+          classifiedType: config.label,
+          typeCategory: getTypeCategory(config.priority)
+        };
+      }
+    }
+  }
+  
+  // 如果没有匹配到关键词，使用现有类型或默认类型
+  return {
+    classifiedType: existingType || '招标公告',
+    typeCategory: 'procurementStart'
+  };
+}
+
+/**
+ * 根据优先级获取类型分类
+ */
+function getTypeCategory(priority: number): string {
+  if (priority >= 10 && priority < 20) return '采购启动';
+  if (priority >= 20 && priority < 30) return '采购变更';
+  if (priority >= 30 && priority < 40) return '采购结果';
+  if (priority >= 40) return '采购后';
+  return '其他';
+}
+
+/**
  * 获取招标详情
  * Path参数：
  * - id: number (招标ID)
@@ -399,6 +521,13 @@ router.get('/:id', async (req, res) => {
       });
     }
 
+    // 智能判断招标类型
+    const { classifiedType, typeCategory } = classifyBidType(
+      bid.title,
+      bid.content || bid.formatted_content,
+      bid.bid_type || bid.announcement_type
+    );
+
     // 增加浏览次数
     await client
       .from('bids')
@@ -407,7 +536,11 @@ router.get('/:id', async (req, res) => {
 
     res.json({
       success: true,
-      data: bid
+      data: {
+        ...bid,
+        classifiedType,      // 智能分类后的类型
+        typeCategory,        // 类型分类：采购启动/采购变更/采购结果/采购后
+      }
     });
   } catch (error) {
     console.error('获取招标详情失败:', error);

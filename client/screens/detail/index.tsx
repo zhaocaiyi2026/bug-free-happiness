@@ -32,6 +32,7 @@ interface Bid {
   city: string | null;
   industry: string | null;
   bid_type: string | null;
+  announcement_type: string | null;
   publish_date: string | null;
   deadline: string | null;
   source: string | null;
@@ -46,6 +47,9 @@ interface Bid {
   requirements: string | null;
   open_bid_time: string | null;
   open_bid_location: string | null;
+  // 智能分类字段（后端新增）
+  classifiedType?: string;
+  typeCategory?: string;
 }
 
 export default function DetailScreen() {
