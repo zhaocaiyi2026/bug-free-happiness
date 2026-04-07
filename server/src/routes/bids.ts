@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
 
     let query = client
       .from('bids')
-      .select('id, title, content, budget, province, city, industry, bid_type, publish_date, deadline, source, source_platform, contact_person, contact_phone, contact_address, is_urgent, status, view_count, created_at', { count: 'exact' })
+      .select('id, title, content, budget, province, city, industry, bid_type, publish_date, deadline, source, source_platform, contact_person, contact_phone, contact_address, is_urgent, status, view_count, created_at, classifiedType, classifiedIndustry', { count: 'exact' })
       // 按发布日期倒序排列，null值排在最后
       .order('publish_date', { ascending: false, nullsFirst: false })
       // 再按创建时间倒序，确保新数据排在前面
@@ -269,10 +269,13 @@ router.get('/', async (req, res) => {
       const isUrgent = deadline && deadline <= fourDaysLater && deadline > now;
       
       // 智能分类公告类型（根据标题判断）
-      const { classifiedType } = classifyBidType(item.title, item.content, item.bid_type);
+      const { classifiedType: dbClassifiedType } = classifyBidType(item.title, item.content, item.bid_type);
+      // 如果数据库已有分类则使用，否则计算
+      const classifiedType = item.classifiedType || dbClassifiedType;
       
       // 智能分类行业（根据正文内容分析）
-      const classifiedIndustry = classifyIndustryFromContent(item.content) || item.industry;
+      // 优先使用数据库中已有的分类
+      const classifiedIndustry = item.classifiedIndustry || classifyIndustryFromContent(item.content) || item.industry;
       
       return {
         ...item,
