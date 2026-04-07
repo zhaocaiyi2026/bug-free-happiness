@@ -23,13 +23,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "resizeMode": "cover",
       "backgroundColor": "#FFFFFF"
     },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "splash": {
+        "image": "./assets/images/splash.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#FFFFFF"
       },
       "package": `com.anonymous.x${projectId || '0'}`
     },
