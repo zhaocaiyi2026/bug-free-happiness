@@ -321,12 +321,12 @@ export default function HomeScreen() {
   // 页面首次加载时获取数据
   // 使用 useEffect 而非 useFocusEffect，避免从详情页返回时自动刷新
   useEffect(() => {
-    // 刷新统计数据
-    fetchStats();
-    fetchProvinces();
-    
-    // 首次加载获取数据
-    fetchData(1, 'all', undefined, undefined, true);
+    // 并行请求：统计数据 + 省份列表 + 首屏招标列表
+    Promise.all([
+      fetchStats(),
+      fetchProvinces(),
+      fetchData(1, 'all', undefined, undefined, true),
+    ]);
   }, []);
 
   const handleFilterPress = async (filterKey: string) => {

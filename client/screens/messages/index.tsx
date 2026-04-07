@@ -57,6 +57,12 @@ export default function MessagesScreen() {
   const [categories, setCategories] = useState<MessageCategory[]>([]);
 
   useEffect(() => {
+    // 并行请求：触发消息生成 + 获取未读统计 + 获取各类最新消息
+    // 消息生成为后台任务，不阻塞UI
+    fetch(`${API_BASE_URL}/api/v1/messages/generate?type=all`, {
+      method: 'POST',
+    }).catch(() => {}); // 静默失败
+
     fetchMessages();
   }, []);
 
@@ -64,30 +70,16 @@ export default function MessagesScreen() {
     try {
       setLoading(true);
       
-      // 先触发消息生成（静默执行）
-      fetch(`${API_BASE_URL}/api/v1/messages/generate?type=all`, {
-        method: 'POST',
-      }).catch(err => console.log('消息生成触发失败:', err));
-      
-      // 获取各分类未读数量
-      /**
-       * 服务端文件：server/src/routes/messages.ts
-       * 接口：GET /api/v1/messages/unread-by-type
-       * Query 参数：userId: number
-       */
-      const unreadRes = await fetch(
-        `${API_BASE_URL}/api/v1/messages/unread-by-type?userId=1`
-      );
-      const unreadData = await unreadRes.json();
-
-      // 获取各类最新消息
-      const [deadlineListRes, winbidListRes, matchListRes, systemListRes] = await Promise.all([
+      // 获取各分类未读数量 + 4类最新消息，全部并行
+      const [unreadRes, deadlineListRes, winbidListRes, matchListRes, systemListRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/v1/messages/unread-by-type?userId=1`),
         fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=deadline`),
         fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=winbid`),
         fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&subType=match`),
         fetch(`${API_BASE_URL}/api/v1/messages?pageSize=1&type=system`),
       ]);
 
+      const unreadData = await unreadRes.json();
       const [deadlineList, winbidList, matchList, systemList] = await Promise.all([
         deadlineListRes.json(),
         winbidListRes.json(),

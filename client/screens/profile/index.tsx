@@ -61,39 +61,25 @@ export default function ProfileScreen() {
 
   const fetchUserData = async () => {
     try {
-      await refreshUser();
+      // 并行请求：刷新用户信息 + 获取收藏数量 + 获取订阅数量 + 获取浏览历史数量
+      const [refreshResult, favRes, subRes, historyRes] = await Promise.all([
+        refreshUser(),
+        fetch(`${API_BASE_URL}/api/v1/favorites?userId=${user?.id || 1}&pageSize=1`),
+        fetch(`${API_BASE_URL}/api/v1/subscriptions?userId=${user?.id || 1}`),
+        fetch(`${API_BASE_URL}/api/v1/browse-history/count?userId=${user?.id || 1}`),
+      ]);
 
-      // 获取收藏数量
-      const favRes = await fetch(
-        `${API_BASE_URL}/api/v1/favorites?userId=${user?.id || 1}&pageSize=1`
-      );
       const favData = await favRes.json();
-
       if (favData.success) {
         setFavoriteCount(favData.data.total);
       }
 
-      // 获取订阅数量
-      const subRes = await fetch(
-        `${API_BASE_URL}/api/v1/subscriptions?userId=${user?.id || 1}`
-      );
       const subData = await subRes.json();
-
       if (subData.success) {
         setSubscribeCount(subData.data?.length || 0);
       }
 
-      // 获取浏览历史数量
-      /**
-       * 服务端文件：server/src/routes/browse-history.ts
-       * 接口：GET /api/v1/browse-history/count
-       * Query 参数：userId: number
-       */
-      const historyRes = await fetch(
-        `${API_BASE_URL}/api/v1/browse-history/count?userId=${user?.id || 1}`
-      );
       const historyData = await historyRes.json();
-
       if (historyData.success) {
         setHistoryCount(historyData.data?.count || 0);
       }
