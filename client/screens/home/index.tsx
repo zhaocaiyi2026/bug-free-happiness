@@ -525,7 +525,7 @@ export default function HomeScreen() {
     const displayType = item.announcement_type || item.bid_type || (isWinBid ? '中标' : '招标');
     
     // 规范化行业名称：如果industry是代码格式（如S912），则显示bid_type
-    const displayIndustry = item.industry && !/^[A-Z][0-9]{3}$/.test(item.industry) 
+    const displayIndustry = item.industry && !/^[A-Z]\d{3}$/.test(item.industry) 
       ? item.industry 
       : displayType;
     

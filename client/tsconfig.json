@@ -3,6 +3,7 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "jsx": "react-jsx",
+    "moduleResolution": "bundler",
     "baseUrl": ".",
     "strict": true,
     "noEmit": true,
