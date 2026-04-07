@@ -246,7 +246,7 @@ export default function DiscoverScreen() {
               {bid.classifiedType || '招标公告'}
             </Text>
           </View>
-          {bid.classifiedIndustry && (
+          {bid.classifiedIndustry && bid.classifiedIndustry.trim() !== '' && (
             <View style={styles.bidTag}>
               <Text style={styles.bidTagText}>
                 {bid.classifiedIndustry}
