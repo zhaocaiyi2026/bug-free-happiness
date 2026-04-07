@@ -69,8 +69,14 @@ export default function DetailScreen() {
 
   useEffect(() => {
     if (params.id) {
-      fetchBidDetail();
-      checkFavorite();
+      // 并行加载详情和收藏状态
+      Promise.all([
+        fetchBidDetail(),
+        checkFavorite(),
+      ]).then(() => {
+        // 详情加载完成后，异步保存浏览历史（不阻塞UI）
+        saveBrowseHistory(params.id);
+      });
     }
   }, [params.id]);
 
@@ -83,8 +89,6 @@ export default function DetailScreen() {
 
       if (data.success) {
         setBid(data.data);
-        // 保存浏览历史
-        saveBrowseHistory(params.id);
       } else {
         Alert.alert('错误', data.message || '获取招标详情失败');
         router.back();
@@ -102,18 +106,23 @@ export default function DetailScreen() {
    * 服务端文件：server/src/routes/browse-history.ts
    * 接口：POST /api/v1/browse-history
    * Body 参数：userId: number, bidId: number
+   * 说明：此请求使用 fire-and-forget 模式，不等待响应，不阻塞UI
    */
-  const saveBrowseHistory = async (bidId: number) => {
-    try {
-      await fetch(`${API_BASE_URL}/api/v1/browse-history`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, bidId }),
-      });
-    } catch (error) {
-      // 静默失败，不影响用户体验
-      console.log('保存浏览历史失败:', error);
-    }
+  const saveBrowseHistory = (bidId: number) => {
+    // React Native 中使用 AbortController + setTimeout 实现非阻塞请求
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 100); // 100ms超时
+    
+    fetch(`${API_BASE_URL}/api/v1/browse-history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, bidId }),
+      signal: controller.signal,
+    }).catch(() => {
+      // 静默失败，超时或网络错误都不影响用户体验
+    }).finally(() => {
+      clearTimeout(timeoutId);
+    });
   };
 
   const checkFavorite = async () => {
