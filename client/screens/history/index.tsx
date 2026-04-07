@@ -83,7 +83,18 @@ function HistoryItemCard({ item, styles, onPress }: HistoryItemCardProps) {
       <View style={styles.cardHeader}>
         <View style={styles.categoryTag}>
           <Text style={styles.categoryTagText} numberOfLines={1}>
-            {bid.classifiedIndustry && bid.classifiedIndustry.trim() !== '' ? bid.classifiedIndustry.slice(0, 4) : '项目'}
+            {(() => {
+              if (bid.classifiedIndustry && bid.classifiedIndustry.trim() !== '') {
+                return bid.classifiedIndustry.slice(0, 4);
+              }
+              // 从标题提取核心关键词
+              const title = bid.title || '';
+              let core = title.replace(/^[^关于]*关于/, '');
+              core = core.replace(/的(?:公开招标|邀请招标|竞争性谈判|竞争性磋商|单一来源|询价采购|招标公告|采购公告|中标公告|成交公告|结果公告)[的]*(?:公告)?$/, '');
+              core = core.replace(/项目$/, '');
+              core = core.replace(/采购$/, '');
+              return core.slice(0, 4) || '项目';
+            })()}
           </Text>
         </View>
       </View>

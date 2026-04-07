@@ -21,6 +21,7 @@ import {
   extractContactInfo,
   type PushedBidData,
 } from '@/services/push-data-processor.js';
+import { classifyBidTitle } from '@/services/classify-bid.js';
 
 const router = Router();
 
@@ -422,6 +423,26 @@ router.post('/push-bid', async (req, res) => {
     
     console.log(`[实时推送] 入库成功: ID=${savedBid.id}, 标题=${savedBid.title}`);
     
+    // ========== 使用豆包大模型智能分类 ==========
+    try {
+      console.log(`[实时推送] 调用豆包分类: ${savedBid.title.substring(0, 30)}...`);
+      const classifyResult = await classifyBidTitle(savedBid.title);
+      
+      // 更新数据库记录
+      await supabase
+        .from('bids')
+        .update({
+          classified_type: classifyResult.classifiedType,
+          classified_industry: classifyResult.classifiedIndustry,
+        })
+        .eq('id', savedBid.id);
+      
+      console.log(`[实时推送] 分类完成: 类型=${classifyResult.classifiedType}, 行业=${classifyResult.classifiedIndustry}`);
+    } catch (classifyError) {
+      console.error('[实时推送] 分类失败:', classifyError);
+      // 分类失败不影响主流程
+    }
+    
     // ========== 更新同步状态 ==========
     if (province) {
       await supabase
@@ -446,6 +467,8 @@ router.post('/push-bid', async (req, res) => {
         city: savedBid.city,
         bidType: savedBid.bid_type,
         publishDate: savedBid.publish_date,
+        classifiedType: savedBid.classified_type,
+        classifiedIndustry: savedBid.classified_industry,
       },
     });
     
@@ -1037,6 +1060,25 @@ router.post('/push', async (req, res) => {
       }
       
       console.log(`[数据处理] 入库成功: ID=${savedData.id}`);
+      
+      // ========== 使用豆包大模型智能分类 ==========
+      try {
+        const classifyResult = await classifyBidTitle(savedData.title || pushedData.title);
+        
+        // 更新数据库记录
+        await supabase
+          .from('bids')
+          .update({
+            classified_type: classifyResult.classifiedType,
+            classified_industry: classifyResult.classifiedIndustry,
+          })
+          .eq('id', savedData.id);
+        
+        console.log(`[数据处理] 分类完成: 类型=${classifyResult.classifiedType}, 行业=${classifyResult.classifiedIndustry}`);
+      } catch (classifyError) {
+        console.error('[数据处理] 分类失败:', classifyError);
+        // 分类失败不影响主流程
+      }
       
       // 更新同步状态
       await updateSyncStatus(insertData.province || '吉林省', savedData.id);

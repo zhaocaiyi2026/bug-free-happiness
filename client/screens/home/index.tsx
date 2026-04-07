@@ -525,10 +525,23 @@ export default function HomeScreen() {
     // 优先使用智能分类的公告类型
     const displayType = item.classifiedType || item.announcement_type || item.bid_type || (isWinBid ? '中标' : '招标');
     
-    // 优先使用智能分类的行业，规范化行业名称
+    // 从标题提取核心关键词作为行业标签
+    const extractIndustryFromTitle = (title: string): string => {
+      if (!title) return '招标';
+      // 移除公司名称前缀（"XXX公司关于"）
+      let core = title.replace(/^[^关于]*关于/, '');
+      // 移除招标方式后缀（"的公开招标公告"、"的竞争性磋商公告"等）
+      core = core.replace(/的(?:公开招标|邀请招标|竞争性谈判|竞争性磋商|单一来源|询价采购|招标公告|采购公告|中标公告|成交公告|结果公告|更正公告|变更公告)[的]*(?:公告)?$/, '');
+      // 移除末尾的项目、招标、采购等词
+      core = core.replace(/项目$/, '');
+      core = core.replace(/采购$/, '');
+      // 截取前8个字符
+      return core.slice(0, 8) || '招标';
+    };
+    
     const displayIndustry = item.classifiedIndustry && item.classifiedIndustry.trim() !== '' 
       ? item.classifiedIndustry 
-      : (item.industry && !/^[A-Z]\d{3}$/.test(item.industry) ? item.industry : null);
+      : extractIndustryFromTitle(item.title);
     
     return (
       <TouchableOpacity

@@ -240,19 +240,28 @@ export default function DiscoverScreen() {
           {bid.title}
         </Text>
         {/* 公告类型 + 行业类别 两个标签 */}
-        <View style={styles.bidMetaRow}>
+          <View style={styles.bidMetaRow}>
           <View style={styles.bidTag}>
             <Text style={styles.bidTagText}>
               {bid.classifiedType || '招标公告'}
             </Text>
           </View>
-          {bid.classifiedIndustry && bid.classifiedIndustry.trim() !== '' && (
-            <View style={styles.bidTag}>
-              <Text style={styles.bidTagText}>
-                {bid.classifiedIndustry}
-              </Text>
-            </View>
-          )}
+          <View style={styles.bidTag}>
+            <Text style={styles.bidTagText}>
+              {(() => {
+                if (bid.classifiedIndustry && bid.classifiedIndustry.trim() !== '') {
+                  return bid.classifiedIndustry;
+                }
+                // 从标题提取核心关键词
+                const title = bid.title || '';
+                let core = title.replace(/^[^关于]*关于/, '');
+                core = core.replace(/的(?:公开招标|邀请招标|竞争性谈判|竞争性磋商|单一来源|询价采购|招标公告|采购公告|中标公告|成交公告|结果公告|更正公告|变更公告)[的]*(?:公告)?$/, '');
+                core = core.replace(/项目$/, '');
+                core = core.replace(/采购$/, '');
+                return core.slice(0, 8) || '招标';
+              })()}
+            </Text>
+          </View>
         </View>
         <Text style={styles.bidLocation} numberOfLines={1}>
           {bid.province} · {bid.city}

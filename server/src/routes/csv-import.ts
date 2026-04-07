@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { LLMClient, Config } from 'coze-coding-dev-sdk';
+import { classifyBidTitle } from '@/services/classify-bid.js';
 
 const router = Router();
 
@@ -161,6 +162,25 @@ router.post('/', async (req: Request, res: Response) => {
           results.imported++;
           results.importedIds.push(insertedBid.id);
           console.log(`[CSV导入] 成功入库: ${title.substring(0, 50)}... ID: ${insertedBid.id}`);
+          
+          // 异步调用豆包分类（不阻塞主流程）
+          classifyBidTitle(title).then(classifyResult => {
+            supabase
+              .from('bids')
+              .update({
+                classified_type: classifyResult.classifiedType,
+                classified_industry: classifyResult.classifiedIndustry,
+              })
+              .eq('id', insertedBid.id)
+              .then(() => {
+                console.log(`[CSV导入] 分类完成: ${classifyResult.classifiedType} | ${classifyResult.classifiedIndustry}`);
+              })
+              .catch(err => {
+                console.error('[CSV导入] 分类更新失败:', err);
+              });
+          }).catch(err => {
+            console.error('[CSV导入] 分类失败:', err);
+          });
         }
 
       } catch (error: any) {

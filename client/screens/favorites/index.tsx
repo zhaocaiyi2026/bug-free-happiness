@@ -143,7 +143,12 @@ export default function FavoritesScreen() {
           </Text>
         </View>
         <View style={styles.typeTag}>
-          <Text style={styles.typeTagText}>{item.bids.classifiedType || item.bids.bid_type || '招标'}</Text>
+          <Text style={styles.typeTagText}>{item.bids.classifiedType || (() => {
+            const title = item.bids.title || '';
+            let core = title.replace(/^[^关于]*关于/, '');
+            core = core.replace(/的(?:公开招标|邀请招标|竞争性谈判|竞争性磋商|单一来源|询价采购|招标公告|采购公告|中标公告|成交公告|结果公告)[的]*(?:公告)?$/, '');
+            return core.slice(0, 4) || '招标';
+          })()}</Text>
         </View>
         <TouchableOpacity
           style={styles.removeButton}

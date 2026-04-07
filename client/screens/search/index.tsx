@@ -446,7 +446,18 @@ export default function SearchScreen() {
         <View style={styles.cardHeader}>
           <View style={styles.categoryTag}>
             <Text style={styles.categoryTagText}>
-              {item.classifiedIndustry && item.classifiedIndustry.trim() !== '' ? item.classifiedIndustry : '综合'}
+              {(() => {
+                if (item.classifiedIndustry && item.classifiedIndustry.trim() !== '') {
+                  return item.classifiedIndustry;
+                }
+                // 从标题提取核心关键词
+                const title = item.title || '';
+                let core = title.replace(/^[^关于]*关于/, '');
+                core = core.replace(/的(?:公开招标|邀请招标|竞争性谈判|竞争性磋商|单一来源|询价采购|招标公告|采购公告|中标公告|成交公告|结果公告)[的]*(?:公告)?$/, '');
+                core = core.replace(/项目$/, '');
+                core = core.replace(/采购$/, '');
+                return core || '综合';
+              })()}
             </Text>
           </View>
           <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
