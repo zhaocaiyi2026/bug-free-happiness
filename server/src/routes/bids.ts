@@ -267,9 +267,18 @@ router.get('/', async (req, res) => {
       const deadline = item.deadline ? new Date(item.deadline) : null;
       // 如果截止日期存在且在4天内，标记为紧急
       const isUrgent = deadline && deadline <= fourDaysLater && deadline > now;
+      
+      // 智能分类公告类型（根据标题判断）
+      const { classifiedType } = classifyBidType(item.title, item.content, item.bid_type);
+      
+      // 智能分类行业（根据正文内容分析）
+      const classifiedIndustry = classifyIndustryFromContent(item.content) || item.industry;
+      
       return {
         ...item,
-        is_urgent: isUrgent
+        is_urgent: isUrgent,
+        classifiedType,
+        classifiedIndustry
       };
     }) || [];
 
@@ -372,9 +381,71 @@ router.get('/stats', async (req, res) => {
 });
 
 /**
- * 招标类型智能分类映射
+ * 行业智能分类映射 - 根据正文内容分析
  */
-const BID_TYPE_CLASSIFICATIONS = {
+const INDUSTRY_CLASSIFICATIONS: Record<string, { keywords: string[]; label: string }> = {
+  'IT服务': {
+    keywords: ['计算机', '软件', '网络', '信息化', '系统集成', 'IT', '信息安全', '服务器', '数据库', '云计算', '大数据', '人工智能', '智能化', '智慧', '电子', '网络设备', '办公设备', '多媒体', '视频会议', '监控', '安防'],
+    label: 'IT服务'
+  },
+  '医疗设备': {
+    keywords: ['医疗', '医院', '药品', '医药', '器械', '保健', '防疫', '核酸检测', '疫苗', '诊疗', '手术', '病床', '监护', '影像', '超声', '检验', '体检'],
+    label: '医疗设备'
+  },
+  '建筑工程': {
+    keywords: ['建筑', '装修', '装饰', '工程', '施工', '监理', '设计', '勘察', '造价', '园林', '绿化', '市政', '道路', '桥梁', '隧道', '钢结构', '消防', '空调', '电梯'],
+    label: '建筑工程'
+  },
+  '办公家具': {
+    keywords: ['家具', '办公桌', '椅子', '柜子', '书架', '会议桌', '沙发', '课桌椅', '实验室家具', '学校家具'],
+    label: '办公家具'
+  },
+  '车辆': {
+    keywords: ['车辆', '汽车', '客车', '货车', '特种车', '救护车', '消防车', '环卫车', '校车', '班车', '出租车', '新能源汽车', '电动车', '充电桩'],
+    label: '车辆'
+  },
+  '物业': {
+    keywords: ['物业', '保洁', '保安', '绿化', '维修', '停车', '物业服务', '后勤'],
+    label: '物业服务'
+  },
+  '食材': {
+    keywords: ['食材', '蔬菜', '肉类', '粮油', '副食品', '食品', '农产品', '生鲜', '水果', '牛奶', '饮料', '食堂', '餐饮'],
+    label: '食材配送'
+  },
+  '印刷': {
+    keywords: ['印刷', '纸张', '文具', '办公用品', '硒鼓', '墨盒', '打印', '复印', '制版', '宣传品', '画册', '包装'],
+    label: '印刷服务'
+  }
+};
+
+/**
+ * 根据正文内容智能分析行业类别
+ */
+function classifyIndustryFromContent(content: string): string | null {
+  if (!content) return null;
+  
+  const text = content.toLowerCase();
+  let bestMatch: { name: string; score: number } | null = null;
+  
+  for (const [, config] of Object.entries(INDUSTRY_CLASSIFICATIONS)) {
+    let score = 0;
+    for (const keyword of config.keywords) {
+      if (text.includes(keyword.toLowerCase())) {
+        score++;
+      }
+    }
+    if (score > 0 && (!bestMatch || score > bestMatch.score)) {
+      bestMatch = { name: config.label, score };
+    }
+  }
+  
+  return bestMatch?.name || null;
+}
+
+/**
+ * 招标类型智能分类映射 - 根据标题判断
+ */
+const BID_TYPE_CLASSIFICATIONS: Record<string, { keywords: string[]; label: string; priority: number }> = {
   // 一、采购前/采购启动
   procurementStart: {
     keywords: ['意向公告', '意向公示', '采购意向', '需求公示', '采购需求'],

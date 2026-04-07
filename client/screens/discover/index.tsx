@@ -46,7 +46,7 @@ interface Bid {
   is_urgent: boolean;
   // 智能分类字段（后端返回）
   classifiedType?: string;
-  typeCategory?: string;
+  classifiedIndustry?: string;
 }
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -239,17 +239,17 @@ export default function DiscoverScreen() {
         <Text style={styles.bidTitle} numberOfLines={2}>
           {bid.title}
         </Text>
-        {/* 公告类型 + 行业类型 两个标签 */}
+        {/* 公告类型 + 行业类别 两个标签 */}
         <View style={styles.bidMetaRow}>
           <View style={styles.bidTag}>
             <Text style={styles.bidTagText}>
-              {bid.classifiedType || bid.bid_type || bid.announcement_type || '招标公告'}
+              {bid.classifiedType || '招标公告'}
             </Text>
           </View>
-          {bid.industry && (
+          {bid.classifiedIndustry && (
             <View style={styles.bidTag}>
               <Text style={styles.bidTagText}>
-                {bid.industry.slice(0, 6)}
+                {bid.classifiedIndustry}
               </Text>
             </View>
           )}
