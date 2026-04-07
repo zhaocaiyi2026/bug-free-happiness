@@ -432,7 +432,7 @@ export default function DiscoverScreen() {
             </View>
           </View>
 
-          {/* 热门推荐 - 只展示1个招标 */}
+          {/* 热门推荐 - 展示多条招标占满屏幕 */}
           <View style={[styles.sectionContainer, { marginBottom: Spacing.lg }]}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>热门推荐</Text>
@@ -442,7 +442,7 @@ export default function DiscoverScreen() {
             </View>
             {recommendBids.length > 0 && (
               <View style={styles.bidList}>
-                {renderBidCard(recommendBids[0])}
+                {recommendBids.map((bid) => renderBidCard(bid))}
               </View>
             )}
             {recommendBids.length === 0 && (
