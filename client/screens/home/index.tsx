@@ -522,12 +522,13 @@ export default function HomeScreen() {
   const renderBidItem = useCallback(({ item, index }: { item: Bid; index: number }) => {
     const isWinBid = item.isWinBid;
     // 规范化公告类型名称
-    const displayType = item.announcement_type || item.bid_type || (isWinBid ? '中标' : '招标');
+    // 优先使用智能分类的公告类型
+    const displayType = item.classifiedType || item.announcement_type || item.bid_type || (isWinBid ? '中标' : '招标');
     
-    // 规范化行业名称：如果industry是代码格式（如S912），则显示bid_type
-    const displayIndustry = item.industry && !/^[A-Z]\d{3}$/.test(item.industry) 
-      ? item.industry 
-      : displayType;
+    // 优先使用智能分类的行业，规范化行业名称
+    const displayIndustry = item.classifiedIndustry && item.classifiedIndustry.trim() !== '' 
+      ? item.classifiedIndustry 
+      : (item.industry && !/^[A-Z]\d{3}$/.test(item.industry) ? item.industry : null);
     
     return (
       <TouchableOpacity
@@ -547,14 +548,16 @@ export default function HomeScreen() {
           <View style={styles.bidMetaRow}>
             <View style={[styles.bidTag, isWinBid && styles.bidTagWin]}>
               <Text style={[styles.bidTagText, isWinBid && styles.bidTagWinText]}>
-                {displayIndustry?.slice(0, 6) || '项目'}
-              </Text>
-            </View>
-            <View style={[styles.bidTag, isWinBid && styles.bidTagWin]}>
-              <Text style={[styles.bidTagText, isWinBid && styles.bidTagWinText]}>
                 {displayType}
               </Text>
             </View>
+            {displayIndustry && displayIndustry.trim() !== '' && (
+              <View style={[styles.bidTag, isWinBid && styles.bidTagWin]}>
+                <Text style={[styles.bidTagText, isWinBid && styles.bidTagWinText]}>
+                  {displayIndustry.slice(0, 6)}
+                </Text>
+              </View>
+            )}
           </View>
           <Text style={styles.bidLocation} numberOfLines={1}>
             {item.province} · {item.city}

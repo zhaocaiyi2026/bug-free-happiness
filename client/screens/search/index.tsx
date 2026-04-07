@@ -445,11 +445,13 @@ export default function SearchScreen() {
       >
         <View style={styles.cardHeader}>
           <View style={styles.categoryTag}>
-            <Text style={styles.categoryTagText}>{item.industry || '综合'}</Text>
+            <Text style={styles.categoryTagText}>
+              {item.classifiedIndustry && item.classifiedIndustry.trim() !== '' ? item.classifiedIndustry : '综合'}
+            </Text>
           </View>
           <View style={[styles.typeTag, isWinBid && styles.typeTagWin]}>
             <Text style={[styles.typeTagText, isWinBid && styles.typeTagTextWin]}>
-              {item.bid_type || (isWinBid ? '中标' : '招标')}
+              {item.classifiedType || item.bid_type || (isWinBid ? '中标' : '招标')}
             </Text>
           </View>
         </View>

@@ -249,13 +249,13 @@ export default function BidListScreen() {
       activeOpacity={0.7}
     >
       <View style={styles.cardHeader}>
+        <View style={styles.typeTag}>
+          <Text style={styles.typeTagText}>{item.classifiedType || item.bid_type || '招标'}</Text>
+        </View>
         <View style={styles.categoryTag}>
           <Text style={styles.categoryTagText} numberOfLines={1}>
-            {item.industry?.slice(0, 4) || '项目'}
+            {item.classifiedIndustry && item.classifiedIndustry.trim() !== '' ? item.classifiedIndustry.slice(0, 4) : '项目'}
           </Text>
-        </View>
-        <View style={styles.typeTag}>
-          <Text style={styles.typeTagText}>{item.bid_type || '招标'}</Text>
         </View>
       </View>
       <Text style={styles.bidTitle} numberOfLines={2}>
@@ -280,14 +280,14 @@ export default function BidListScreen() {
       activeOpacity={0.7}
     >
       <View style={styles.cardHeader}>
-        <View style={[styles.categoryTag, styles.winCategoryTag]}>
-          <Text style={styles.categoryTagText} numberOfLines={1}>
-            {item.industry?.slice(0, 4) || '中标'}
-          </Text>
-        </View>
         <View style={styles.winTag}>
           <FontAwesome6 name="trophy" size={10} color="#FFFFFF" />
-          <Text style={styles.winTagText} numberOfLines={1}>{item.bid_type || '中标'}</Text>
+          <Text style={styles.winTagText} numberOfLines={1}>{item.classifiedType || item.bid_type || '中标'}</Text>
+        </View>
+        <View style={[styles.categoryTag, styles.winCategoryTag]}>
+          <Text style={styles.categoryTagText} numberOfLines={1}>
+            {item.classifiedIndustry && item.classifiedIndustry.trim() !== '' ? item.classifiedIndustry.slice(0, 4) : '中标'}
+          </Text>
         </View>
       </View>
       <Text style={styles.bidTitle} numberOfLines={2}>

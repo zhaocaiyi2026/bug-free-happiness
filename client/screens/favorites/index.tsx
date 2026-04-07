@@ -143,7 +143,7 @@ export default function FavoritesScreen() {
           </Text>
         </View>
         <View style={styles.typeTag}>
-          <Text style={styles.typeTagText}>{item.bids.bid_type || '招标'}</Text>
+          <Text style={styles.typeTagText}>{item.bids.classifiedType || item.bids.bid_type || '招标'}</Text>
         </View>
         <TouchableOpacity
           style={styles.removeButton}

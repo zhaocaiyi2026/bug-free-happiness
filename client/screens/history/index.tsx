@@ -83,7 +83,7 @@ function HistoryItemCard({ item, styles, onPress }: HistoryItemCardProps) {
       <View style={styles.cardHeader}>
         <View style={styles.categoryTag}>
           <Text style={styles.categoryTagText} numberOfLines={1}>
-            {bid.industry?.slice(0, 4) || '项目'}
+            {bid.classifiedIndustry && bid.classifiedIndustry.trim() !== '' ? bid.classifiedIndustry.slice(0, 4) : '项目'}
           </Text>
         </View>
       </View>
