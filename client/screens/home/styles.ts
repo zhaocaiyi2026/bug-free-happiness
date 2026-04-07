@@ -197,15 +197,16 @@ export const createStyles = (theme: Theme) => {
     quickActionsRow: {
       flexDirection: 'row',
       gap: Spacing.sm,
+      alignItems: 'center',
     },
     quickActionTab: {
       flex: 1,
-      flexDirection: 'row',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: Spacing.sm + 2,
-      paddingHorizontal: Spacing.sm,
-      borderRadius: 12,
+      paddingVertical: Spacing.sm,
+      paddingHorizontal: Spacing.xs,
+      borderRadius: 10,
       backgroundColor: '#FFFFFF',
       ...Platform.select({
         ios: {
@@ -222,11 +223,14 @@ export const createStyles = (theme: Theme) => {
     quickActionTabActive: {
       backgroundColor: '#2563EB',
     },
+    quickActionIconWrapper: {
+      marginBottom: 4,
+    },
     quickActionTabText: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '600',
       color: '#64748B',
-      marginLeft: 4,
+      textAlign: 'center',
     },
     quickActionTabTextActive: {
       color: '#FFFFFF',

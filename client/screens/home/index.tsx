@@ -736,11 +736,13 @@ export default function HomeScreen() {
                   onPress={() => handleFilterPress(action.key)}
                   activeOpacity={0.7}
                 >
-                  <FontAwesome6 
-                    name={action.icon as any} 
-                    size={14} 
-                    color={isActive ? '#FFFFFF' : action.color} 
-                  />
+                  <View style={styles.quickActionIconWrapper}>
+                    <FontAwesome6 
+                      name={action.icon as any} 
+                      size={14} 
+                      color={isActive ? '#FFFFFF' : action.color} 
+                    />
+                  </View>
                   <Text style={[
                     styles.quickActionTabText,
                     isActive && styles.quickActionTabTextActive
